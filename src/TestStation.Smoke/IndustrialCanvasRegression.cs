@@ -51,6 +51,14 @@ internal static class IndustrialCanvasRegression
             NativePointer.Drag(resizeStart, resizeStart + new Vector(16, 16)); Pump();
             Require(widget.Bounds.Columns == before.Columns + 1 && widget.Bounds.Rows == before.Rows + 1,
                 $"{spec.Kind} resize did not follow the grid");
+            if (instrument is NumericFieldControl)
+            {
+                window.UpdateLayout();
+                var row = Find<Grid>(instrument).FirstOrDefault(item => item.ColumnDefinitions.Count == 3
+                    && item.ColumnDefinitions[1].Width.Value is >= 4 and <= 6);
+                Require(row is not null && row.ActualHeight >= instrument.ActualHeight - 2,
+                    $"{spec.Kind} numeric row did not stretch vertically: row={row?.ActualHeight}, control={instrument.ActualHeight}");
+            }
 
             // Complex library-specific state must survive a project save,
             // not just the common name/minimum/maximum settings.

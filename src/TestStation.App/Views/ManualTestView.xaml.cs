@@ -18,6 +18,7 @@ namespace TestStation.App.Views;
 
 public partial class ManualTestView : UserControl, IDisposable
 {
+    private const double CollapsedDockWidth = 40;
     private bool _workspaceActive = true;
     private bool _disposed;
     public bool SamplesRunning => _samples.IsEnabled;
@@ -50,8 +51,8 @@ public partial class ManualTestView : UserControl, IDisposable
         InitializeComponent(); DataContext = model;
         _libraryExpanded = false;
         _propertyExpanded = false;
-        LibraryColumn.Width = new GridLength(46);
-        PropertyColumn.Width = new GridLength(46);
+        LibraryColumn.Width = new GridLength(CollapsedDockWidth);
+        PropertyColumn.Width = new GridLength(CollapsedDockWidth);
         LibraryContent.Visibility = Visibility.Collapsed;
         LibraryIconRail.Visibility = Visibility.Visible;
         WidgetPropertyPanel.Visibility = Visibility.Collapsed;
@@ -110,11 +111,11 @@ public partial class ManualTestView : UserControl, IDisposable
 
     private void LibraryToggle_Click(object sender, RoutedEventArgs e)
     {
-        if (_libraryExpanded && LibraryColumn.Width.Value > 46)
+        if (_libraryExpanded && LibraryColumn.Width.Value > CollapsedDockWidth)
             _libraryExpandedWidth = LibraryColumn.Width.Value;
 
         _libraryExpanded = !_libraryExpanded;
-        LibraryColumn.Width = new GridLength(_libraryExpanded ? Math.Max(190, _libraryExpandedWidth) : 46);
+        LibraryColumn.Width = new GridLength(_libraryExpanded ? Math.Max(190, _libraryExpandedWidth) : CollapsedDockWidth);
         LibraryContent.Visibility = _libraryExpanded ? Visibility.Visible : Visibility.Collapsed;
         LibraryIconRail.Visibility = _libraryExpanded ? Visibility.Collapsed : Visibility.Visible;
         LibraryTitle.Visibility = _libraryExpanded ? Visibility.Visible : Visibility.Collapsed;
@@ -133,11 +134,11 @@ public partial class ManualTestView : UserControl, IDisposable
 
     private void PropertyToggle_Click(object sender, RoutedEventArgs e)
     {
-        if (_propertyExpanded && PropertyColumn.Width.Value > 46)
+        if (_propertyExpanded && PropertyColumn.Width.Value > CollapsedDockWidth)
             _propertyExpandedWidth = PropertyColumn.Width.Value;
 
         _propertyExpanded = !_propertyExpanded;
-        PropertyColumn.Width = new GridLength(_propertyExpanded ? Math.Max(260, _propertyExpandedWidth) : 46);
+        PropertyColumn.Width = new GridLength(_propertyExpanded ? Math.Max(260, _propertyExpandedWidth) : CollapsedDockWidth);
         WidgetPropertyPanel.Visibility = _propertyExpanded ? Visibility.Visible : Visibility.Collapsed;
         PropertyTitle.Visibility = _propertyExpanded ? Visibility.Visible : Visibility.Collapsed;
         PropertyToggleIcon.Kind = _propertyExpanded ? PackIconKind.ChevronRight : PackIconKind.ChevronLeft;

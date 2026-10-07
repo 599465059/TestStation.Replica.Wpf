@@ -56,9 +56,9 @@
                                             <TextBlock Text="{Binding Name}" Foreground="{DynamicResource MutedBrush}" FontSize="10" FontWeight="SemiBold" Margin="0,7,0,3"/>
                                         </HierarchicalDataTemplate>
                                         <DataTemplate DataType="{x:Type vm:StepPaletteItem}">
-                                            <StackPanel Orientation="Horizontal" Height="26" VerticalAlignment="Center" ToolTip="{x:Static text:UiText.DragOrDoubleClick}">
-                                                <md:PackIcon Kind="{Binding Kind, Converter={StaticResource StepKindToIcon}}" Style="{StaticResource StepIconStyle}"/>
-                                                <TextBlock Text="{Binding Name}" FontSize="12"/>
+                                            <StackPanel Orientation="Horizontal" Height="28" VerticalAlignment="Center" ToolTip="{x:Static text:UiText.DragOrDoubleClick}">
+                                                <md:PackIcon Kind="{Binding Kind, Converter={StaticResource StepKindToIcon}}" Style="{StaticResource StepIconStyle}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </TreeView.Resources>

@@ -64,6 +64,11 @@ public partial class ManualWorkspaceView : UserControl
                 var view = new ManualTestView(tab.Model, _instruments, _configuration, _theme);
                 _views.Add(tab, view);
                 var document = Workspace.AddDocument(tab.Title, view);
+                // MdiWorkspace adds a 14-DIP body inset for floating windows.
+                // In the tabbed manual workspace that inset only creates empty
+                // bands around the canvas, so remove it at the application
+                // boundary without changing the shared control library.
+                RemoveTabbedDocumentPadding(document);
                 document.Tag = tab;
                 _documents.Add(tab, document);
                 tab.PropertyChanged += OnTabChanged;
@@ -104,13 +109,72 @@ public partial class ManualWorkspaceView : UserControl
         }
         if (Workspace.Content is not Grid root) return;
         foreach (var tabs in root.Children.OfType<NavigationTabs>())
+        {
+        NormalizeTabbedSurface(tabs);
         foreach (var item in tabs.Items.OfType<NavigationTabItem>())
         {
             if (item.Tag is not Border document || document.Tag is not ManualWorkspaceTab tab) continue;
             item.SetBinding(HeaderedContentControl.HeaderProperty, new Binding(nameof(tab.Title)) { Source = tab });
+            item.HeaderTemplate = (DataTemplate)FindResource("ManualTabHeaderTemplate");
             item.IsClosable = Model.Documents.Count > 1;
-            item.MinWidth = 140;
+            item.Width = 128;
+            item.MinWidth = 104;
+            item.MaxWidth = 150;
+            item.Height = 34;
+            item.MinHeight = 34;
+            item.MaxHeight = 34;
+            item.Padding = new Thickness(8, 4, 8, 4);
             item.ToolTip = "双击标签名重命名";
+            item.ApplyTemplate();
+            ResizeTabCloseButtons(item);
+            item.Dispatcher.BeginInvoke(new Action(() => ResizeTabCloseButtons(item)));
+        }
+        }
+    }
+
+    private static void NormalizeTabbedSurface(NavigationTabs tabs)
+    {
+        tabs.ApplyTemplate();
+        foreach (var border in FindVisualChildren<Border>(tabs))
+        {
+            var isContentSurface = string.Equals(border.Name, "ContentSurface", StringComparison.Ordinal)
+                || border.Child is ContentPresenter && Grid.GetRow(border) == 1;
+            if (!isContentSurface) continue;
+            border.Margin = new Thickness(0);
+            border.Padding = new Thickness(0);
+        }
+    }
+
+    private static void ResizeTabCloseButtons(NavigationTabItem item)
+    {
+        foreach (var close in FindVisualChildren<Button>(item).Where(button =>
+                     button.Content is string text && text == "×"
+                     || button.ToolTip?.ToString()?.Contains("关闭标签", StringComparison.Ordinal) == true))
+        {
+            close.Width = 16;
+            close.MinWidth = 16;
+            close.Height = 16;
+            close.MinHeight = 16;
+            close.Margin = new Thickness(2, 0, 0, 0);
+            close.Padding = new Thickness(0);
+            close.FontSize = 11;
+        }
+    }
+
+    private static void RemoveTabbedDocumentPadding(Border document)
+    {
+        if (document.Child is not Grid layout) return;
+        foreach (var body in layout.Children.OfType<Border>().Where(border => Grid.GetRow(border) == 1))
+            body.Padding = new Thickness(0);
+    }
+
+    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T match) yield return match;
+            foreach (var descendant in FindVisualChildren<T>(child)) yield return descendant;
         }
     }
 

@@ -5,25 +5,20 @@
  xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
  xmlns:text="clr-namespace:TestStation.App.Localization"
  Background="{DynamicResource ContentBrush}" Foreground="{DynamicResource TextBrush}">
+ <UserControl.Resources>
+  <DataTemplate x:Key="ManualTabHeaderTemplate">
+   <TextBlock Text="{Binding}" FontSize="12" MaxWidth="82" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+  </DataTemplate>
+ </UserControl.Resources>
  <Grid>
-  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
   <ToolBar Style="{StaticResource AppToolBarStyle}">
    <Button Command="{Binding NewDocumentCommand}" AutomationProperties.AutomationId="NewManualWorkspace" ToolTip="{x:Static text:UiText.ManualWorkspaceNew}"><StackPanel Orientation="Horizontal"><md:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,5,0"/><TextBlock Text="{x:Static text:UiText.ManualWorkspaceNew}"/></StackPanel></Button>
+   <Button Command="{Binding ToggleModeCommand}" Content="{Binding ModeCaption}" AutomationProperties.AutomationId="CanvasToggleMode" ToolTip="切换所有工区的设计/运行模式"/>
    <Button x:Name="ViewToggleButton" Content="{x:Static text:UiText.ManualWindowView}" Click="ToggleView_Click" AutomationProperties.AutomationId="ToggleManualView"/>
    <Button Content="{x:Static text:UiText.ManualTile}" Click="Tile_Click" AutomationProperties.AutomationId="TileManualWorkspaces"/>
    <Button Content="{x:Static text:UiText.ManualCascade}" Click="Cascade_Click" AutomationProperties.AutomationId="CascadeManualWorkspaces"/>
-   <Separator/>
-   <Menu>
-    <MenuItem Header="{x:Static text:UiText.ManualWorkspaceReopen}" ItemsSource="{Binding ClosedDocuments}">
-     <MenuItem.ItemContainerStyle><Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-      <Setter Property="Header" Value="{Binding Name}"/>
-      <Setter Property="Command" Value="{Binding DataContext.ReopenDocumentCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-      <Setter Property="CommandParameter" Value="{Binding}"/>
-     </Style></MenuItem.ItemContainerStyle>
-    </MenuItem>
-   </Menu>
   </ToolBar>
   <kit:MdiWorkspace x:Name="Workspace" Grid.Row="1" View="Tabbed" Background="{DynamicResource ContentBrush}" Foreground="{DynamicResource TextBrush}"/>
-  <TextBlock Grid.Row="2" Text="{Binding Status}" Foreground="{DynamicResource MutedBrush}" Margin="8,3" TextWrapping="Wrap"/>
  </Grid>
 </UserControl>

@@ -33,6 +33,20 @@ public sealed partial class ManualWorkspaceViewModel : ObservableObject, IProjec
     [ObservableProperty] private ManualWorkspaceTab? _activeDocument;
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private bool _isBusy;
+    private bool _isDesignMode = true;
+    public bool IsDesignMode
+    {
+        get => _isDesignMode;
+        set
+        {
+            if (_isDesignMode == value) return;
+            _isDesignMode = value;
+            foreach (var document in Documents) document.Model.IsDesignMode = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ModeCaption));
+        }
+    }
+    public string ModeCaption => UiText.Get(IsDesignMode ? "CanvasSwitchToRun" : "CanvasSwitchToDesign");
     public bool HasProject => _projectRoot is not null;
 
     public ManualWorkspaceViewModel(IManualCanvasEditingService editing, IManualCanvasRepository canvasRepository,
@@ -154,8 +168,12 @@ public sealed partial class ManualWorkspaceViewModel : ObservableObject, IProjec
     {
         var model = new ManualTestViewModel(_editing, _canvasRepository, _documentService);
         model.OpenProject(_projectRoot!, entry.Id);
+        model.IsDesignMode = IsDesignMode;
         return new(entry.Id, entry.Name, model);
     }
+
+    [RelayCommand]
+    private void ToggleMode() => IsDesignMode = !IsDesignMode;
     private void Persist(List<ManualWorkspaceEntry> entries)
     {
         _workspaces.Save(_projectRoot!, entries); _catalog = entries;

@@ -22,6 +22,12 @@ public sealed class ManualInstrumentFactory(ManualWidgetConfigurationAdapter con
         control.DeleteRequested += (_, _) => deleteRequested();
         ConfigureMoveTargets(control, widget);
         control.ConfigurationChanged += (_, _) => ConfigureMoveTargets(control, widget);
+        // Industrial.Controls 1.0.0 keeps the shared numeric name/value row at
+        // a compact fixed height. The canvas can resize the host vertically,
+        // so clear that local height in the application adapter and let the
+        // row stretch with its host. This keeps the library package untouched.
+        if (control is NumericFieldControl)
+            ExpandNumericRows(control);
         // The library gauges use fixed internal drawing sizes. Fit those
         // drawing surfaces to canvas bounds without scaling text or inputs.
         if (control is GaugeControl or ProgressRingControl)
@@ -55,6 +61,19 @@ public sealed class ManualInstrumentFactory(ManualWidgetConfigurationAdapter con
         if (control is ProgressRingControl)
             foreach (var ring in Descendants<Industrial.Controls.ProgressRing>(control))
             { ring.Height = size; ring.Width = size; }
+    }
+
+    private static void ExpandNumericRows(InstrumentControl control)
+    {
+        foreach (var row in Descendants<Grid>(control)
+                     .Where(item => item.ColumnDefinitions.Count == 3
+                                    && item.ColumnDefinitions[1].Width.Value >= 4
+                                    && item.ColumnDefinitions[1].Width.Value <= 6))
+        {
+            row.ClearValue(FrameworkElement.HeightProperty);
+            row.MinHeight = 32;
+            row.VerticalAlignment = VerticalAlignment.Stretch;
+        }
     }
 
     private static IEnumerable<T> Descendants<T>(DependencyObject parent) where T : DependencyObject

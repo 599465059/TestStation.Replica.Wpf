@@ -274,7 +274,13 @@ public partial class MainWindow : Window
         {
             // The host toolbar already exposes the navigation toggle. Hide only
             // the NavigationView's duplicate compact button; keep its item tree.
-            if (button.Content is string content && content == "☰")
+            // NavigationView creates this button in code with a MaterialDesign
+            // PackIcon (Menu), so checking only for the old text glyph ("☰")
+            // leaves the duplicate visible with the current Industrial.Controls.
+            // Keep the check scoped to NavigationItems so toolbar buttons are
+            // never affected.
+            if (button.Content is PackIcon { Kind: PackIconKind.Menu }
+                || button.Content is string content && content == "☰")
                 button.Visibility = Visibility.Collapsed;
         }
         foreach (var textBox in FindVisualChildren<TextBox>(NavigationItems))
