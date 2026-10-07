@@ -1,0 +1,11 @@
+TestStand Editor Trial License
+
+Copyright (c) 2026 比怪兽还怪. All rights reserved.
+
+This software is provided as a trial version of TestStand Editor. You may install and evaluate this trial package for internal testing, workflow validation, and acceptance review.
+
+You may not sell, sublicense, redistribute, reverse engineer, or offer this software as a hosted service without written permission from 比怪兽还怪.
+
+This software is provided "as is", without warranty of any kind. 比怪兽还怪 is not liable for any claim, damage, data loss, production interruption, or other liability arising from use of this trial software.
+
+Third-party components remain governed by their own licenses. See NOTICE and THIRD-PARTY-NOTICES.md for attribution and dependency details.

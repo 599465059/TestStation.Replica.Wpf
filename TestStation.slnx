@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TestStation.App/TestStation.App.csproj" />
+    <Project Path="src/TestStation.Application/TestStation.Application.csproj" />
+    <Project Path="src/TestStation.Domain/TestStation.Domain.csproj" />
+    <Project Path="src/TestStation.Infrastructure/TestStation.Infrastructure.csproj" />
+    <Project Path="src/TestStation.Smoke/TestStation.Smoke.csproj" />
+  </Folder>
+</Solution>

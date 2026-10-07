@@ -1,0 +1,8 @@
+# Build and IDE output
+**/bin/
+**/obj/
+.packages/
+artifacts/
+.vs/
+*.user
+*.suo

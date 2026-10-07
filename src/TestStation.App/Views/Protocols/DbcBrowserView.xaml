@@ -1,0 +1,44 @@
+<UserControl x:Class="TestStation.App.Views.Protocols.DbcBrowserView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:text="clr-namespace:TestStation.App.Localization"
+ xmlns:vm="clr-namespace:TestStation.App.ViewModels.Protocols" Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}">
+ <Grid Margin="22,18">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <DockPanel Margin="0,0,0,16">
+   <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+    <TextBox Width="260" Margin="0,0,8,0" Text="{Binding FilterText,UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static text:UiText.DbcFilterHint}" AutomationProperties.AutomationId="DbcFilter"/>
+    <Button Content="{x:Static text:UiText.Clear}" Command="{Binding ClearFilterCommand}" Margin="0,0,8,0"/>
+    <Button Content="{x:Static text:UiText.ImportDbc}" Click="Import_Click"/>
+   </StackPanel>
+   <TextBlock Text="{x:Static text:UiText.DbcDatabase}" FontSize="19" FontWeight="SemiBold"/>
+  </DockPanel>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="240" MinWidth="170"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*" MinWidth="260"/></Grid.ColumnDefinitions>
+   <TreeView x:Name="DbcTree" ItemsSource="{Binding Tree}" SelectedItemChanged="Tree_SelectedItemChanged" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" AutomationProperties.AutomationId="DbcTree">
+    <TreeView.ItemTemplate><HierarchicalDataTemplate DataType="{x:Type vm:DbcTreeNode}" ItemsSource="{Binding Children}"><TextBlock Text="{Binding Name}"/></HierarchicalDataTemplate></TreeView.ItemTemplate>
+   </TreeView>
+   <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" Background="{DynamicResource BorderBrush}"/>
+   <DockPanel Grid.Column="2">
+    <TextBlock DockPanel.Dock="Top" Text="{Binding DetailTitle}" FontWeight="SemiBold" Margin="4,0,0,12"/>
+    <DataGrid x:Name="SignalsGrid" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" RowHeaderWidth="0" AutomationProperties.AutomationId="DbcSignals">
+     <DataGrid.Columns>
+      <DataGridTextColumn Header="{x:Static text:UiText.CanId}" Binding="{Binding CanId}" Width="90" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.Message}" Binding="{Binding Message}" Width="150" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.TransmitterEcu}" Binding="{Binding Transmitter}" Width="110" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.ReceiverEcu}" Binding="{Binding Receivers}" Width="140" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.FrameLength}" Binding="{Binding Dlc}" Width="75" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.Signal}" Binding="{Binding Signal}" Width="145" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.StartBit}" Binding="{Binding StartBit}" Width="75" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.BitLength}" Binding="{Binding Length}" Width="90" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.ByteOrder}" Binding="{Binding ByteOrder}" Width="130" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.DataType}" Binding="{Binding DataType}" Width="110" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.Scale}" Binding="{Binding Factor}" Width="90" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.Offset}" Binding="{Binding Offset}" Width="90" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+      <DataGridTextColumn Header="{x:Static text:UiText.Unit}" Binding="{Binding Unit}" Width="*" MinWidth="90" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+     </DataGrid.Columns>
+    </DataGrid>
+   </DockPanel>
+  </Grid>
+  <TextBlock Grid.Row="2" Text="{Binding Status}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,12,0,0"/>
+ </Grid>
+</UserControl>

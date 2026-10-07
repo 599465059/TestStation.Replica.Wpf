@@ -1,0 +1,195 @@
+<UserControl x:Class="TestStation.App.Views.ManualTestView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+ xmlns:scm="clr-namespace:System.Windows.Data;assembly=PresentationFramework"
+ xmlns:kit="clr-namespace:Industrial.Controls;assembly=Industrial.Controls"
+ xmlns:text="clr-namespace:TestStation.App.Localization" Background="{DynamicResource ContentBrush}" Foreground="{DynamicResource TextBrush}">
+ <UserControl.Resources>
+  <BooleanToVisibilityConverter x:Key="VisibleWhenTrue"/>
+  <Style x:Key="ManualPropertyLabel" TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Margin" Value="0,12,0,5"/></Style>
+  <CollectionViewSource x:Key="WidgetToolsView" Source="{Binding WidgetTools}">
+   <CollectionViewSource.GroupDescriptions><scm:PropertyGroupDescription PropertyName="Category"/></CollectionViewSource.GroupDescriptions>
+  </CollectionViewSource>
+ </UserControl.Resources>
+ <Grid PreviewKeyDown="OnKeyDown">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="26"/></Grid.RowDefinitions>
+  <ToolBar Style="{StaticResource AppToolBarStyle}">
+   <Button Command="{Binding DeleteWidgetCommand}" ToolTip="{x:Static text:UiText.Delete}"><md:PackIcon Kind="DeleteOutline" Width="16" Height="16"/></Button>
+   <Separator/>
+   <Button Command="{Binding ToggleModeCommand}" Content="{Binding ModeCaption}" AutomationProperties.AutomationId="CanvasToggleMode"/>
+   <TextBlock Text="{x:Static text:UiText.CanvasGridCaption}" Foreground="{DynamicResource MutedBrush}" Margin="14,0,6,0"/>
+ </ToolBar>
+ <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition x:Name="LibraryColumn" Width="228"/><ColumnDefinition Width="5"/><ColumnDefinition Width="*"/><ColumnDefinition Width="5"/><ColumnDefinition x:Name="PropertyColumn" Width="300"/></Grid.ColumnDefinitions>
+   <Grid x:Name="WidgetLibraryPanel" Grid.Column="0" Background="{DynamicResource SurfaceBrush}" MinWidth="46" MaxWidth="320" ClipToBounds="True">
+    <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,1" Background="{DynamicResource SurfaceBrush}">
+     <Grid>
+      <TextBlock x:Name="LibraryTitle" Text="控件库" Margin="12,0,42,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+      <Button x:Name="LibraryToggleButton" Click="LibraryToggle_Click" Width="34" Height="30" Margin="0,0,4,0" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" ToolTip="收起控件库" Style="{StaticResource AppButtonStyle}"><md:PackIcon x:Name="LibraryToggleIcon" Kind="ChevronLeft" Width="16" Height="16"/></Button>
+     </Grid>
+    </Border>
+    <DockPanel x:Name="LibraryContent" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" MinWidth="190">
+      <TextBlock DockPanel.Dock="Bottom" Text="{Binding LibraryHint}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="12,8"/>
+     <ListBox x:Name="WidgetPalette" ItemsSource="{Binding Source={StaticResource WidgetToolsView}}" IsEnabled="{Binding IsDesignMode}"
+             BorderThickness="0" Background="{DynamicResource SurfaceBrush}"
+             PreviewMouseLeftButtonDown="Palette_MouseDown" PreviewMouseMove="Palette_MouseMove" MouseDoubleClick="Palette_DoubleClick"
+             AutomationProperties.AutomationId="ManualWidgetPalette">
+      <ListBox.GroupStyle>
+       <GroupStyle>
+        <GroupStyle.HeaderTemplate>
+         <DataTemplate><Border Background="{DynamicResource SubtleBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,7" Margin="0,4,0,0"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/></Border></DataTemplate>
+        </GroupStyle.HeaderTemplate>
+       </GroupStyle>
+      </ListBox.GroupStyle>
+     <ListBox.ItemTemplate><DataTemplate>
+      <StackPanel Orientation="Horizontal" Margin="4,5" Cursor="Hand"><md:PackIcon Kind="{Binding Icon}" Width="18" Height="18" Margin="0,0,8,0"/><TextBlock Text="{Binding Name}"/></StackPanel>
+     </DataTemplate></ListBox.ItemTemplate>
+     </ListBox>
+    </DockPanel>
+   </Grid>
+   <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource BorderBrush}"/>
+  <ScrollViewer x:Name="CanvasScroll" Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollChanged="OnScrollChanged" CanContentScroll="False">
+   <Grid x:Name="CanvasSurface" Width="{Binding SurfaceWidth}" Height="{Binding SurfaceHeight}" Background="{DynamicResource ContentBrush}" Cursor="Arrow"
+         PreviewMouseLeftButtonDown="OnPointerDown" PreviewMouseMove="OnPointerMove" PreviewMouseLeftButtonUp="OnPointerUp" LostMouseCapture="OnCaptureLost" Focusable="True"
+         AllowDrop="True" PreviewDragOver="Canvas_DragOver" PreviewDrop="Canvas_Drop" ContextMenuOpening="Canvas_ContextMenuOpening">
+    <Grid.ContextMenu><ContextMenu/></Grid.ContextMenu>
+    <ItemsControl x:Name="CanvasItems" ItemsSource="{Binding Widgets}" Focusable="False">
+     <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+     <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter"><Setter Property="Canvas.Left" Value="{Binding X}"/><Setter Property="Canvas.Top" Value="{Binding Y}"/><Setter Property="Width" Value="{Binding Width}"/><Setter Property="Height" Value="{Binding Height}"/></Style></ItemsControl.ItemContainerStyle>
+     <ItemsControl.ItemTemplate>
+      <DataTemplate>
+       <Grid AutomationProperties.AutomationId="ManualNumericWidget" ToolTip="{x:Static text:UiText.CanvasSampleTooltip}" ClipToBounds="False">
+        <Grid.Style>
+         <Style TargetType="Grid">
+          <Setter Property="Cursor" Value="SizeAll"/>
+          <Style.Triggers><DataTrigger Binding="{Binding IsInput}" Value="True"><Setter Property="Cursor" Value="Arrow"/></DataTrigger></Style.Triggers>
+         </Style>
+        </Grid.Style>
+        <!-- Industrial.Controls already draws its own frame. Do not wrap it in
+             a second application Border. -->
+        <ContentControl Tag="InstrumentHost" Loaded="InstrumentHost_Loaded" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+        <!-- Interactive controls expose only a small move handle so their
+             buttons, editors, checkboxes and console toolbar remain clickable. -->
+        <Border Tag="MoveHandle" Panel.ZIndex="6" Width="92" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeAll">
+         <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers>
+          <DataTrigger Binding="{Binding Model.Kind}" Value="input"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+         </Style.Triggers></Style></Border.Style>
+        </Border>
+        <Border Tag="MoveHandle" Panel.ZIndex="6" Height="22" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeAll">
+         <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers>
+          <DataTrigger Binding="{Binding Model.Kind}" Value="command"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+         </Style.Triggers></Style></Border.Style>
+        </Border>
+        <Border Tag="MoveHandle" Panel.ZIndex="6" Width="22" Height="22" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" Cursor="SizeAll">
+         <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers>
+          <DataTrigger Binding="{Binding Model.Kind}" Value="serial"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+         </Style.Triggers></Style></Border.Style>
+        </Border>        <!-- Transparent edge hit zones remain available after selection is
+             cleared, so the next pointer-down can start a resize gesture. -->
+        <Grid Panel.ZIndex="5" IsHitTestVisible="True">
+         <Grid.Style><Style TargetType="Grid"><Setter Property="Visibility" Value="Visible"/><Style.Triggers>
+          <DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+         </Style.Triggers></Style></Grid.Style>
+         <Border Tag="EdgeNorthWest" Width="10" Height="10" Background="Transparent" HorizontalAlignment="Left" VerticalAlignment="Top" Cursor="SizeNWSE"/>
+         <Border Tag="EdgeNorth" Height="10" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Top" Cursor="SizeNS"/>
+         <Border Tag="EdgeNorthEast" Width="10" Height="10" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="SizeNESW"/>
+         <Border Tag="EdgeWest" Width="10" Background="Transparent" HorizontalAlignment="Left" VerticalAlignment="Stretch" Cursor="SizeWE"/>
+         <Border Tag="EdgeEast" Width="10" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Stretch" Cursor="SizeWE"/>
+         <Border Tag="EdgeSouthWest" Width="10" Height="10" Background="Transparent" HorizontalAlignment="Left" VerticalAlignment="Bottom" Cursor="SizeNESW"/>
+         <Border Tag="EdgeSouth" Height="10" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Cursor="SizeNS"/>
+         <Border Tag="EdgeSouthEast" Width="10" Height="10" Background="Transparent" HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE"/>
+        </Grid>
+        <Grid Panel.ZIndex="7" Visibility="{Binding IsSelected,Converter={StaticResource VisibleWhenTrue}}">
+         <!-- Selection is a dashed outline outside the instrument, not a
+              permanent second frame, and never intercepts inner operations. -->
+         <Rectangle Margin="-2" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1" StrokeDashArray="3,2" IsHitTestVisible="False"/>
+         <Border Tag="NorthWest" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Top" Cursor="SizeNWSE"/>
+         <Border Tag="North" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Top" Cursor="SizeNS"/>
+         <Border Tag="NorthEast" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="SizeNESW"/>
+         <Border Tag="West" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center" Cursor="SizeWE"/>
+         <Border Tag="East" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" Cursor="SizeWE"/>
+         <Border Tag="SouthWest" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Cursor="SizeNESW"/>
+         <Border Tag="South" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Cursor="SizeNS"/>
+         <Border Tag="SouthEast" Width="8" Height="8" Background="{DynamicResource AccentBrush}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE"/>
+        </Grid>
+       </Grid>
+      </DataTemplate>
+     </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <Canvas IsHitTestVisible="False" Panel.ZIndex="20">
+     <Rectangle x:Name="SelectionMarquee" Visibility="Collapsed" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1" StrokeDashArray="4,2">
+      <Rectangle.Fill><SolidColorBrush Color="{DynamicResource SelectedRowColor}" Opacity="0.12"/></Rectangle.Fill>
+     </Rectangle>
+    </Canvas>
+   </Grid>
+  </ScrollViewer>
+  <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource BorderBrush}"/>
+   <Grid x:Name="WidgetPropertyDock" Grid.Column="4" Background="{DynamicResource SurfaceBrush}" MinWidth="46" MaxWidth="380" ClipToBounds="True">
+    <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,1" Background="{DynamicResource SurfaceBrush}">
+     <Grid>
+      <Button x:Name="PropertyToggleButton" Click="PropertyToggle_Click" Width="34" Height="30" Margin="4,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="0" ToolTip="收起属性" Style="{StaticResource AppButtonStyle}"><md:PackIcon x:Name="PropertyToggleIcon" Kind="ChevronRight" Width="16" Height="16"/></Button>
+      <TextBlock x:Name="PropertyTitle" Text="属性" Margin="42,0,12,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+     </Grid>
+    </Border>
+    <Border x:Name="WidgetPropertyPanel" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="14,12" IsEnabled="{Binding IsDesignMode}" MinWidth="260">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+     <StackPanel MinWidth="240">
+     <TextBlock Text="控件属性" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+     <TextBlock Text="当前选中" Foreground="{DynamicResource MutedBrush}" FontSize="11"/>
+     <TextBlock Text="{Binding Selected.Name, FallbackValue=未选择控件}" Margin="0,2,0,12" TextTrimming="CharacterEllipsis"/>
+     <TextBlock Text="名称" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Name, UpdateSourceTrigger=PropertyChanged}" MinWidth="220"/>
+     <TextBlock Text="单位" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Unit, UpdateSourceTrigger=PropertyChanged}" MinWidth="220"/>
+     <TextBlock Text="通道" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Channel, UpdateSourceTrigger=PropertyChanged}" MinWidth="220"/>
+     <StackPanel Visibility="{Binding Selected.IsNumeric, Converter={StaticResource VisibleWhenTrue}}">
+      <TextBlock Text="数值参数" Style="{StaticResource ManualPropertyLabel}"/>
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <StackPanel Grid.Column="0"><TextBlock Text="最小值" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Minimum, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+       <StackPanel Grid.Column="2"><TextBlock Text="最大值" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Maximum, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+      </Grid>
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <StackPanel Grid.Column="0"><TextBlock Text="步长" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Step, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+       <StackPanel Grid.Column="2"><TextBlock Text="显示精度" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Precision, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+      </Grid>
+     </StackPanel>
+     <StackPanel Visibility="{Binding Selected.IsGauge, Converter={StaticResource VisibleWhenTrue}}">
+      <TextBlock Text="仪表阈值" Style="{StaticResource ManualPropertyLabel}"/>
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <StackPanel Grid.Column="0"><TextBlock Text="警告上限" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.WarningAbove, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+       <StackPanel Grid.Column="2"><TextBlock Text="错误上限" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.ErrorAbove, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+      </Grid>
+     </StackPanel>
+     <StackPanel Visibility="{Binding Selected.IsStatus, Converter={StaticResource VisibleWhenTrue}}">
+      <TextBlock Text="状态阈值" Style="{StaticResource ManualPropertyLabel}"/>
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <StackPanel Grid.Column="0"><TextBlock Text="警告上限" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.WarningAbove, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+       <StackPanel Grid.Column="2"><TextBlock Text="错误上限" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.ErrorAbove, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+      </Grid>
+     </StackPanel>
+     <StackPanel Visibility="{Binding Selected.IsCommand, Converter={StaticResource VisibleWhenTrue}}">
+      <TextBlock Text="命令参数" Style="{StaticResource ManualPropertyLabel}"/>
+      <TextBlock Text="命令模板" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Command, UpdateSourceTrigger=PropertyChanged}" MinWidth="220" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="52"/>
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <StackPanel Grid.Column="0"><TextBlock Text="编码" Style="{StaticResource ManualPropertyLabel}"/><ComboBox SelectedValue="{Binding Selected.Encoding}" SelectedValuePath="Content" MinWidth="90"><ComboBoxItem Content="ABC"/><ComboBoxItem Content="HEX"/></ComboBox></StackPanel>
+       <StackPanel Grid.Column="2"><TextBlock Text="重复次数" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.Repeat, UpdateSourceTrigger=PropertyChanged}" MinWidth="90"/></StackPanel>
+      </Grid>
+      <TextBlock Text="命令间隔(ms)" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.CommandInterval, UpdateSourceTrigger=PropertyChanged}" MinWidth="100"/>
+     </StackPanel>
+     <StackPanel Visibility="{Binding Selected.IsSerial, Converter={StaticResource VisibleWhenTrue}}">
+      <TextBlock Text="串口显示" Style="{StaticResource ManualPropertyLabel}"/>
+      <ComboBox SelectedValue="{Binding Selected.SerialMode}" SelectedValuePath="Content" MinWidth="100"><ComboBoxItem Content="ABC"/><ComboBoxItem Content="HEX"/></ComboBox>
+      <WrapPanel Margin="0,8,0,0"><CheckBox Content="RX" IsChecked="{Binding Selected.ShowRx}" Margin="0,0,12,0"/><CheckBox Content="TX" IsChecked="{Binding Selected.ShowTx}" Margin="0,0,12,0"/><CheckBox Content="时间" IsChecked="{Binding Selected.ShowTime}"/></WrapPanel>
+      <WrapPanel Margin="0,8,0,0"><CheckBox Content="ANSI" IsChecked="{Binding Selected.AnsiEnabled}" Margin="0,0,12,0"/><CheckBox Content="自动滚动" IsChecked="{Binding Selected.AutoScroll}"/></WrapPanel>
+     </StackPanel>
+     <TextBlock Text="轮询间隔(ms)" Style="{StaticResource ManualPropertyLabel}"/><TextBox Text="{Binding Selected.PollInterval, UpdateSourceTrigger=PropertyChanged}" MinWidth="100"/>
+     <Button Content="应用属性" Command="{Binding ApplyWidgetPropertiesCommand}" Margin="0,12,0,0" MinHeight="32"/>
+     <TextBlock Text="属性会写入当前工程的画布文件，重新打开工程后自动恢复。" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,12,0,0"/>
+     </StackPanel>
+    </ScrollViewer>
+   </Border>
+   </Grid>
+  </Grid>
+  <TextBlock Grid.Row="2" Text="{Binding Status}" Foreground="{DynamicResource MutedBrush}" Margin="10,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+ </Grid>
+</UserControl>

@@ -1,0 +1,1015 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="StepLibrary" xml:space="preserve">
+    <value>步骤库</value>
+  </data>
+  <data name="SequenceEditor" xml:space="preserve">
+    <value>序列编辑</value>
+  </data>
+  <data name="SequenceList" xml:space="preserve">
+    <value>序列列表</value>
+  </data>
+  <data name="Variables" xml:space="preserve">
+    <value>变量</value>
+  </data>
+  <data name="Simulation" xml:space="preserve">
+    <value>模拟数据</value>
+  </data>
+  <data name="RunLog" xml:space="preserve">
+    <value>运行日志</value>
+  </data>
+  <data name="StepProperties" xml:space="preserve">
+    <value>步骤属性</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Step" xml:space="preserve">
+    <value>步骤</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="SettingsSummary" xml:space="preserve">
+    <value>设置摘要</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="DefaultValue" xml:space="preserve">
+    <value>默认值</value>
+  </data>
+  <data name="Scope" xml:space="preserve">
+    <value>作用域</value>
+  </data>
+  <data name="Channel" xml:space="preserve">
+    <value>通道</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>描述</value>
+  </data>
+  <data name="StepId" xml:space="preserve">
+    <value>步骤标识</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="AdditionalParameters" xml:space="preserve">
+    <value>附加参数（JSON）</value>
+  </data>
+  <data name="JsonValue" xml:space="preserve">
+    <value>值（JSON）</value>
+  </data>
+  <data name="NewSequence" xml:space="preserve">
+    <value>新建序列</value>
+  </data>
+  <data name="Run" xml:space="preserve">
+    <value>运行</value>
+  </data>
+  <data name="Preflight" xml:space="preserve">
+    <value>预检</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="Resume" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="RunCurrentSequence" xml:space="preserve">
+    <value>运行当前序列</value>
+  </data>
+  <data name="PreflightTooltip" xml:space="preserve">
+    <value>运行前检查</value>
+  </data>
+  <data name="StopCurrentSequence" xml:space="preserve">
+    <value>停止当前序列</value>
+  </data>
+  <data name="PauseResume" xml:space="preserve">
+    <value>暂停或继续</value>
+  </data>
+  <data name="DragOrDoubleClick" xml:space="preserve">
+    <value>拖入步骤表格，或双击添加</value>
+  </data>
+  <data name="DropIntoSection" xml:space="preserve">
+    <value>拖入步骤添加到此区域</value>
+  </data>
+  <data name="FlowControl" xml:space="preserve">
+    <value>流程控制</value>
+  </data>
+  <data name="TestActions" xml:space="preserve">
+    <value>测试步骤</value>
+  </data>
+  <data name="Utility" xml:space="preserve">
+    <value>辅助步骤</value>
+  </data>
+  <data name="Setup" xml:space="preserve">
+    <value>初始化</value>
+  </data>
+  <data name="Main" xml:space="preserve">
+    <value>主序列</value>
+  </data>
+  <data name="Cleanup" xml:space="preserve">
+    <value>清理</value>
+  </data>
+  <data name="Branch" xml:space="preserve">
+    <value>分支</value>
+  </data>
+  <data name="Initialize" xml:space="preserve">
+    <value>初始化</value>
+  </data>
+  <data name="SetValue" xml:space="preserve">
+    <value>设置值</value>
+  </data>
+  <data name="GetValue" xml:space="preserve">
+    <value>读取值</value>
+  </data>
+  <data name="Wait" xml:space="preserve">
+    <value>等待</value>
+  </data>
+  <data name="Assert" xml:space="preserve">
+    <value>断言</value>
+  </data>
+  <data name="SequenceCall" xml:space="preserve">
+    <value>调用序列</value>
+  </data>
+  <data name="Comment" xml:space="preserve">
+    <value>注释</value>
+  </data>
+  <data name="Idle" xml:space="preserve">
+    <value>未运行</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>运行中</value>
+  </data>
+  <data name="Paused" xml:space="preserve">
+    <value>已暂停</value>
+  </data>
+  <data name="Passed" xml:space="preserve">
+    <value>通过</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="Stopped" xml:space="preserve">
+    <value>已停止</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>已跳过</value>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>待执行</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>调试</value>
+  </data>
+  <data name="Number" xml:space="preserve">
+    <value>数值</value>
+  </data>
+  <data name="Integer" xml:space="preserve">
+    <value>整数</value>
+  </data>
+  <data name="Boolean" xml:space="preserve">
+    <value>布尔值</value>
+  </data>
+  <data name="Text" xml:space="preserve">
+    <value>文本</value>
+  </data>
+  <data name="Local" xml:space="preserve">
+    <value>局部变量</value>
+  </data>
+  <data name="Parameter" xml:space="preserve">
+    <value>运行参数</value>
+  </data>
+  <data name="TimeoutMs" xml:space="preserve">
+    <value>超时（ms）</value>
+  </data>
+  <data name="WaitMs" xml:space="preserve">
+    <value>等待时间（ms）</value>
+  </data>
+  <data name="Comparator" xml:space="preserve">
+    <value>比较方式</value>
+  </data>
+  <data name="Expected" xml:space="preserve">
+    <value>期望值</value>
+  </data>
+  <data name="Minimum" xml:space="preserve">
+    <value>下限</value>
+  </data>
+  <data name="Maximum" xml:space="preserve">
+    <value>上限</value>
+  </data>
+  <data name="OnFailure" xml:space="preserve">
+    <value>失败处理</value>
+  </data>
+  <data name="Condition" xml:space="preserve">
+    <value>条件表达式</value>
+  </data>
+  <data name="Variable" xml:space="preserve">
+    <value>变量</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>起始值</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>结束值</value>
+  </data>
+  <data name="Increment" xml:space="preserve">
+    <value>步长</value>
+  </data>
+  <data name="Sequence" xml:space="preserve">
+    <value>序列</value>
+  </data>
+  <data name="Arguments" xml:space="preserve">
+    <value>参数（JSON）</value>
+  </data>
+  <data name="StopOnFailure" xml:space="preserve">
+    <value>停止执行</value>
+  </data>
+  <data name="ContinueOnFailure" xml:space="preserve">
+    <value>继续执行</value>
+  </data>
+  <data name="LogOnly" xml:space="preserve">
+    <value>仅记录</value>
+  </data>
+  <data name="InRange" xml:space="preserve">
+    <value>区间范围</value>
+  </data>
+  <data name="ReadRequest" xml:space="preserve">
+    <value>读取请求</value>
+  </data>
+  <data name="ReadResponse" xml:space="preserve">
+    <value>读取响应</value>
+  </data>
+  <data name="WriteRequest" xml:space="preserve">
+    <value>写入请求</value>
+  </data>
+  <data name="WriteResponse" xml:space="preserve">
+    <value>写入响应</value>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>事件帧</value>
+  </data>
+  <data name="FrameHeader" xml:space="preserve">
+    <value>帧头</value>
+  </data>
+  <data name="Identifier" xml:space="preserve">
+    <value>标识</value>
+  </data>
+  <data name="Length" xml:space="preserve">
+    <value>长度</value>
+  </data>
+  <data name="Data" xml:space="preserve">
+    <value>数据</value>
+  </data>
+  <data name="Checksum" xml:space="preserve">
+    <value>校验</value>
+  </data>
+  <data name="FrameTail" xml:space="preserve">
+    <value>帧尾</value>
+  </data>
+  <data name="Reserved" xml:space="preserve">
+    <value>保留</value>
+  </data>
+  <data name="BigEndian" xml:space="preserve">
+    <value>大端</value>
+  </data>
+  <data name="LittleEndian" xml:space="preserve">
+    <value>小端</value>
+  </data>
+  <data name="NoChecksum" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="Sum8" xml:space="preserve">
+    <value>累加和（8 位）</value>
+  </data>
+  <data name="Xor8" xml:space="preserve">
+    <value>异或（8 位）</value>
+  </data>
+  <data name="Crc8" xml:space="preserve">
+    <value>CRC-8</value>
+  </data>
+  <data name="Crc16" xml:space="preserve">
+    <value>CRC-16</value>
+  </data>
+  <data name="ModbusCrc16" xml:space="preserve">
+    <value>Modbus CRC-16</value>
+  </data>
+  <data name="Serial" xml:space="preserve">
+    <value>串口</value>
+  </data>
+  <data name="Can" xml:space="preserve">
+    <value>CAN</value>
+  </data>
+  <data name="Tcp" xml:space="preserve">
+    <value>TCP</value>
+  </data>
+  <data name="Udp" xml:space="preserve">
+    <value>UDP</value>
+  </data>
+  <data name="BoolType" xml:space="preserve">
+    <value>布尔值（bool）</value>
+  </data>
+  <data name="UInt8" xml:space="preserve">
+    <value>无符号整数（8 位）</value>
+  </data>
+  <data name="Int8" xml:space="preserve">
+    <value>有符号整数（8 位）</value>
+  </data>
+  <data name="UInt16" xml:space="preserve">
+    <value>无符号整数（16 位）</value>
+  </data>
+  <data name="Int16" xml:space="preserve">
+    <value>有符号整数（16 位）</value>
+  </data>
+  <data name="UInt32" xml:space="preserve">
+    <value>无符号整数（32 位）</value>
+  </data>
+  <data name="Int32" xml:space="preserve">
+    <value>有符号整数（32 位）</value>
+  </data>
+  <data name="UInt64" xml:space="preserve">
+    <value>无符号整数（64 位）</value>
+  </data>
+  <data name="Int64" xml:space="preserve">
+    <value>有符号整数（64 位）</value>
+  </data>
+  <data name="Float32" xml:space="preserve">
+    <value>浮点数（32 位）</value>
+  </data>
+  <data name="Float64" xml:space="preserve">
+    <value>浮点数（64 位）</value>
+  </data>
+  <data name="Ascii" xml:space="preserve">
+    <value>文本（ASCII）</value>
+  </data>
+  <data name="Hex" xml:space="preserve">
+    <value>十六进制</value>
+  </data>
+  <data name="SignedBit" xml:space="preserve">
+    <value>有符号 / 位</value>
+  </data>
+  <data name="UnsignedBit" xml:space="preserve">
+    <value>无符号 / 位</value>
+  </data>
+  <data name="Unsaved" xml:space="preserve">
+    <value>有未保存的修改</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>无未保存的修改</value>
+  </data>
+  <data name="SequenceDefaultName" xml:space="preserve">
+    <value>序列 {0}</value>
+  </data>
+  <data name="ExecutionSummary" xml:space="preserve">
+    <value>{0}：{1} 个步骤</value>
+  </data>
+  <data name="ExecutionFinished" xml:space="preserve">
+    <value>序列运行完成：{0}</value>
+  </data>
+  <data name="StepAdded" xml:space="preserve">
+    <value>已添加 {0}，保存后写入工程</value>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="Cut" xml:space="preserve">
+    <value>剪切</value>
+  </data>
+  <data name="Paste" xml:space="preserve">
+    <value>粘贴</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>放弃</value>
+  </data>
+  <data name="Acknowledge" xml:space="preserve">
+    <value>知道了</value>
+  </data>
+  <data name="SwitchProtocol" xml:space="preserve">
+    <value>切换协议</value>
+  </data>
+  <data name="UnsavedProtocolPrompt" xml:space="preserve">
+    <value>协议有未保存的修改。是否保存？</value>
+  </data>
+  <data name="PanelMenu" xml:space="preserve">
+    <value>面板菜单</value>
+  </data>
+  <data name="AutoHide" xml:space="preserve">
+    <value>自动隐藏</value>
+  </data>
+  <data name="Hide" xml:space="preserve">
+    <value>隐藏</value>
+  </data>
+  <data name="Float" xml:space="preserve">
+    <value>浮动</value>
+  </data>
+  <data name="Dock" xml:space="preserve">
+    <value>停靠</value>
+  </data>
+  <data name="DockAsDocument" xml:space="preserve">
+    <value>作为文档停靠</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="CloseOthers" xml:space="preserve">
+    <value>关闭其他面板</value>
+  </data>
+  <data name="CloseAll" xml:space="preserve">
+    <value>关闭所有面板</value>
+  </data>
+  <data name="NewHorizontalGroup" xml:space="preserve">
+    <value>新建水平分组</value>
+  </data>
+  <data name="NewVerticalGroup" xml:space="preserve">
+    <value>新建垂直分组</value>
+  </data>
+  <data name="MoveToNextGroup" xml:space="preserve">
+    <value>移至下一分组</value>
+  </data>
+  <data name="MoveToPreviousGroup" xml:space="preserve">
+    <value>移至上一分组</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>关于 Test Station</value>
+  </data>
+  <data name="AboutMessage" xml:space="preserve">
+    <value>Test Station
+工业测试工作台</value>
+  </data>
+  <data name="SelectProjectParent" xml:space="preserve">
+    <value>选择工程父目录</value>
+  </data>
+  <data name="SelectProjectFolder" xml:space="preserve">
+    <value>选择工程目录</value>
+  </data>
+  <data name="NewProject" xml:space="preserve">
+    <value>新建工程</value>
+  </data>
+  <data name="OpenProject" xml:space="preserve">
+    <value>打开工程</value>
+  </data>
+  <data name="DefaultProjectName" xml:space="preserve">
+    <value>测试工程</value>
+  </data>
+  <data name="CannotCreateProject" xml:space="preserve">
+    <value>无法创建工程</value>
+  </data>
+  <data name="CannotOpenProject" xml:space="preserve">
+    <value>无法打开工程</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>视图</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>帮助</value>
+  </data>
+  <data name="Exit" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="RestoreLayout" xml:space="preserve">
+    <value>恢复自动测试默认布局</value>
+  </data>
+  <data name="SaveSequence" xml:space="preserve">
+    <value>保存序列</value>
+  </data>
+  <data name="DeleteSelectedSteps" xml:space="preserve">
+    <value>删除选中步骤</value>
+  </data>
+  <data name="ShowProtocolNavigation" xml:space="preserve">
+    <value>显示协议子导航</value>
+  </data>
+  <data name="ControlPreview" xml:space="preserve">
+    <value>控件预览</value>
+  </data>
+  <data name="Overview" xml:space="preserve">
+    <value>工程概览</value>
+  </data>
+  <data name="AutomaticTest" xml:space="preserve">
+    <value>自动测试</value>
+  </data>
+  <data name="DeviceConfiguration" xml:space="preserve">
+    <value>设备配置</value>
+  </data>
+  <data name="ProtocolManagement" xml:space="preserve">
+    <value>协议管理</value>
+  </data>
+  <data name="ProtocolLibrary" xml:space="preserve">
+    <value>协议库</value>
+  </data>
+  <data name="ProtocolEditor" xml:space="preserve">
+    <value>自定义协议</value>
+  </data>
+  <data name="DbcDatabase" xml:space="preserve">
+    <value>DBC 数据库</value>
+  </data>
+  <data name="ProtocolTest" xml:space="preserve">
+    <value>协议测试</value>
+  </data>
+  <data name="RunHistory" xml:space="preserve">
+    <value>运行记录</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>系统设置</value>
+  </data>
+  <data name="Workspace" xml:space="preserve">
+    <value>工作区</value>
+  </data>
+  <data name="RecentProjects" xml:space="preserve">
+    <value>近期工程</value>
+  </data>
+  <data name="NewProtocol" xml:space="preserve">
+    <value>新建协议</value>
+  </data>
+  <data name="DeleteProtocol" xml:space="preserve">
+    <value>删除协议</value>
+  </data>
+  <data name="NewProtocolPrompt" xml:space="preserve">
+    <value>创建一个新的自定义协议？</value>
+  </data>
+  <data name="DeleteProtocolPrompt" xml:space="preserve">
+    <value>确定删除“{0}”吗？</value>
+  </data>
+  <data name="ProtocolFiles" xml:space="preserve">
+    <value>Test Station 协议|*.tsproto</value>
+  </data>
+  <data name="ProtocolImportFilter" xml:space="preserve">
+    <value>Test Station 协议|*.tsproto|所有文件|*.*</value>
+  </data>
+  <data name="CanDatabaseFilter" xml:space="preserve">
+    <value>CAN 数据库|*.dbc</value>
+  </data>
+  <data name="AssertPassed" xml:space="preserve">
+    <value>断言通过：{0}</value>
+  </data>
+  <data name="AssertFailed" xml:space="preserve">
+    <value>断言失败：{0}</value>
+  </data>
+  <data name="SequenceEnded" xml:space="preserve">
+    <value>序列结束：{0}</value>
+  </data>
+  <data name="StepStarted" xml:space="preserve">
+    <value>开始：{0} / {1}</value>
+  </data>
+  <data name="CleanupFailed" xml:space="preserve">
+    <value>清理执行失败：{0}</value>
+  </data>
+  <data name="CleanupStepFailed" xml:space="preserve">
+    <value>清理步骤失败</value>
+  </data>
+  <data name="ProtocolTransport" xml:space="preserve">
+    <value>通信类型：{0}</value>
+  </data>
+  <data name="Maximize" xml:space="preserve">
+    <value>最大化</value>
+  </data>
+  <data name="Restore" xml:space="preserve">
+    <value>还原</value>
+  </data>
+  <data name="ImportProtocol" xml:space="preserve">
+    <value>导入协议</value>
+  </data>
+  <data name="ExportProtocol" xml:space="preserve">
+    <value>导出协议</value>
+  </data>
+  <data name="ImportDbc" xml:space="preserve">
+    <value>导入 DBC</value>
+  </data>
+  <data name="LengthFieldId" xml:space="preserve">
+    <value>长度字段标识</value>
+  </data>
+  <data name="ProductName" xml:space="preserve">
+    <value>Test Station</value>
+  </data>
+  <data name="WorkspaceSubtitle" xml:space="preserve">
+    <value>  测试软件主工作区</value>
+  </data>
+  <data name="AutoFitBytes" xml:space="preserve">
+    <value>0 = 自动适配</value>
+  </data>
+  <data name="CanId" xml:space="preserve">
+    <value>CAN ID</value>
+  </data>
+  <data name="DbcSignalJson" xml:space="preserve">
+    <value>DBC 信号值 JSON（仅编码提供的信号）</value>
+  </data>
+  <data name="InteractiveDial" xml:space="preserve">
+    <value>交互旋钮</value>
+  </data>
+  <data name="GaugesAndDials" xml:space="preserve">
+    <value>仪表与旋钮</value>
+  </data>
+  <data name="PreviewInstructions" xml:space="preserve">
+    <value>使用标题栏切换深浅主题和强调色。此页使用独立的样例数据，可直接调整控件进行对比。</value>
+  </data>
+  <data name="Signal" xml:space="preserve">
+    <value>信号</value>
+  </data>
+  <data name="Offset" xml:space="preserve">
+    <value>偏移</value>
+  </data>
+  <data name="SwitchTheme" xml:space="preserve">
+    <value>切换主题</value>
+  </data>
+  <data name="AdjustableTableHint" xml:space="preserve">
+    <value>列宽可拖动调整，数值可双击编辑。</value>
+  </data>
+  <data name="StartupHint" xml:space="preserve">
+    <value>创建或打开一个测试工程目录</value>
+  </data>
+  <data name="DeleteField" xml:space="preserve">
+    <value>删除字段</value>
+  </data>
+  <data name="DeleteFrame" xml:space="preserve">
+    <value>删除帧</value>
+  </data>
+  <data name="HexFrame" xml:space="preserve">
+    <value>十六进制报文</value>
+  </data>
+  <data name="Protocol" xml:space="preserve">
+    <value>协议</value>
+  </data>
+  <data name="ProtocolAndFrame" xml:space="preserve">
+    <value>协议/帧</value>
+  </data>
+  <data name="OfflineProtocolTest" xml:space="preserve">
+    <value>协议测试 · 离线</value>
+  </data>
+  <data name="Unit" xml:space="preserve">
+    <value>单位</value>
+  </data>
+  <data name="RawHexValue" xml:space="preserve">
+    <value>原始值 (HEX)</value>
+  </data>
+  <data name="TransmitterEcu" xml:space="preserve">
+    <value>发送 ECU</value>
+  </data>
+  <data name="ContextMenu" xml:space="preserve">
+    <value>右键菜单</value>
+  </data>
+  <data name="EnableField" xml:space="preserve">
+    <value>启用字段</value>
+  </data>
+  <data name="EnableInputs" xml:space="preserve">
+    <value>启用输入控件</value>
+  </data>
+  <data name="FixedLength" xml:space="preserve">
+    <value>固定长度（0 = 自动）</value>
+  </data>
+  <data name="FillReserved" xml:space="preserve">
+    <value>填充保留</value>
+  </data>
+  <data name="CopyFrame" xml:space="preserve">
+    <value>复制帧</value>
+  </data>
+  <data name="Field" xml:space="preserve">
+    <value>字段</value>
+  </data>
+  <data name="FieldOrSignal" xml:space="preserve">
+    <value>字段 / 信号</value>
+  </data>
+  <data name="FieldPalette" xml:space="preserve">
+    <value>字段组件</value>
+  </data>
+  <data name="ByteWidth" xml:space="preserve">
+    <value>字节宽度</value>
+  </data>
+  <data name="ByteOrder" xml:space="preserve">
+    <value>字节序</value>
+  </data>
+  <data name="ByteLength" xml:space="preserve">
+    <value>字节长度</value>
+  </data>
+  <data name="Completion" xml:space="preserve">
+    <value>完成比例</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="FillReservedHint" xml:space="preserve">
+    <value>将帧头与帧尾之间的空白字节一次填充为保留</value>
+  </data>
+  <data name="FrameDescription" xml:space="preserve">
+    <value>帧描述</value>
+  </data>
+  <data name="FrameCount" xml:space="preserve">
+    <value>帧数</value>
+  </data>
+  <data name="FrameLength" xml:space="preserve">
+    <value>帧长度</value>
+  </data>
+  <data name="Constant" xml:space="preserve">
+    <value>常量（整数、文本或十六进制）</value>
+  </data>
+  <data name="ApplyProperties" xml:space="preserve">
+    <value>应用属性</value>
+  </data>
+  <data name="ApplyStepProperties" xml:space="preserve">
+    <value>应用步骤属性</value>
+  </data>
+  <data name="CurrentProject" xml:space="preserve">
+    <value>当前工程</value>
+  </data>
+  <data name="CurrentFrame" xml:space="preserve">
+    <value>当前帧</value>
+  </data>
+  <data name="DbcFilterHint" xml:space="preserve">
+    <value>按 CAN ID、消息、信号或 ECU 筛选</value>
+  </data>
+  <data name="ButtonsAndOptions" xml:space="preserve">
+    <value>按钮与选项</value>
+  </data>
+  <data name="ReceiverEcu" xml:space="preserve">
+    <value>接收 ECU</value>
+  </data>
+  <data name="CollapseNavigation" xml:space="preserve">
+    <value>收起导航</value>
+  </data>
+  <data name="Gauge" xml:space="preserve">
+    <value>数值仪表</value>
+  </data>
+  <data name="DataType" xml:space="preserve">
+    <value>数据类型</value>
+  </data>
+  <data name="AddFrame" xml:space="preserve">
+    <value>新增帧</value>
+  </data>
+  <data name="DialSyncHint" xml:space="preserve">
+    <value>旋钮、输入值与显示仪表双向同步。</value>
+  </data>
+  <data name="DisplayBytes" xml:space="preserve">
+    <value>显示字节数</value>
+  </data>
+  <data name="ToggleNavigation" xml:space="preserve">
+    <value>显示或收起导航</value>
+  </data>
+  <data name="NormalButton" xml:space="preserve">
+    <value>普通按钮</value>
+  </data>
+  <data name="MaximizeRestore" xml:space="preserve">
+    <value>最大化/还原</value>
+  </data>
+  <data name="Minimize" xml:space="preserve">
+    <value>最小化</value>
+  </data>
+  <data name="TreeList" xml:space="preserve">
+    <value>树形列表</value>
+  </data>
+  <data name="ChecksumConfiguration" xml:space="preserve">
+    <value>校验算法（配置）</value>
+  </data>
+  <data name="ChecksumStart" xml:space="preserve">
+    <value>校验起点</value>
+  </data>
+  <data name="Mode" xml:space="preserve">
+    <value>模式</value>
+  </data>
+  <data name="SimulatedChannel" xml:space="preserve">
+    <value>模拟通道</value>
+  </data>
+  <data name="Scale" xml:space="preserve">
+    <value>比例</value>
+  </data>
+  <data name="TestSequence" xml:space="preserve">
+    <value>测试序列</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>消息</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>清除</value>
+  </data>
+  <data name="ColorPickerHint" xml:space="preserve">
+    <value>点击打开颜色面板，支持颜色选择和 HEX 输入。</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="StateOrPhysical" xml:space="preserve">
+    <value>状态 / 物理值</value>
+  </data>
+  <data name="GenerateFrame" xml:space="preserve">
+    <value>生成示例帧</value>
+  </data>
+  <data name="ElectronicLoad" xml:space="preserve">
+    <value>电子负载</value>
+  </data>
+  <data name="DcSupply" xml:space="preserve">
+    <value>直流电源</value>
+  </data>
+  <data name="ApplyPreview" xml:space="preserve">
+    <value>确认样例</value>
+  </data>
+  <data name="DisabledButton" xml:space="preserve">
+    <value>禁用按钮</value>
+  </data>
+  <data name="DisabledAction" xml:space="preserve">
+    <value>禁用操作</value>
+  </data>
+  <data name="TypeOrUnit" xml:space="preserve">
+    <value>类型 / 单位</value>
+  </data>
+  <data name="AccentPurple" xml:space="preserve">
+    <value>紫色强调色</value>
+  </data>
+  <data name="Pin" xml:space="preserve">
+    <value>置顶</value>
+  </data>
+  <data name="RangeBounds" xml:space="preserve">
+    <value>范围上下限</value>
+  </data>
+  <data name="AccentBlue" xml:space="preserve">
+    <value>蓝色强调色</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>角色</value>
+  </data>
+  <data name="ParseInput" xml:space="preserve">
+    <value>解析输入</value>
+  </data>
+  <data name="EnableLogs" xml:space="preserve">
+    <value>记录日志</value>
+  </data>
+  <data name="LoadCurrent" xml:space="preserve">
+    <value>负载电流</value>
+  </data>
+  <data name="StartBit" xml:space="preserve">
+    <value>起始位</value>
+  </data>
+  <data name="StartByte" xml:space="preserve">
+    <value>起始字节</value>
+  </data>
+  <data name="StartOffset" xml:space="preserve">
+    <value>起点</value>
+  </data>
+  <data name="InputsAndRange" xml:space="preserve">
+    <value>输入与范围</value>
+  </data>
+  <data name="OutputEnabled" xml:space="preserve">
+    <value>输出使能</value>
+  </data>
+  <data name="OutputVoltage" xml:space="preserve">
+    <value>输出电压</value>
+  </data>
+  <data name="OutputCurrent" xml:space="preserve">
+    <value>输出电流</value>
+  </data>
+  <data name="ProgressRing" xml:space="preserve">
+    <value>进度环</value>
+  </data>
+  <data name="EditSelectedFieldHint" xml:space="preserve">
+    <value>选中块后编辑参数</value>
+  </data>
+  <data name="ColorPreviewHint" xml:space="preserve">
+    <value>选中颜色仅用于此页样例，软件强调色由标题栏统一切换。</value>
+  </data>
+  <data name="Transport" xml:space="preserve">
+    <value>通信类型</value>
+  </data>
+  <data name="ChannelName" xml:space="preserve">
+    <value>通道名称</value>
+  </data>
+  <data name="ChannelReference" xml:space="preserve">
+    <value>通道引用（保留原配置）</value>
+  </data>
+  <data name="ChannelTable" xml:space="preserve">
+    <value>通道表格</value>
+  </data>
+  <data name="ResetPreview" xml:space="preserve">
+    <value>重置样例</value>
+  </data>
+  <data name="BitLength" xml:space="preserve">
+    <value>长度 (bit)</value>
+  </data>
+  <data name="AccentTeal" xml:space="preserve">
+    <value>青色强调色</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="ColorPicker" xml:space="preserve">
+    <value>颜色选择</value>
+  </data>
+  <data name="UnsavedSequenceTitle" xml:space="preserve"><value>序列尚未保存</value></data>
+  <data name="UnsavedSequencePrompt" xml:space="preserve"><value>序列“{0}”有未保存的修改，是否保存后继续？</value></data>
+  <data name="DeleteSequence" xml:space="preserve"><value>删除序列</value></data>
+  <data name="DeleteSequencePrompt" xml:space="preserve"><value>确定删除序列“{0}”吗？此操作会删除工程中的序列文件，不能撤销。</value></data>
+  <data name="RenameSequence" xml:space="preserve"><value>重命名序列</value></data>
+  <data name="ExecutionInProgress" xml:space="preserve"><value>序列正在运行</value></data>
+  <data name="StopAndContinue" xml:space="preserve"><value>停止并继续</value></data>
+  <data name="StopBeforeLeaving" xml:space="preserve"><value>序列正在运行或执行清理步骤。是否停止，并等待 CLEANUP 完成后继续？</value></data>
+  <data name="Undone" xml:space="preserve"><value>已撤销</value></data>
+  <data name="Redone" xml:space="preserve"><value>已重做</value></data>
+  <data name="SequenceCopyName" xml:space="preserve"><value>{0} 副本</value></data>
+  <data name="SequenceCopied" xml:space="preserve"><value>已复制序列，副本尚未保存</value></data>
+  <data name="SequenceInUse" xml:space="preserve"><value>序列被“{0}”调用，请先移除调用再删除</value></data>
+  <data name="SequenceDeleted" xml:space="preserve"><value>序列已删除</value></data>
+  <data name="ResolveChangesFirst" xml:space="preserve"><value>请先停止运行并处理未保存的修改，再切换工程</value></data>
+  <data name="NewSequenceUnsaved" xml:space="preserve"><value>新序列尚未保存</value></data>
+  <data name="Undo" xml:space="preserve"><value>撤销</value></data>
+  <data name="Redo" xml:space="preserve"><value>重做</value></data>
+  <data name="DuplicateSequence" xml:space="preserve"><value>复制序列</value></data>
+  <data name="UndoTooltip" xml:space="preserve"><value>撤销（Ctrl+Z）</value></data>
+  <data name="RedoTooltip" xml:space="preserve"><value>重做（Ctrl+Y）</value></data>
+  <data name="SaveSequenceTooltip" xml:space="preserve"><value>保存序列（Ctrl+S）</value></data>
+  <data name="CanvasAddNumeric" xml:space="preserve"><value>添加数值控件</value></data>
+  <data name="CanvasGridCaption" xml:space="preserve"><value>网格吸附 · 16 像素</value></data>
+  <data name="CanvasSampleTooltip" xml:space="preserve"><value>模拟数值，供画布测试；设计模式可拖动和调整尺寸</value></data>
+  <data name="CanvasSwitchToRun" xml:space="preserve"><value>切换运行模式</value></data>
+  <data name="CanvasSwitchToDesign" xml:space="preserve"><value>切换设计模式</value></data>
+  <data name="ManualCanvasHint" xml:space="preserve"><value>拖动控件移动；选中后拖动边缘调整大小。位置和尺寸强制按网格吸附，拖动时显示辅助网格。</value></data>
+  <data name="CanvasVoltage" xml:space="preserve"><value>电压</value></data>
+  <data name="CanvasWidgetLibrary" xml:space="preserve"><value>控件库</value></data>
+  <data name="CanvasWidgetLibraryHint" xml:space="preserve"><value>拖拽到画布，或在空白处右键添加</value></data>
+  <data name="CanvasBounds" xml:space="preserve"><value>位置：第 {0} 列 / 第 {1} 行 · 尺寸：{2} × {3} 格 · 每格 {4} 像素</value></data>
+  <data name="CanvasSaved" xml:space="preserve"><value>布局已自动保存 · 拖动或缩放时显示辅助网格</value></data>
+  <data name="CanvasSaveFailed" xml:space="preserve"><value>布局保存失败：{0}；修改保留在当前页面，请处理后重试</value></data>
+  <data name="CanvasLoadFailed" xml:space="preserve"><value>布局读取失败：{0}；已禁止编辑，避免覆盖原文件</value></data>
+  <data name="ManualTest" xml:space="preserve"><value>手动测试</value></data>
+  <data name="ResourceManagement" xml:space="preserve"><value>设备与通信资源</value></data>
+  <data name="ResourceSubtitle" xml:space="preserve"><value>统一管理通信资源、设备、通道和轮询策略</value></data>
+  <data name="CommunicationResource" xml:space="preserve"><value>通信资源</value></data>
+  <data name="Device" xml:space="preserve"><value>设备</value></data>
+  <data name="AddChannel" xml:space="preserve"><value>通道</value></data>
+  <data name="Refresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="Polling" xml:space="preserve"><value>轮询</value></data>
+  <data name="Access" xml:space="preserve"><value>读写</value></data>
+  <data name="Driver" xml:space="preserve"><value>驱动</value></data>
+  <data name="ChannelCount" xml:space="preserve"><value>通道数</value></data>
+  <data name="PollingPeriod" xml:space="preserve"><value>周期(ms)</value></data>
+  <data name="ManualWorkspaceNew" xml:space="preserve"><value>新建工区</value></data>
+  <data name="ManualWorkspaceRename" xml:space="preserve"><value>重命名工区</value></data>
+  <data name="ManualWorkspaceReopen" xml:space="preserve"><value>打开工区</value></data>
+  <data name="ManualWorkspaceDefaultName" xml:space="preserve"><value>手动测试 {0}</value></data>
+  <data name="ManualWorkspaceInvalidName" xml:space="preserve"><value>工区名称必须为 1 到 100 个字符</value></data>
+  <data name="ManualWorkspaceSaved" xml:space="preserve"><value>工区已保存</value></data>
+  <data name="ManualWorkspaceUnsavedTitle" xml:space="preserve"><value>工区有未保存的修改</value></data>
+  <data name="ManualWorkspaceUnsavedPrompt" xml:space="preserve"><value>工区“{0}”有未保存的画布或属性修改。是否保存？</value></data>
+  <data name="ManualOpenProjectFirst" xml:space="preserve"><value>请先打开工程</value></data>
+  <data name="SaveProject" xml:space="preserve"><value>保存工程</value></data>
+  <data name="ProjectSaved" xml:space="preserve"><value>工程已保存</value></data>
+  <data name="ProjectSaveFailed" xml:space="preserve"><value>工程保存未完成：{0}（已保存的模块保持保存状态）</value></data>
+  <data name="ManualTile" xml:space="preserve"><value>平铺</value></data>
+  <data name="ManualCascade" xml:space="preserve"><value>层叠</value></data>
+  <data name="ManualTabbedView" xml:space="preserve"><value>切换为标签视图</value></data>
+  <data name="ManualWindowView" xml:space="preserve"><value>切换为窗口视图</value></data>
+</root>

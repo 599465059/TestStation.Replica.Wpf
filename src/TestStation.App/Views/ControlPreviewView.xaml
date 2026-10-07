@@ -1,0 +1,115 @@
+<UserControl x:Class="TestStation.App.Views.ControlPreviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:text="clr-namespace:TestStation.App.Localization"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:kit="clr-namespace:Industrial.Controls;assembly=Industrial.Controls"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Foreground="{DynamicResource TextBrush}" Background="{DynamicResource WindowBrush}">
+    <UserControl.Resources>
+        <ResourceDictionary Source="/TestStation.App;component/Themes/IndustrialControlsPreviewStyles.xaml"/>
+    </UserControl.Resources>
+    <Grid Margin="24,20,8,8">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid Margin="0,0,16,10">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <md:PackIcon Kind="PaletteOutline" Width="22" Height="22" Margin="0,0,10,0" Foreground="{DynamicResource AccentBrush}"/>
+                <TextBlock Text="{x:Static text:UiText.ControlPreview}" FontSize="19" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding LibraryVersion}" Margin="14,0,0,0" Foreground="{DynamicResource MutedBrush}"/>
+            </StackPanel>
+            <Button Grid.Column="1" Content="{x:Static text:UiText.ResetPreview}" Command="{Binding ResetPreviewCommand}" AutomationProperties.AutomationId="PreviewReset"/>
+        </Grid>
+        <TextBlock Grid.Row="1" Text="{x:Static text:UiText.PreviewInstructions}"
+                   Foreground="{DynamicResource MutedBrush}" Margin="0,0,16,18" TextWrapping="Wrap"/>
+        <ScrollViewer x:Name="PreviewScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" CanContentScroll="False">
+            <WrapPanel MinWidth="576" Width="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+                <Border Style="{StaticResource PreviewCard}" Width="360">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static text:UiText.InputsAndRange}" Style="{StaticResource PreviewHeading}"/>
+                        <CheckBox Content="{x:Static text:UiText.EnableInputs}" IsChecked="{Binding IsControlsEnabled}" Margin="0,0,0,8" AutomationProperties.AutomationId="PreviewEnabled"/>
+                        <StackPanel IsEnabled="{Binding IsControlsEnabled}">
+                            <TextBlock Text="{x:Static text:UiText.ChannelName}" Style="{StaticResource PreviewLabel}"/>
+                            <TextBox x:Name="ChannelInput" MinHeight="36" Text="{Binding ChannelName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.AutomationId="PreviewChannelInput"/>
+                            <TextBlock Text="{x:Static text:UiText.SetValue}" Style="{StaticResource PreviewLabel}"/>
+                            <hc:NumericUpDown x:Name="ValueInput" Value="{Binding InputValue, Mode=TwoWay}" Minimum="0" Maximum="100" DecimalPlaces="1"/>
+                            <Slider Value="{Binding InputValue, Mode=TwoWay}" Minimum="0" Maximum="100" Margin="0,12,0,0"/>
+                            <TextBlock Text="{x:Static text:UiText.RangeBounds}" Style="{StaticResource PreviewLabel}"/>
+                            <kit:RangeSlider x:Name="RangeInput" Minimum="0" Maximum="100" LowerValue="{Binding LowerValue, Mode=TwoWay}" UpperValue="{Binding UpperValue, Mode=TwoWay}"/>
+                            <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource MutedBrush}">
+                                <Run Text="{Binding LowerValue, StringFormat={}{0:0.0}}"/><Run Text=" — "/><Run Text="{Binding UpperValue, StringFormat={}{0:0.0}}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource PreviewCard}" Width="360">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static text:UiText.ButtonsAndOptions}" Style="{StaticResource PreviewHeading}"/>
+                        <WrapPanel>
+                            <Button Content="{x:Static text:UiText.NormalButton}" Command="{Binding ApplyPreviewCommand}" Margin="0,0,8,8"/>
+                            <Button x:Name="ApplyButton" Style="{StaticResource AccentButton}" Command="{Binding ApplyPreviewCommand}" Margin="0,0,0,8" AutomationProperties.AutomationId="PreviewApply">
+                                <StackPanel Orientation="Horizontal"><md:PackIcon Kind="CheckCircleOutline" Width="17" Height="17" Margin="0,0,6,0"/><TextBlock Text="{x:Static text:UiText.ApplyPreview}" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/></StackPanel>
+                            </Button>
+                            <Button Content="{x:Static text:UiText.DisabledButton}" IsEnabled="False" Margin="0,0,8,8"/>
+                            <Button x:Name="ContextButton" Content="{x:Static text:UiText.ContextMenu}" Margin="0,0,0,8">
+                                <Button.ContextMenu><ContextMenu><MenuItem Header="{x:Static text:UiText.ApplyPreview}" Command="{Binding ApplyPreviewCommand}"/><MenuItem Header="{x:Static text:UiText.ResetPreview}" Command="{Binding ResetPreviewCommand}"/><Separator/><MenuItem Header="{x:Static text:UiText.DisabledAction}" IsEnabled="False"/></ContextMenu></Button.ContextMenu>
+                            </Button>
+                        </WrapPanel>
+                        <TextBlock Text="{x:Static text:UiText.Mode}" Style="{StaticResource PreviewLabel}"/>
+                        <ComboBox x:Name="ModeInput" ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}"/>
+                        <CheckBox Content="{x:Static text:UiText.EnableLogs}" IsChecked="{Binding IsLoggingEnabled}" Margin="0,16,0,0"/>
+                        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,16,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource PreviewCard}" Width="560">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static text:UiText.ChannelTable}" Style="{StaticResource PreviewHeading}"/>
+                        <DataGrid x:Name="ChannelGrid" ItemsSource="{Binding Channels}" AutoGenerateColumns="False" CanUserAddRows="False"
+                                  CanUserResizeColumns="True" SelectionMode="Extended" SelectionUnit="FullRow" MinWidth="510" Height="194"
+                                  Background="{DynamicResource SurfaceBrush}" RowBackground="{DynamicResource SurfaceBrush}"
+                                  AlternatingRowBackground="{DynamicResource SubtleBrush}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{x:Static text:UiText.Channel}" Binding="{Binding Name}" Width="160" MinWidth="100"/>
+                                <DataGridTextColumn Header="{x:Static text:UiText.Number}" Binding="{Binding Value}" Width="110" MinWidth="75"/>
+                                <DataGridTextColumn Header="{x:Static text:UiText.Unit}" Binding="{Binding Unit}" Width="80" MinWidth="60"/>
+                                <DataGridTextColumn Header="{x:Static text:UiText.Status}" Binding="{Binding State}" Width="*" MinWidth="75"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="{x:Static text:UiText.AdjustableTableHint}" Style="{StaticResource PreviewLabel}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource PreviewCard}" Width="560">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static text:UiText.GaugesAndDials}" Style="{StaticResource PreviewHeading}"/>
+                        <WrapPanel>
+                            <StackPanel Width="164" Margin="0,0,4,0"><TextBlock Text="{x:Static text:UiText.InteractiveDial}" HorizontalAlignment="Center"/>
+                                <kit:Dial x:Name="ValueDial" Width="164" Height="180" Value="{Binding InputValue, Mode=TwoWay}" Minimum="0" Maximum="100" Suffix="" AnimationEnabled="False"/></StackPanel>
+                            <StackPanel Width="174" Margin="0,0,4,0"><TextBlock Text="{x:Static text:UiText.Gauge}" HorizontalAlignment="Center"/>
+                                <kit:RadialGauge x:Name="ValueGauge" Width="174" Height="180" Value="{Binding InputValue}" Minimum="0" Maximum="100" TickCount="6" Title="{x:Static text:UiText.SetValue}" Suffix="" IsInteractive="False" AnimationEnabled="False"/></StackPanel>
+                            <StackPanel Width="156"><TextBlock Text="{x:Static text:UiText.ProgressRing}" HorizontalAlignment="Center"/>
+                                <kit:ProgressRing x:Name="ValueRing" Width="156" Height="180" Value="{Binding InputValue}" Title="{x:Static text:UiText.Completion}" AnimationEnabled="False"/></StackPanel>
+                        </WrapPanel>
+                        <TextBlock Text="{x:Static text:UiText.DialSyncHint}" Style="{StaticResource PreviewLabel}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource PreviewCard}" Width="300">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static text:UiText.TreeList}" Style="{StaticResource PreviewHeading}"/>
+                        <TreeView x:Name="DeviceTree" Height="188" BorderThickness="0">
+                            <TreeViewItem Header="{x:Static text:UiText.DcSupply}" IsExpanded="True"><TreeViewItem Header="{x:Static text:UiText.OutputVoltage}"/><TreeViewItem Header="{x:Static text:UiText.OutputCurrent}"/><TreeViewItem Header="{x:Static text:UiText.OutputEnabled}"/></TreeViewItem>
+                            <TreeViewItem Header="{x:Static text:UiText.ElectronicLoad}" IsExpanded="True"><TreeViewItem Header="{x:Static text:UiText.LoadCurrent}"/></TreeViewItem>
+                        </TreeView>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource PreviewCard}" Width="360">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static text:UiText.ColorPicker}" Style="{StaticResource PreviewHeading}"/>
+                        <kit:ColorPickerButton x:Name="ColorInput" SelectedColor="{Binding PreviewColor, Mode=TwoWay}" MinHeight="36"/>
+                        <TextBlock Text="{x:Static text:UiText.ColorPickerHint}" TextWrapping="Wrap" Style="{StaticResource PreviewLabel}"/>
+                        <TextBlock Text="{x:Static text:UiText.ColorPreviewHint}" TextWrapping="Wrap" Style="{StaticResource PreviewLabel}"/>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

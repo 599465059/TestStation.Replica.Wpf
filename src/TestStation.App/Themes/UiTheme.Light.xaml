@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="WindowBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SubtleBrush" Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="ContentBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="#F7F7F7"/>
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="SelectedRowBrush" Color="#2563EB"/>
+    <Color x:Key="SelectedRowColor">#2563EB</Color>
+    <Color x:Key="SelectionTextColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="TextBrush" Color="#171717"/>
+    <SolidColorBrush x:Key="MutedBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#D0D0D0"/>
+    <SolidColorBrush x:Key="CanvasMajorGridBrush" Color="#AEB8C5"/>
+    <SolidColorBrush x:Key="CanvasGridTickBrush" Color="#B8C1CC"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#2563EB"/>
+    <!-- Built-in step colors remain semantic and independent of the accent. -->
+    <SolidColorBrush x:Key="FlowStepBrush" Color="#1976D2"/>
+    <SolidColorBrush x:Key="ActionStepBrush" Color="#168A55"/>
+    <SolidColorBrush x:Key="TimingStepBrush" Color="#A86300"/>
+    <SolidColorBrush x:Key="ComparisonStepBrush" Color="#C62828"/>
+    <SolidColorBrush x:Key="SequenceStepBrush" Color="#007C91"/>
+    <SolidColorBrush x:Key="UtilityStepBrush" Color="#7B1FA2"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#C62828"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#A15C00"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#087443"/>
+    <SolidColorBrush x:Key="InfoBrush" Color="#2563EB"/>
+
+    <!-- Shared aliases used by the editor templates and HandyControl overrides. -->
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#1F2937"/>
+    <SolidColorBrush x:Key="StrongTextBrush" Color="#111827"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#344054"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#667085"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#98A2B3"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#C9D1DC"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#EAEAEA"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#1D4ED8"/>
+    <SolidColorBrush x:Key="MenuBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="DataGridAltRowBrush" Color="#F7F7F7"/>
+    <SolidColorBrush x:Key="BlueSwatchBrush" Color="#2563EB"/>
+    <SolidColorBrush x:Key="PurpleSwatchBrush" Color="#7C3AED"/>
+    <SolidColorBrush x:Key="TealSwatchBrush" Color="#0F766E"/>
+    <!-- Protocol field roles keep their semantic colors in both themes. The
+         accent is reserved for selection and focus; it must not flatten the
+         field palette into monochrome. -->
+    <SolidColorBrush x:Key="ProtocolHeaderBrush" Color="#B45309"/>
+    <SolidColorBrush x:Key="ProtocolIdBrush" Color="#2563EB"/>
+    <SolidColorBrush x:Key="ProtocolLengthBrush" Color="#7C3AED"/>
+    <SolidColorBrush x:Key="ProtocolDataBrush" Color="#059669"/>
+    <SolidColorBrush x:Key="ProtocolChecksumBrush" Color="#DC2626"/>
+    <SolidColorBrush x:Key="ProtocolTailBrush" Color="#0891B2"/>
+    <SolidColorBrush x:Key="ProtocolSkipBrush" Color="#6B7280"/>
+</ResourceDictionary>

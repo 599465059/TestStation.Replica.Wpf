@@ -1,0 +1,230 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:behaviors="clr-namespace:TestStation.App.Behaviors"
+                    xmlns:hc="https://handyorg.github.io/handycontrol">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="HandyControlBases.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    <Style x:Key="AppButtonStyle" TargetType="Button" BasedOn="{StaticResource IndustrialButtonStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="MinHeight" Value="29"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource HoverBrush}"/></Trigger>
+            <Trigger Property="IsPressed" Value="True"><Setter Property="Background" Value="{DynamicResource SelectedRowBrush}"/></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="AppToolBarButtonStyle" TargetType="Button" BasedOn="{StaticResource AppButtonStyle}">
+        <Setter Property="Height" Value="26"/>
+        <Setter Property="MinHeight" Value="26"/>
+        <Setter Property="MinWidth" Value="48"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="Margin" Value="2,0"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="AppToolBarStyle" TargetType="ToolBar" BasedOn="{StaticResource IndustrialToolBarStyle}">
+        <Setter Property="behaviors:ToolBarPalette.UseApplicationPalette" Value="True"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Style.Resources>
+            <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button" BasedOn="{StaticResource AppToolBarButtonStyle}"/>
+        </Style.Resources>
+    </Style>
+    <Style TargetType="ToolBar" BasedOn="{StaticResource AppToolBarStyle}"/>
+    <Style x:Key="AppTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource IndustrialTextBoxStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="MinHeight" Value="29"/>
+    </Style>
+    <Style x:Key="AppDataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource IndustrialDataGridStyle}">
+        <Setter Property="Background" Value="{DynamicResource ContentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="RowBackground" Value="{DynamicResource ContentBrush}"/>
+        <Setter Property="AlternatingRowBackground" Value="{DynamicResource SubtleBrush}"/>
+        <Setter Property="RowHeight" Value="28"/>
+        <Setter Property="ColumnHeaderHeight" Value="30"/>
+        <Setter Property="CanUserResizeColumns" Value="True"/>
+        <Setter Property="GridLinesVisibility" Value="All"/>
+        <Setter Property="RowStyle" Value="{DynamicResource {x:Type DataGridRow}}"/>
+        <Setter Property="CellStyle" Value="{DynamicResource {x:Type DataGridCell}}"/>
+    </Style>
+
+    <!-- Industrial.Controls supplies supported base templates; unsupported types
+         retain the documented centralized HandyControl fallback. -->
+    <Style TargetType="Button" BasedOn="{StaticResource AppButtonStyle}"/>
+    <Style TargetType="TextBox" BasedOn="{StaticResource AppTextBoxStyle}"/>
+    <Style x:Key="AppComboBoxItemStyle" TargetType="ComboBoxItem" BasedOn="{StaticResource IndustrialComboBoxItemStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Style.Triggers>
+            <Trigger Property="IsHighlighted" Value="True"><Setter Property="Background" Value="{DynamicResource HoverBrush}"/></Trigger>
+            <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource SelectedRowBrush}"/></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="ComboBoxItem" BasedOn="{StaticResource AppComboBoxItemStyle}"/>
+    <Style TargetType="ComboBox" BasedOn="{StaticResource IndustrialComboBoxStyle}">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AppComboBoxItemStyle}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+        <Setter Property="MinHeight" Value="29"/>
+        <Setter Property="Padding" Value="6,3"/>
+    </Style>
+    <Style TargetType="CheckBox" BasedOn="{StaticResource HandyCheckBoxStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
+    </Style>
+    <Style x:Key="AppListBoxItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource IndustrialListBoxItemStyle}">
+        <Style.Resources>
+            <!-- Keep HandyControl's active/inactive selection triggers, with our palette. -->
+            <SolidColorBrush x:Key="PrimaryBrush" Color="{DynamicResource SelectedRowColor}"/>
+            <SolidColorBrush x:Key="DarkDefaultBrush" Color="{DynamicResource SelectedRowColor}"/>
+            <SolidColorBrush x:Key="TextIconBrush" Color="{DynamicResource SelectionTextColor}"/>
+        </Style.Resources>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource SelectedRowBrush}"/></Trigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions><Condition Property="IsMouseOver" Value="True"/><Condition Property="IsSelected" Value="False"/></MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+            </MultiTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="ListBoxItem" BasedOn="{StaticResource AppListBoxItemStyle}"/>
+    <Style TargetType="ListBox" BasedOn="{StaticResource IndustrialListBoxStyle}">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AppListBoxItemStyle}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ContentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style x:Key="AppTreeViewItemStyle" TargetType="TreeViewItem" BasedOn="{StaticResource IndustrialTreeViewItemStyle}">
+        <Style.Resources>
+            <SolidColorBrush x:Key="PrimaryBrush" Color="{DynamicResource SelectedRowColor}"/>
+            <SolidColorBrush x:Key="DarkDefaultBrush" Color="{DynamicResource SelectedRowColor}"/>
+            <SolidColorBrush x:Key="TextIconBrush" Color="{DynamicResource SelectionTextColor}"/>
+        </Style.Resources>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Padding" Value="4,2"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource SelectedRowBrush}"/></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="TreeViewItem" BasedOn="{StaticResource AppTreeViewItemStyle}"/>
+    <Style TargetType="TreeView" BasedOn="{StaticResource IndustrialTreeViewStyle}">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AppTreeViewItemStyle}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ContentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style TargetType="Expander" BasedOn="{StaticResource HandyExpanderStyle}">
+        <Setter Property="Background" Value="{DynamicResource SubtleBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style TargetType="ScrollBar" BasedOn="{StaticResource HandyScrollBarStyle}">
+        <Setter Property="Background" Value="{DynamicResource SubtleBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+    <Style TargetType="ToolTip" BasedOn="{StaticResource IndustrialToolTipStyle}">
+        <Setter Property="Background" Value="{DynamicResource MenuBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style TargetType="Separator" BasedOn="{StaticResource HandySeparatorStyle}">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style TargetType="Menu" BasedOn="{StaticResource IndustrialMenuStyle}">
+        <Setter Property="Background" Value="{DynamicResource WindowBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <!-- Industrial.Controls 1.2.0 supplies KitMenuItem as the item
+             container for every menu item. WPF also puts Separators in the
+             same collection, so that contract causes a MenuItem style to be
+             applied to Separator and crashes when a menu opens. Let the
+             implicit MenuItem/Separator styles below select by actual type. -->
+        <Setter Property="ItemContainerStyle" Value="{x:Null}"/>
+    </Style>
+    <Style TargetType="DataGrid" BasedOn="{StaticResource AppDataGridStyle}"/>
+    <!-- DataGridTextColumn supplies a local element style, so implicit TextBlock
+         styling cannot set alignment. Share this style across formal tables. -->
+    <Style x:Key="AppDataGridTextStyle" TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource HandyDataGridColumnHeaderStyle}">
+        <Setter Property="Background" Value="{DynamicResource SubtleBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <Setter Property="Padding" Value="7,0"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Height" Value="30"/>
+    </Style>
+    <Style TargetType="DataGridCell" BasedOn="{StaticResource IndustrialDataGridCellStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="5,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource SelectedRowBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="DataGridRow" BasedOn="{StaticResource IndustrialDataGridRowStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ContentBrush}"/>
+        <Setter Property="Height" Value="{Binding RowHeight, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+        <Setter Property="Margin" Value="0"/>
+    </Style>
+    <Style x:Key="AppContextMenuStyle" TargetType="ContextMenu" BasedOn="{StaticResource IndustrialContextMenuStyle}">
+        <Setter Property="Background" Value="{DynamicResource MenuBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="ItemContainerStyle" Value="{x:Null}"/>
+    </Style>
+    <Style TargetType="ContextMenu" BasedOn="{StaticResource AppContextMenuStyle}"/>
+    <Style x:Key="AppMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource IndustrialMenuItemStyle}">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource MenuBackgroundBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="9,5"/>
+        <Setter Property="MinHeight" Value="30"/>
+        <Setter Property="ItemContainerStyle" Value="{x:Null}"/>
+        <Style.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="MenuItem" BasedOn="{StaticResource AppMenuItemStyle}"/>
+</ResourceDictionary>

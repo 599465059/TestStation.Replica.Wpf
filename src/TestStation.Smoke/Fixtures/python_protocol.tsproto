@@ -1,0 +1,160 @@
+{
+  "format": "test-station-protocol",
+  "version": 1,
+  "protocol": {
+    "id": "demo_power_protocol",
+    "name": "电源示例协议",
+    "version": 1,
+    "transport": "serial",
+    "description": "离线示例：选择集合比较两帧，拖拽字段，修改属性并保存。",
+    "frames": [
+      {
+        "id": "read",
+        "name": "读取请求",
+        "kind": "read_request",
+        "fields": [
+          {
+            "id": "header",
+            "name": "帧头",
+            "role": "header",
+            "data_type": "hex",
+            "byte_offset": 0,
+            "length": 2,
+            "byte_order": "big",
+            "scale": 1.0,
+            "value_offset": 0.0,
+            "channel_id": "",
+            "constant_value": "AA 55",
+            "description": "",
+            "enabled": true
+          },
+          {
+            "id": "command",
+            "name": "命令",
+            "role": "id",
+            "data_type": "uint8",
+            "byte_offset": 2,
+            "length": 1,
+            "byte_order": "big",
+            "scale": 1.0,
+            "value_offset": 0.0,
+            "channel_id": "",
+            "constant_value": 1,
+            "description": "",
+            "enabled": true
+          },
+          {
+            "id": "reserved",
+            "name": "保留",
+            "role": "skip",
+            "data_type": "hex",
+            "byte_offset": 3,
+            "length": 1,
+            "byte_order": "big",
+            "scale": 1.0,
+            "value_offset": 0.0,
+            "channel_id": "",
+            "constant_value": "00",
+            "description": "",
+            "enabled": true
+          }
+        ],
+        "fixed_length": 4,
+        "length_field_id": "",
+        "checksum_algorithm": "none",
+        "checksum_start": 0,
+        "description": ""
+      },
+      {
+        "id": "response",
+        "name": "电压响应",
+        "kind": "read_response",
+        "fields": [
+          {
+            "id": "header",
+            "name": "帧头",
+            "role": "header",
+            "data_type": "hex",
+            "byte_offset": 0,
+            "length": 2,
+            "byte_order": "big",
+            "scale": 1.0,
+            "value_offset": 0.0,
+            "channel_id": "",
+            "constant_value": "AA 55",
+            "description": "",
+            "enabled": true
+          },
+          {
+            "id": "address",
+            "name": "地址",
+            "role": "id",
+            "data_type": "uint8",
+            "byte_offset": 2,
+            "length": 1,
+            "byte_order": "big",
+            "scale": 1.0,
+            "value_offset": 0.0,
+            "channel_id": "",
+            "constant_value": 1,
+            "description": "",
+            "enabled": true
+          },
+          {
+            "id": "voltage",
+            "name": "电压",
+            "role": "data",
+            "data_type": "uint16",
+            "byte_offset": 3,
+            "length": 2,
+            "byte_order": "little",
+            "scale": 0.01,
+            "value_offset": 0.0,
+            "channel_id": "Power.Voltage",
+            "constant_value": 1234,
+            "description": "",
+            "enabled": true
+          },
+          {
+            "id": "reserved",
+            "name": "保留",
+            "role": "skip",
+            "data_type": "hex",
+            "byte_offset": 5,
+            "length": 1,
+            "byte_order": "big",
+            "scale": 1.0,
+            "value_offset": 0.0,
+            "channel_id": "",
+            "constant_value": "00",
+            "description": "",
+            "enabled": true
+          },
+          {
+            "id": "tail",
+            "name": "帧尾",
+            "role": "tail",
+            "data_type": "hex",
+            "byte_offset": 6,
+            "length": 2,
+            "byte_order": "big",
+            "scale": 1.0,
+            "value_offset": 0.0,
+            "channel_id": "",
+            "constant_value": "0D 0A",
+            "description": "",
+            "enabled": true
+          }
+        ],
+        "fixed_length": 8,
+        "length_field_id": "",
+        "checksum_algorithm": "none",
+        "checksum_start": 0,
+        "description": ""
+      }
+    ],
+    "metadata": {
+      "demo": true
+    }
+  }
+}
