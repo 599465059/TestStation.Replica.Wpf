@@ -20,16 +20,23 @@
    <TextBlock Text="{x:Static text:UiText.CanvasGridCaption}" Foreground="{DynamicResource MutedBrush}" Margin="14,0,6,0"/>
  </ToolBar>
  <Grid Grid.Row="1">
-   <Grid.ColumnDefinitions><ColumnDefinition x:Name="LibraryColumn" Width="228"/><ColumnDefinition Width="5"/><ColumnDefinition Width="*"/><ColumnDefinition Width="5"/><ColumnDefinition x:Name="PropertyColumn" Width="300"/></Grid.ColumnDefinitions>
+   <Grid.ColumnDefinitions><ColumnDefinition x:Name="LibraryColumn" Width="46"/><ColumnDefinition Width="5"/><ColumnDefinition Width="*"/><ColumnDefinition Width="5"/><ColumnDefinition x:Name="PropertyColumn" Width="46"/></Grid.ColumnDefinitions>
    <Grid x:Name="WidgetLibraryPanel" Grid.Column="0" Background="{DynamicResource SurfaceBrush}" MinWidth="46" MaxWidth="320" ClipToBounds="True">
     <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/></Grid.RowDefinitions>
     <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,1" Background="{DynamicResource SurfaceBrush}">
      <Grid>
-      <TextBlock x:Name="LibraryTitle" Text="控件库" Margin="12,0,42,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
-      <Button x:Name="LibraryToggleButton" Click="LibraryToggle_Click" Width="34" Height="30" Margin="0,0,4,0" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" ToolTip="收起控件库" Style="{StaticResource AppButtonStyle}"><md:PackIcon x:Name="LibraryToggleIcon" Kind="ChevronLeft" Width="16" Height="16"/></Button>
+      <TextBlock x:Name="LibraryTitle" Text="控件库" Margin="12,0,42,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Visibility="Collapsed"/>
+      <Button x:Name="LibraryToggleButton" Click="LibraryToggle_Click" Width="34" Height="30" Margin="0,0,4,0" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" ToolTip="展开控件库" Style="{StaticResource AppButtonStyle}"><md:PackIcon x:Name="LibraryToggleIcon" Kind="ChevronRight" Width="16" Height="16"/></Button>
      </Grid>
     </Border>
-    <DockPanel x:Name="LibraryContent" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" MinWidth="190">
+    <StackPanel x:Name="LibraryIconRail" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" HorizontalAlignment="Stretch">
+      <Button Tag="数值" Click="PaletteCategory_Click" ToolTip="数值" Style="{StaticResource IconButton}" Margin="5,8,5,2"><md:PackIcon Kind="Numeric" Width="18" Height="18"/></Button>
+      <Button Tag="布尔与状态" Click="PaletteCategory_Click" ToolTip="布尔与状态" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="ToggleSwitchOutline" Width="18" Height="18"/></Button>
+      <Button Tag="仪表" Click="PaletteCategory_Click" ToolTip="仪表" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="Gauge" Width="18" Height="18"/></Button>
+      <Button Tag="操作与命令" Click="PaletteCategory_Click" ToolTip="操作与命令" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="GestureTap" Width="18" Height="18"/></Button>
+      <Button Tag="串口与通信" Click="PaletteCategory_Click" ToolTip="串口与通信" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="Console" Width="18" Height="18"/></Button>
+    </StackPanel>
+    <DockPanel x:Name="LibraryContent" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" MinWidth="190" Visibility="Collapsed">
       <TextBlock DockPanel.Dock="Bottom" Text="{Binding LibraryHint}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="12,8"/>
      <ListBox x:Name="WidgetPalette" ItemsSource="{Binding Source={StaticResource WidgetToolsView}}" IsEnabled="{Binding IsDesignMode}"
              BorderThickness="0" Background="{DynamicResource SurfaceBrush}"
@@ -42,8 +49,10 @@
         </GroupStyle.HeaderTemplate>
        </GroupStyle>
       </ListBox.GroupStyle>
+     <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
+     <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem" BasedOn="{StaticResource AppListBoxItemStyle}"><Setter Property="Width" Value="88"/><Setter Property="Height" Value="70"/><Setter Property="Margin" Value="3"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Stretch"/></Style></ListBox.ItemContainerStyle>
      <ListBox.ItemTemplate><DataTemplate>
-      <StackPanel Orientation="Horizontal" Margin="4,5" Cursor="Hand"><md:PackIcon Kind="{Binding Icon}" Width="18" Height="18" Margin="0,0,8,0"/><TextBlock Text="{Binding Name}"/></StackPanel>
+      <StackPanel Cursor="Hand" HorizontalAlignment="Center" VerticalAlignment="Center"><md:PackIcon Kind="{Binding Icon}" Width="24" Height="24" HorizontalAlignment="Center"/><TextBlock Text="{Binding Name}" TextAlignment="Center" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0"/></StackPanel>
      </DataTemplate></ListBox.ItemTemplate>
      </ListBox>
     </DockPanel>
@@ -133,7 +142,7 @@
       <TextBlock x:Name="PropertyTitle" Text="属性" Margin="42,0,12,0" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
      </Grid>
     </Border>
-    <Border x:Name="WidgetPropertyPanel" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="14,12" IsEnabled="{Binding IsDesignMode}" MinWidth="260">
+    <Border x:Name="WidgetPropertyPanel" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="14,12" IsEnabled="{Binding IsDesignMode}" MinWidth="260" Visibility="Collapsed">
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
      <StackPanel MinWidth="240">
      <TextBlock Text="控件属性" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>

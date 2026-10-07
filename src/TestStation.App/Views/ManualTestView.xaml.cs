@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -32,6 +33,7 @@ public partial class ManualTestView : UserControl, IDisposable
     private readonly ManualCanvasInteractionController _interaction;
     private bool _libraryExpanded = true;
     private bool _propertyExpanded = true;
+    private string? _paletteCategory;
     private double _libraryExpandedWidth = 228;
     private double _propertyExpandedWidth = 300;
     public bool IsManipulating => _interaction.IsManipulating;
@@ -41,6 +43,17 @@ public partial class ManualTestView : UserControl, IDisposable
         _configuration = configuration ?? new ManualWidgetConfigurationAdapter();
         _instrumentFactory = instrumentFactory ?? new ManualInstrumentFactory(_configuration);
         InitializeComponent(); DataContext = model;
+        _libraryExpanded = false;
+        _propertyExpanded = false;
+        LibraryColumn.Width = new GridLength(46);
+        PropertyColumn.Width = new GridLength(46);
+        LibraryContent.Visibility = Visibility.Collapsed;
+        LibraryIconRail.Visibility = Visibility.Visible;
+        WidgetPropertyPanel.Visibility = Visibility.Collapsed;
+        LibraryTitle.Visibility = Visibility.Collapsed;
+        PropertyTitle.Visibility = Visibility.Collapsed;
+        LibraryToggleIcon.Kind = PackIconKind.ChevronRight;
+        PropertyToggleIcon.Kind = PackIconKind.ChevronLeft;
         _interaction = new ManualCanvasInteractionController(Model, CanvasSurface, CanvasItems, SelectionMarquee);
         Model.WidgetConfigurationChanged += RefreshInstrument;
         _samples.Tick += (_, _) =>
@@ -86,9 +99,19 @@ public partial class ManualTestView : UserControl, IDisposable
         _libraryExpanded = !_libraryExpanded;
         LibraryColumn.Width = new GridLength(_libraryExpanded ? Math.Max(190, _libraryExpandedWidth) : 46);
         LibraryContent.Visibility = _libraryExpanded ? Visibility.Visible : Visibility.Collapsed;
+        LibraryIconRail.Visibility = _libraryExpanded ? Visibility.Collapsed : Visibility.Visible;
         LibraryTitle.Visibility = _libraryExpanded ? Visibility.Visible : Visibility.Collapsed;
         LibraryToggleIcon.Kind = _libraryExpanded ? PackIconKind.ChevronLeft : PackIconKind.ChevronRight;
         LibraryToggleButton.ToolTip = _libraryExpanded ? "收起控件库" : "展开控件库";
+    }
+
+    private void PaletteCategory_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string category }) return;
+        _paletteCategory = category;
+        if (Resources["WidgetToolsView"] is CollectionViewSource source)
+            source.View.Filter = item => item is ManualWidgetTool tool && string.Equals(tool.Category, _paletteCategory, StringComparison.Ordinal);
+        if (!_libraryExpanded) LibraryToggle_Click(LibraryToggleButton, new RoutedEventArgs(Button.ClickEvent));
     }
 
     private void PropertyToggle_Click(object sender, RoutedEventArgs e)
