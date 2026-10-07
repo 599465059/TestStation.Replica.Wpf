@@ -49,10 +49,13 @@ public sealed class ManualCanvasInteractionController
         var node = e.OriginalSource as DependencyObject;
         ManualWidgetViewModel? widget = null; _gesture = CanvasGesture.Move;
         var moveHandle = false;
+        var interactivePart = false;
         while (node is not null && node != _surface)
         {
             if (node is FrameworkElement element)
             {
+                if (node is ButtonBase or TextBoxBase or PasswordBox or Selector or Slider or Thumb or GridSplitter)
+                    interactivePart = true;
                 if (element.Tag is string tag)
                 {
                     if (tag.StartsWith("Edge", StringComparison.Ordinal)) tag = tag[4..];
@@ -65,7 +68,7 @@ public sealed class ManualCanvasInteractionController
         }
         if (widget is null) { BeginSelection(e); return; }
         _model.SetSelection([widget], (Keyboard.Modifiers & ModifierKeys.Control) != 0);
-        var canMove = widget.IsDisplay || moveHandle || _gesture != CanvasGesture.Move;
+        var canMove = _gesture != CanvasGesture.Move || moveHandle || (widget.IsDisplay && !interactivePart);
         if (!canMove) return;
 
         _surface.Focus();
@@ -181,7 +184,7 @@ public sealed class ManualCanvasInteractionController
         _started = true;
         if (_gesture == CanvasGesture.Move && _dragTransform is not null)
         {
-            var bounds = _model.CalculatePreview(_origin, _gesture, delta.X, delta.Y);
+            var bounds = _model.CalculatePreview(_origin, _gesture, delta.X, delta.Y, _dragged);
             _dragTransform.X = (bounds.Column - _origin.Column) * _model.GridSize;
             _dragTransform.Y = (bounds.Row - _origin.Row) * _model.GridSize; return;
         }

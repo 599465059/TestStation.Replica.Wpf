@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+using System.Collections.Specialized;
 using MaterialDesignThemes.Wpf;
 using TestStation.App.Services;
 using TestStation.App.ViewModels;
@@ -28,6 +29,7 @@ public partial class ManualTestView : UserControl, IDisposable
     private readonly Dictionary<string, InstrumentControl> _instrumentControls = new(StringComparer.Ordinal);
     private readonly ManualInstrumentFactory _instrumentFactory;
     private readonly ManualWidgetConfigurationAdapter _configuration;
+    private readonly IThemeService? _theme;
     private ManualWidgetTool? _paletteTool;
     private Point _palettePress;
     private readonly ManualCanvasInteractionController _interaction;
@@ -36,11 +38,14 @@ public partial class ManualTestView : UserControl, IDisposable
     private string? _paletteCategory;
     private double _libraryExpandedWidth = 228;
     private double _propertyExpandedWidth = 300;
+    private bool _applyingConfiguration;
+    private double _scopeTime;
     public bool IsManipulating => _interaction.IsManipulating;
-    public ManualTestView(ManualTestViewModel model, ManualInstrumentFactory? instrumentFactory = null, ManualWidgetConfigurationAdapter? configuration = null)
+    public ManualTestView(ManualTestViewModel model, ManualInstrumentFactory? instrumentFactory = null, ManualWidgetConfigurationAdapter? configuration = null, IThemeService? theme = null)
     {
         Model = model;
         _configuration = configuration ?? new ManualWidgetConfigurationAdapter();
+        _theme = theme;
         _instrumentFactory = instrumentFactory ?? new ManualInstrumentFactory(_configuration);
         InitializeComponent(); DataContext = model;
         _libraryExpanded = false;
@@ -56,6 +61,8 @@ public partial class ManualTestView : UserControl, IDisposable
         PropertyToggleIcon.Kind = PackIconKind.ChevronLeft;
         _interaction = new ManualCanvasInteractionController(Model, CanvasSurface, CanvasItems, SelectionMarquee);
         Model.WidgetConfigurationChanged += RefreshInstrument;
+        Model.CaptureConfigurationsRequested += CaptureConfigurations;
+        Model.Widgets.CollectionChanged += OnWidgetsChanged;
         _samples.Tick += (_, _) =>
         {
             var value = 12 + Math.Sin((DateTime.UtcNow - _clock).TotalSeconds) * 0.25;
@@ -63,14 +70,20 @@ public partial class ManualTestView : UserControl, IDisposable
             // serial console receives its own records below; updating every
             // widget here would cause unrelated controls to invalidate while
             // another widget is being dragged.
-            foreach (var widget in Model.Widgets.Where(item => item.Model.Kind is "numeric" or "gauge" or "status"))
+            foreach (var widget in Model.Widgets.Where(item => item.IsDisplay))
                 widget.Value = value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
             _backend.Publish(new NumericSample("CH1", value, DateTimeOffset.UtcNow));
             _backend.Publish(new SerialRecord(DateTimeOffset.UtcNow, "RX", System.Text.Encoding.ASCII.GetBytes($"CH1={value:F3}\\r\\n")));
+            if (_instrumentControls.Values.Any(control => control is OscilloscopeControl))
+            {
+                var samples = Enumerable.Range(0, 100).Select(i => Math.Sin((_scopeTime + i * .001) * 2 * Math.PI * 2)).ToArray();
+                _backend.Publish(new SampleBatch("CH1", samples, _scopeTime, .001));
+                _scopeTime += .1;
+            }
         };
-        Loaded += (_, _) => UpdateSampleActivity();
+        Loaded += (_, _) => { if (_theme is not null) { _theme.Changed -= OnThemeChanged; _theme.Changed += OnThemeChanged; } UpdateSampleActivity(); };
         IsVisibleChanged += (_, _) => UpdateSampleActivity();
-        Unloaded += (_, _) => { _interaction.Cancel(); _samples.Stop(); };
+        Unloaded += (_, _) => { if (_theme is not null) _theme.Changed -= OnThemeChanged; _interaction.Cancel(); _samples.Stop(); };
     }
     public void SetWorkspaceActive(bool active)
     {
@@ -87,7 +100,11 @@ public partial class ManualTestView : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true; _samples.Stop(); _interaction.Cancel();
+        if (_theme is not null) _theme.Changed -= OnThemeChanged;
         Model.WidgetConfigurationChanged -= RefreshInstrument;
+        Model.CaptureConfigurationsRequested -= CaptureConfigurations;
+        Model.Widgets.CollectionChanged -= OnWidgetsChanged;
+        foreach (var control in _instrumentControls.Values) control.Dispose();
         _instrumentControls.Clear();
     }
 
@@ -132,9 +149,36 @@ public partial class ManualTestView : UserControl, IDisposable
         if (!_instrumentControls.TryGetValue(item.Id, out var control)) return;
         try
         {
+            _applyingConfiguration = true;
             _configuration.Apply(control, item);
         }
         catch (Exception) { }
+        finally { _applyingConfiguration = false; }
+    }
+
+    private void CaptureConfigurations()
+    {
+        foreach (var widget in Model.Widgets)
+            if (_instrumentControls.TryGetValue(widget.Id, out var control))
+                Model.StoreWidgetConfiguration(widget, _configuration.Capture(control), persist: false);
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        // Redraw only on an actual theme change. Stable brush updates alone
+        // cannot refresh the scope's ScottPlot colors and cached readouts.
+        _applyingConfiguration = true;
+        try { foreach (var control in _instrumentControls.Values) control.ApplySettings(control.ExportSettings()); }
+        finally { _applyingConfiguration = false; }
+    }
+
+    private void OnWidgetsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        foreach (var id in _instrumentControls.Keys.Where(id => Model.Widgets.All(widget => widget.Id != id)).ToArray())
+        {
+            _instrumentControls[id].Dispose();
+            _instrumentControls.Remove(id);
+        }
     }
 
     private void InstrumentHost_Loaded(object sender, RoutedEventArgs e)
@@ -146,6 +190,12 @@ public partial class ManualTestView : UserControl, IDisposable
         // Capture the library defaults once so future versions can extend the
         // settings object without changing the canvas schema.
         Model.StoreWidgetConfiguration(item, _configuration.Capture(control));
+        control.ConfigurationChanged += (_, _) =>
+        {
+            if (_applyingConfiguration || _disposed) return;
+            Model.StoreWidgetConfiguration(item, _configuration.Capture(control), persist: false);
+            if (Model.Selected == item) Model.Select(item);
+        };
         host.Content = control;
     }
 
@@ -207,16 +257,21 @@ public partial class ManualTestView : UserControl, IDisposable
         var position = Mouse.GetPosition(CanvasSurface);
         var menu = CanvasSurface.ContextMenu;
         menu.Items.Clear();
-        foreach (var tool in Model.WidgetTools)
+        foreach (var category in Model.WidgetTools.GroupBy(tool => tool.Category))
         {
-            var item = new MenuItem
+            var group = new MenuItem { Header = category.Key };
+            foreach (var tool in category)
             {
-                Header = tool.Name,
-                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = Enum.Parse<MaterialDesignThemes.Wpf.PackIconKind>(tool.Icon), Width = 17, Height = 17 },
-                IsEnabled = Model.AddWidgetCommand.CanExecute(null)
-            };
-            item.Click += (_, _) => AddAt(tool.Kind, position);
-            menu.Items.Add(item);
+                var item = new MenuItem
+                {
+                    Header = tool.Name,
+                    Icon = new PackIcon { Kind = Enum.Parse<PackIconKind>(tool.Icon), Width = 17, Height = 17 },
+                    IsEnabled = Model.AddWidgetCommand.CanExecute(null)
+                };
+                item.Click += (_, _) => AddAt(tool.Kind, position);
+                group.Items.Add(item);
+            }
+            menu.Items.Add(group);
         }
     }
 

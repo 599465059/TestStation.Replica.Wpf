@@ -1,6 +1,6 @@
 # 控件迁移与控件库缺项
 
-基线：已发布 Industrial.Controls 1.2.0；只消费原包。IndustrialKit 源码、Gallery 和原 Python 工程均未修改。
+基线：已发布 Industrial.Controls 1.0.0；只消费原包。IndustrialKit 源码、Gallery 和原 Python 工程均未修改。
 
 ## 已接入
 
@@ -14,7 +14,7 @@ ResourceBootstrap 顺序加载 HandyControl 依赖、Industrial.Controls 原始�
 
 | 编号 | 位置/类型 | 缺少的能力 | 当前处理 | 建议库接口 |
 |---|---|---|---|---|
-| C01 | 标题菜单、右键菜单、导航弹出菜单 / Menu、MenuItem、ContextMenu | 1.2.0 已有 `KitMenu`、`KitMenuItem`、`KitContextMenu` 配色/状态契约，未提供专属模板及 MenuItem.Role 的模板选择 | 直接继承 Kit 样式，ResourceBootstrap 复用 HandyControl 的普通项/顶层/子菜单模板对象；不在页面复制模板；映射 MenuBrush/MenuHoverBrush | 发布含顶层、子菜单、普通项角色的完整菜单模板 |
+| C01 | 标题菜单、右键菜单、导航弹出菜单 / Menu、MenuItem、ContextMenu | 1.0.0 已有 `KitMenu`、`KitMenuItem`、`KitContextMenu` 配色/状态契约，未提供专属模板及 MenuItem.Role 的模板选择 | 直接继承 Kit 样式，ResourceBootstrap 复用 HandyControl 的普通项/顶层/子菜单模板对象；不在页面复制模板；映射 MenuBrush/MenuHoverBrush | 发布含顶层、子菜单、普通项角色的完整菜单模板 |
 | C02 | 序列 ENABLED / CheckBox | 库专属勾选、未勾选、三态、禁用样式 | 保留统一 HandyControl 样式，主题同步 | 发布可调尺寸 CheckBox 样式 |
 | C03 | 表格表头 / DataGridColumnHeader | 库字典未单独封装表头、排序、调整列宽状态 | 保留 HandyControl 表头模板，集中动态配色 | 发布 KitDataGridColumnHeader 样式 |
 | C04 | 全部滚动区域 / ScrollBar | 库专属横纵滚动条及各交互状态 | 保留 HandyControl 滚动条 | 发布 ScrollBar 样式与尺寸资源 |
@@ -24,7 +24,7 @@ ResourceBootstrap 顺序加载 HandyControl 依赖、Industrial.Controls 原始�
 | C08 | InfoBar、Timeline 等缓存画刷的扩展控件 | Theme.Apply 会覆盖外部调色板且提前通知；资源覆盖后缓存内容未必同步 | 正式页面不用不兼容组件；预览中自绘控件在本项目主题事件上重绘 | 外部调色板提供者及完整更新后统一通知 |
 | C09 | 紧凑表格行、按钮圆角 | 表格行仍继承 HandyControl 内部模板；按钮模板圆角固定，公开属性不能完全控制所有内部间距 | 公开属性调整行高、边框、Margin；无法调整的内部细节保留 | 紧凑 DataGridRow 模板/间距资源，按钮圆角资源 |
 | C10 | 文件/文件夹选择窗口 | 库使用系统文件对话框，无法按项目主题绘制操作系统窗口 | 使用系统文件选择器 | 如需要完全统一，提供可选库内文件浏览器 |
-| C11 | ToolBar/ToolBarTray 与未来使用的 RadioButton/ToggleButton、ProgressBar、Slider、Calendar 等 | 1.2.0 已提供 `KitToolBar` 样式契约，保留 WPF 模板的溢出按钮未使用库动态画刷；ToolBarTray 暂无独立资源键 | 自动测试与主窗口工具栏使用 KitToolBar；公共 ToolBarPalette 仅为原溢出按钮绑定项目画刷，不复制模板；ToolBarTray 作为标准工具栏布局容器；其他未使用类型不额外引入 | 工具栏全部模板部件的主题契约和 ToolBarTray 样式 |
+| C11 | ToolBar/ToolBarTray 与未来使用的 RadioButton/ToggleButton、ProgressBar、Slider、Calendar 等 | 1.0.0 已提供 `KitToolBar` 样式契约，保留 WPF 模板的溢出按钮未使用库动态画刷；ToolBarTray 暂无独立资源键 | 自动测试与主窗口工具栏使用 KitToolBar；公共 ToolBarPalette 仅为原溢出按钮绑定项目画刷，不复制模板；ToolBarTray 作为标准工具栏布局容器；其他未使用类型不额外引入 | 工具栏全部模板部件的主题契约和 ToolBarTray 样式 |
 | C12 | 主窗口底部 / StatusBar | 未封装 StatusBar 的库专属模板 | 保留 WPF 状态栏类型，使用项目动态背景/文字；明确作为缺项 | 发布 StatusBar 和 StatusBarItem 样式 |
 | C13 | 协议三个页面 / GridSplitter、ScrollViewer | 库未封装专用分割器与滚动容器样式 | 分割器使用 WPF 类型和动态边框色；滚动容器沿用 HandyControl 依赖样式、库缺少的滚动条回退见 C04 | 发布 GridSplitter/ScrollViewer 样式和命中区域尺寸资源 |
 

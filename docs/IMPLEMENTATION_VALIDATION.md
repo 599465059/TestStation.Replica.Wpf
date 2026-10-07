@@ -1,14 +1,14 @@
 # 本轮实施与验证记录
 
-验证日期：2026-10-06。目标工程：TestStation.Replica.Wpf，.NET 10 + Prism + MVVM。
+验证日期：2026-10-07。目标工程：TestStation.Replica.Wpf，.NET 10 + Prism + MVVM。
 
 ## 完成范围
 
-- 正式页面中有现成库样式的基础控件已统一接入 Industrial.Controls 1.2.0，与控件预览使用同一资源入口；页面不复制基础模板。
+- 正式页面中有现成库样式的基础控件已统一接入 Industrial.Controls 1.0.0，与控件预览使用同一资源入口；页面不复制基础模板。
 - 库缺项分为 C01–C13，逐项记录当前使用位置、回退来源及建议接口。不能将这些回退称为库已提供的控件。
 - 序列编辑仍为主窗口内一个 DataGrid：统一连续网格线、单元格文本垂直居中；同一插入目标只对应一条插入线，消除相邻行半区重复位置。
 - 自定义协议帧编辑允许字段拖到空白字节和原长度之外，并自动扩展帧长度；“填充保留”可将帧头与帧尾之间的所有连续空白一次生成保留字段。
-- 新建、保存、删除及未保存修改确认统一通过 Industrial.Controls 1.2.0 DialogHost；文件夹选择器仍是 Windows 系统窗口。
+- 新建、保存、删除及未保存修改确认统一通过 Industrial.Controls 1.0.0 DialogHost；文件夹选择器仍是 Windows 系统窗口。
 - 协议库、自定义协议、DBC 数据库、协议测试四个导航均接通当前 C# 模块。复刻原 Python 已完成功能，并按确认范围接通离线组帧/解析和 DBC 编解码。
 - DBC 浏览器增加表格筛选，可按 CAN ID、消息名、信号名、发送 ECU、接收 ECU 或单位过滤，并可一键清除恢复全部信号。
 - 移除标题栏搜索；工程工具栏使用 KitToolBar，自动测试页独立提供新建/保存序列、运行、预检、暂停/继续和停止。顶部菜单和右键菜单使用 Kit 系列样式及集中角色模板适配。
@@ -32,16 +32,16 @@
 | Python → C# 协议兼容 | 通过 | 原 Python 模型生成的双帧夹具、元数据、数值常量和字节序 |
 | C# → Python 协议兼容 | 通过 | 原 Python ProtocolDefinition.from_dict/validate 读取当前 C# 文件；内层版本为整数 |
 | 实际 Prism 可执行文件启动 | 通过 | --open 打开示例工程、最大化、四个协议导航切换、选中示例协议、正常关闭测试窗口 |
-| 控件包完整性 | 通过 | 本工程包与只读来源 dist/packages/Industrial.Controls.1.2.0.nupkg 的 SHA256 一致 |
+| 控件包完整性 | 通过 | 本工程包与只读来源 dist/packages/Industrial.Controls.1.0.0.nupkg 的 SHA256 一致 |
 
-控件包 SHA256：FB2DCE6556E46F2183B8301157535EBC6E29896129B6E8E1B8B8FAFB648E85BE。
+控件包 SHA256：1DB737418FF2E535F2B9226C2D238D42172D41BED81B51B78CCA31978A677F08。
 
-IndustrialKit、原 Python 工程及两个参考工程均不作为写入目标；没有修改或重新打包控件库。当前依赖固定为正式发布目录中的 1.2.0，不自动消费候选包。
+IndustrialKit、原 Python 工程及两个参考工程均不作为写入目标；没有修改或重新打包控件库。当前依赖固定为正式发布目录中的 1.0.0，不自动消费候选包。
 
 ## 序列可靠性补充
 
 - 完成未保存保护、撤销重做、序列重命名/复制/删除及运行编辑锁定；不改变序列文件格式。说明与边界见 SEQUENCE_DOCUMENTS.md。
-- 新增 DocumentRegression（业务）与 DocumentUiRegression（实际窗口）；未保存/删除/更名弹窗均复用 Industrial.Controls 1.2.0 DialogHost。
+- 新增 DocumentRegression（业务）与 DocumentUiRegression（实际窗口）；未保存/删除/更名弹窗均复用 Industrial.Controls 1.0.0 DialogHost。
 - build：0 警告、0 错误。业务、完整 --ui 和 --ui-documents 检查通过。实际 Prism 可执行文件验证了服务注册、未保存属性保护、取消关闭与放弃后关闭。
 - 暂停运行时取消关闭保留执行；确认停止则在 CLEANUP 与运行结果保存后关闭。报告保存在原工程，不会写入下一个工程。
 

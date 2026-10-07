@@ -62,7 +62,7 @@ public sealed class ManualCanvasDocumentService : IManualCanvasDocumentService
     private static void ValidateWidget(ManualWidgetDefinition widget)
     {
         if (string.IsNullOrWhiteSpace(widget.Id) || string.IsNullOrWhiteSpace(widget.Name) || widget.Unit is null ||
-            widget.Kind is not ("numeric" or "input" or "serial" or "gauge" or "status" or "command") ||
+            !ManualWidgetKinds.IsSupported(widget.Kind) ||
             string.IsNullOrWhiteSpace(widget.ConfigurationJson) || !IsJsonObject(widget.ConfigurationJson))
             throw new ArgumentException("Invalid manual widget definition.", nameof(widget));
         ValidateBounds(widget.Bounds);

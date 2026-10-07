@@ -20,6 +20,7 @@ public sealed class ManualWidgetConfigurationAdapter
                 stored = JsonSerializer.Deserialize<InstrumentFiles.ConfigurationFile>(widget.Model.ConfigurationJson);
                 if (stored is not null && stored.Type == control.GetType().Name)
                     settings = stored.Settings;
+                else stored = null;
             }
             catch (JsonException) { /* invalid snapshots use library defaults */ }
         }
@@ -27,8 +28,14 @@ public sealed class ManualWidgetConfigurationAdapter
         settings.Name = widget.Name;
         settings.Channel = string.IsNullOrWhiteSpace(settings.Channel) ? widget.Channel : settings.Channel;
         settings.Unit = widget.Unit;
-        control.ApplySettings(settings);
-        ApplyStoredProperties(control, stored?.Properties);
+        if (control is OscilloscopeControl scope)
+            scope.ApplyConfiguration(settings, stored?.Properties?.Where(pair => pair.Key != "PollIntervalMilliseconds")
+                .ToDictionary(pair => pair.Key, pair => pair.Value) ?? new());
+        else
+        {
+            control.ApplySettings(settings);
+            ApplyStoredProperties(control, stored?.Properties);
+        }
     }
 
     public void ApplyStoredProperties(InstrumentControl control, Dictionary<string, string>? values)
@@ -40,6 +47,7 @@ public sealed class ManualWidgetConfigurationAdapter
             {
                 if (control is SerialDataDisplay serial && key == "EncodingName") { serial.SetEncoding(value); continue; }
                 if (control is SerialDataDisplay serialMode && key == "DisplayMode") { serialMode.SetDisplayMode(Enum.Parse<SerialDisplayMode>(value)); continue; }
+                if (control is OscilloscopeControl scope && key == "VisibleChannels") { scope.SetVisibleChannels(value.Split(',', StringSplitOptions.RemoveEmptyEntries)); continue; }
                 var property = control.GetType().GetProperty(key, BindingFlags.Instance | BindingFlags.Public);
                 if (property is null || !property.CanWrite) continue;
                 object converted = property.PropertyType.IsEnum

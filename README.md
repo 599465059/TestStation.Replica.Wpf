@@ -29,7 +29,7 @@ dotnet build TestStation.slnx --no-restore
 
 从顶部“视图 → 控件预览”进入，不需要先打开工程。工作区左侧“系统设置”下方也有“控件预览”入口。
 
-此页使用固定版本 `Industrial.Controls 1.2.0` 的样式和控件，包含输入、按钮、下拉框、可调列宽表格、树、范围滑块、旋钮、仪表、进度环及颜色选择。使用标题栏太阳按钮和色点比较深浅主题及强调色。样例使用独立 ViewModel，不会修改工程和序列。
+此页使用固定版本 `Industrial.Controls 1.0.0` 的样式和控件，包含输入、按钮、下拉框、可调列宽表格、树、范围滑块、旋钮、仪表、进度环及颜色选择。使用标题栏太阳按钮和色点比较深浅主题及强调色。样例使用独立 ViewModel，不会修改工程和序列。
 
 控件包随工程保存在 `vendor/nuget`，无需引用原始源码目录。正式页面的可迁移控件已使用同一包；未封装控件及主题接口见 docs/CONTROL_LIBRARY_GAPS.md。接入边界、主题适配、升级步骤和验收记录见 [docs/INDUSTRIAL_CONTROLS_INTEGRATION.md](docs/INDUSTRIAL_CONTROLS_INTEGRATION.md)。
 

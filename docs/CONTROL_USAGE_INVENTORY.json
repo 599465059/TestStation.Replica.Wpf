@@ -2,77 +2,77 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolTestView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolTestView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolTestView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolTestView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolTestView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolTestView.xaml",
     "type": "DataGrid",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ResultsGrid"
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolLibraryView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolLibraryView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolLibraryView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolLibraryView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolLibraryView.xaml",
     "type": "DataGrid",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ProtocolList"
   },
@@ -93,84 +93,84 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "NumericUpDown",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "NumericUpDown",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TreeView",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "FrameTree"
   },
@@ -184,7 +184,7 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "ListBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "FieldPalette"
   },
@@ -219,14 +219,14 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "NavigationTabs",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "PropertyTabs"
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "NavigationTabItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -240,105 +240,105 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "NavigationTabItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -352,84 +352,84 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -443,21 +443,21 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "NavigationTabItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -471,56 +471,56 @@
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/ProtocolEditorView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/DbcBrowserView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/DbcBrowserView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/DbcBrowserView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/Protocols/DbcBrowserView.xaml",
     "type": "TreeView",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "DbcTree"
   },
@@ -534,7 +534,7 @@
   {
     "file": "src/TestStation.App/Views/Protocols/DbcBrowserView.xaml",
     "type": "DataGrid",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "SignalsGrid"
   },
@@ -548,7 +548,7 @@
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -569,35 +569,35 @@
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ChannelInput"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "NumericUpDown",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ValueInput"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "RangeSlider",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "RangeInput"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ApplyButton"
   },
@@ -611,35 +611,35 @@
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ContextButton"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "ContextMenu",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
@@ -653,14 +653,14 @@
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ModeInput"
   },
@@ -674,84 +674,84 @@
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "DataGrid",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ChannelGrid"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "Dial",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ValueDial"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "RadialGauge",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ValueGauge"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "ProgressRing",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ValueRing"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TreeView",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "DeviceTree"
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TreeViewItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TreeViewItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TreeViewItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TreeViewItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TreeViewItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "TreeViewItem",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/Views/ControlPreviewView.xaml",
     "type": "ColorPickerButton",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ColorInput"
   },
@@ -765,21 +765,21 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "ToolBar",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": "C11",
     "name": "SequenceToolBar"
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -793,7 +793,7 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "RunButton"
   },
@@ -807,7 +807,7 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -821,7 +821,7 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "PauseButton"
   },
@@ -835,7 +835,7 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -856,7 +856,7 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TreeView",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "StepPalette"
   },
@@ -870,7 +870,7 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "DataGrid",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "StepGrid"
   },
@@ -884,35 +884,35 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "ListBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "SequenceList"
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -926,56 +926,56 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "DataGrid",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -989,49 +989,49 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "DataGrid",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "ListBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1045,28 +1045,28 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "FieldText"
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "ComboBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "FieldChoice"
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1080,21 +1080,21 @@
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "TextBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/SequenceWorkspace.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1108,7 +1108,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "DialogHost",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "AppDialogHost"
   },
@@ -1122,28 +1122,28 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "AccentBlueButton"
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "AccentPurpleButton"
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "AccentTealButton"
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ThemeButton"
   },
@@ -1157,7 +1157,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "PinButton"
   },
@@ -1171,7 +1171,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1185,7 +1185,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1199,7 +1199,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1213,21 +1213,21 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Menu",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": "ShellMenu"
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": "FileMenu"
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
@@ -1241,7 +1241,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
@@ -1255,7 +1255,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
@@ -1276,7 +1276,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
@@ -1290,77 +1290,77 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "MenuItem",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": ""
   },
@@ -1374,14 +1374,14 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "ToolBar",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": "C11",
     "name": "ProjectToolBar"
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1395,35 +1395,35 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "ListBox",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "RecentList"
   },
@@ -1437,7 +1437,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1451,7 +1451,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1465,7 +1465,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": "ProtocolButton"
   },
@@ -1486,35 +1486,35 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1528,7 +1528,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1542,7 +1542,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1556,7 +1556,7 @@
   {
     "file": "src/TestStation.App/MainWindow.xaml",
     "type": "Button",
-    "source": "Industrial.Controls 1.2.0",
+    "source": "Industrial.Controls 1.0.0",
     "gap": null,
     "name": ""
   },
@@ -1577,7 +1577,7 @@
   {
     "file": "src/TestStation.App/Services/SequenceInteractionService.cs",
     "type": "ContextMenu",
-    "source": "Industrial.Controls 1.2.0 (HandyControl template fallback)",
+    "source": "Industrial.Controls 1.0.0 (HandyControl template fallback)",
     "gap": "C01",
     "name": "dynamic"
   },

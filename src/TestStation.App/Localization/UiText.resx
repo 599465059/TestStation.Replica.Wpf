@@ -976,12 +976,12 @@
   <data name="CanvasSampleTooltip" xml:space="preserve"><value>模拟数值，供画布测试；设计模式可拖动和调整尺寸</value></data>
   <data name="CanvasSwitchToRun" xml:space="preserve"><value>切换运行模式</value></data>
   <data name="CanvasSwitchToDesign" xml:space="preserve"><value>切换设计模式</value></data>
-  <data name="ManualCanvasHint" xml:space="preserve"><value>拖动控件移动；选中后拖动边缘调整大小。位置和尺寸强制按网格吸附，拖动时显示辅助网格。</value></data>
+  <data name="ManualCanvasHint" xml:space="preserve"><value>显示控件可直接拖动；输入控件拖动名称，串口与示波器拖动标题。边缘调整尺寸，位置和尺寸均按网格吸附。</value></data>
   <data name="CanvasVoltage" xml:space="preserve"><value>电压</value></data>
   <data name="CanvasWidgetLibrary" xml:space="preserve"><value>控件库</value></data>
   <data name="CanvasWidgetLibraryHint" xml:space="preserve"><value>拖拽到画布，或在空白处右键添加</value></data>
   <data name="CanvasBounds" xml:space="preserve"><value>位置：第 {0} 列 / 第 {1} 行 · 尺寸：{2} × {3} 格 · 每格 {4} 像素</value></data>
-  <data name="CanvasSaved" xml:space="preserve"><value>布局已自动保存 · 拖动或缩放时显示辅助网格</value></data>
+  <data name="CanvasSaved" xml:space="preserve"><value>布局已自动保存 · 位置和尺寸按网格吸附</value></data>
   <data name="CanvasSaveFailed" xml:space="preserve"><value>布局保存失败：{0}；修改保留在当前页面，请处理后重试</value></data>
   <data name="CanvasLoadFailed" xml:space="preserve"><value>布局读取失败：{0}；已禁止编辑，避免覆盖原文件</value></data>
   <data name="ManualTest" xml:space="preserve"><value>手动测试</value></data>

@@ -18,13 +18,14 @@ public partial class ManualWorkspaceView : UserControl
     public ManualWorkspaceViewModel Model { get; }
     private readonly ManualInstrumentFactory _instruments;
     private readonly ManualWidgetConfigurationAdapter _configuration;
+    private readonly IThemeService? _theme;
     private readonly Dictionary<ManualWorkspaceTab, Border> _documents = [];
     private readonly Dictionary<ManualWorkspaceTab, ManualTestView> _views = [];
     private bool _syncing;
 
-    public ManualWorkspaceView(ManualWorkspaceViewModel model, ManualInstrumentFactory instruments, ManualWidgetConfigurationAdapter configuration)
+    public ManualWorkspaceView(ManualWorkspaceViewModel model, ManualInstrumentFactory instruments, ManualWidgetConfigurationAdapter configuration, IThemeService? theme = null)
     {
-        Model = model; _instruments = instruments; _configuration = configuration;
+        Model = model; _instruments = instruments; _configuration = configuration; _theme = theme;
         InitializeComponent(); DataContext = model;
         model.Documents.CollectionChanged += (_, _) => ReconcileDocuments();
         model.PropertyChanged += OnModelChanged;
@@ -60,7 +61,7 @@ public partial class ManualWorkspaceView : UserControl
             }
             foreach (var tab in Model.Documents.Where(tab => !_documents.ContainsKey(tab)))
             {
-                var view = new ManualTestView(tab.Model, _instruments, _configuration);
+                var view = new ManualTestView(tab.Model, _instruments, _configuration, _theme);
                 _views.Add(tab, view);
                 var document = Workspace.AddDocument(tab.Title, view);
                 document.Tag = tab;
@@ -89,7 +90,7 @@ public partial class ManualWorkspaceView : UserControl
         if (e.PropertyName is nameof(ManualWorkspaceTab.Title)) AdaptDocumentHeaders();
     }
 
-    // MdiWorkspace 1.2.0 exposes no title setter/header template. Bind its public
+    // MdiWorkspace 1.0.0 exposes no title setter/header template. Bind its public
     // composed header elements without reflection, private state or template replacement.
     private void AdaptDocumentHeaders()
     {
@@ -106,9 +107,10 @@ public partial class ManualWorkspaceView : UserControl
         foreach (var item in tabs.Items.OfType<NavigationTabItem>())
         {
             if (item.Tag is not Border document || document.Tag is not ManualWorkspaceTab tab) continue;
-            var header = new TextBlock { MinWidth = 96, ToolTip = "双击标签名重命名" };
-            header.SetBinding(TextBlock.TextProperty, new Binding(nameof(tab.Title)) { Source = tab });
-            item.Header = header;
+            item.SetBinding(HeaderedContentControl.HeaderProperty, new Binding(nameof(tab.Title)) { Source = tab });
+            item.IsClosable = Model.Documents.Count > 1;
+            item.MinWidth = 140;
+            item.ToolTip = "双击标签名重命名";
         }
     }
 

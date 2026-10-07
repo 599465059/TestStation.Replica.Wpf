@@ -1,15 +1,15 @@
-> 当前接入记录。正式页面使用 Industrial.Controls 1.2.0；最新迁移结果及缺项以 CONTROL_LIBRARY_GAPS.md 和 CONTROL_USAGE_INVENTORY.json 为准。
+> 当前接入记录。正式页面使用 Industrial.Controls 1.0.0；最新迁移结果及缺项以 CONTROL_LIBRARY_GAPS.md 和 CONTROL_USAGE_INVENTORY.json 为准。
 
 # Industrial.Controls 第一轮接入
 
-日期：2026-10-06。范围：固定版本包引用、主题适配和独立控件预览页、统一弹窗。
+日期：2026-10-07。范围：固定版本包引用、主题适配和独立控件预览页、统一弹窗。
 
 ## 固定包与来源
 
-- 来源：`F:\opencode\web_py\UI库\IndustrialKit\dist\packages\Industrial.Controls.1.2.0.nupkg`。
-- 本工程保存位置：`vendor/nuget/Industrial.Controls.1.2.0.nupkg`。
+- 来源：`F:\opencode\web_py\UI库\IndustrialKit\dist\packages\Industrial.Controls.1.0.0.nupkg`。
+- 本工程保存位置：`vendor/nuget/Industrial.Controls.1.0.0.nupkg`。
 - 原包与工程内副本 SHA-256：`FB2DCE6556E46F2183B8301157535EBC6E29896129B6E8E1B8B8FAFB648E85BE`。
-- App 项目以 `Version="[1.2.0]"` 精确引用。NuGet.Config 为此包指定工程内源，其余包使用 nuget.org。
+- App 项目以 `Version="[1.0.0]"` 精确引用。NuGet.Config 为此包指定工程内源，其余包使用 nuget.org。
 - 当前目标框架为 .NET 10，HandyControl 3.5.1、MaterialDesignThemes 5.3.2 继续使用现有版本。
 
 只消费已发布的包。IndustrialKit 源码与 Gallery 保持只读；源码中尚未发布到此版本包的功能不会自动进入本软件。
@@ -55,7 +55,7 @@ SurfaceBrush、SubtleBrush、TextBrush、MutedBrush、AccentBrush、SuccessBrush
 
 ## 当前边界
 
-正式页面和自动测试编辑器已使用同一套 1.2.0 资源入口；AvalonDock 继续作为停靠宿主，不复制控件库模板。
+正式页面和自动测试编辑器已使用同一套 1.0.0 资源入口；AvalonDock 继续作为停靠宿主，不复制控件库模板。
 
 库的 FluentWindow 等组件依赖库内部 Theme.Mode/Changed。本轮保留现有主窗口；后续接入这些组件时，需要确认库提供外部主题状态和通知接口，不能通过反射修改其私有状态，也不能让两个全局主题管理器同时覆盖资源。
 

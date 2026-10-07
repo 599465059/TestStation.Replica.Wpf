@@ -35,6 +35,8 @@
       <Button Tag="仪表" Click="PaletteCategory_Click" ToolTip="仪表" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="Gauge" Width="18" Height="18"/></Button>
       <Button Tag="操作与命令" Click="PaletteCategory_Click" ToolTip="操作与命令" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="GestureTap" Width="18" Height="18"/></Button>
       <Button Tag="串口与通信" Click="PaletteCategory_Click" ToolTip="串口与通信" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="Console" Width="18" Height="18"/></Button>
+      <Button Tag="波形" Click="PaletteCategory_Click" ToolTip="波形" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="Waveform" Width="18" Height="18"/></Button>
+      <Button Tag="容器" Click="PaletteCategory_Click" ToolTip="容器" Style="{StaticResource IconButton}" Margin="5,2"><md:PackIcon Kind="FolderOutline" Width="18" Height="18"/></Button>
     </StackPanel>
     <DockPanel x:Name="LibraryContent" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" MinWidth="190" Visibility="Collapsed">
       <TextBlock DockPanel.Dock="Bottom" Text="{Binding LibraryHint}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="12,8"/>
@@ -77,23 +79,21 @@
         </Grid.Style>
         <!-- Industrial.Controls already draws its own frame. Do not wrap it in
              a second application Border. -->
-        <ContentControl Tag="InstrumentHost" Loaded="InstrumentHost_Loaded" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
-        <!-- Interactive controls expose only a small move handle so their
-             buttons, editors, checkboxes and console toolbar remain clickable. -->
-        <Border Tag="MoveHandle" Panel.ZIndex="6" Width="92" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeAll">
+        <ContentControl Tag="InstrumentHost" Loaded="InstrumentHost_Loaded" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+         <ContentControl.Style><Style TargetType="ContentControl"><Style.Triggers>
+          <DataTrigger Binding="{Binding HasCornerMoveHandle}" Value="True"><Setter Property="Margin" Value="0,28,0,0"/></DataTrigger>
+         </Style.Triggers></Style></ContentControl.Style>
+        </ContentControl>
+        <!-- Name surfaces are tagged by the host adapter. Complex interactive
+             instruments use a dedicated move grip outside the resize edges. -->
+        <Border Tag="MoveHandle" Panel.ZIndex="4" Height="28" VerticalAlignment="Top" Background="Transparent" Cursor="SizeAll" ToolTip="拖动标题移动控件">
          <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers>
-          <DataTrigger Binding="{Binding Model.Kind}" Value="input"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+          <MultiDataTrigger><MultiDataTrigger.Conditions>
+           <Condition Binding="{Binding HasCornerMoveHandle}" Value="True"/>
+           <Condition Binding="{Binding DataContext.IsDesignMode, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True"/>
+          </MultiDataTrigger.Conditions><Setter Property="Visibility" Value="Visible"/></MultiDataTrigger>
          </Style.Triggers></Style></Border.Style>
-        </Border>
-        <Border Tag="MoveHandle" Panel.ZIndex="6" Height="22" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeAll">
-         <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers>
-          <DataTrigger Binding="{Binding Model.Kind}" Value="command"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
-         </Style.Triggers></Style></Border.Style>
-        </Border>
-        <Border Tag="MoveHandle" Panel.ZIndex="6" Width="22" Height="22" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" Cursor="SizeAll">
-         <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers>
-          <DataTrigger Binding="{Binding Model.Kind}" Value="serial"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
-         </Style.Triggers></Style></Border.Style>
+         <Grid Margin="12,0"><TextBlock Text="{Binding Name}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/><md:PackIcon Kind="Drag" Width="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{DynamicResource MutedBrush}"/></Grid>
         </Border>        <!-- Transparent edge hit zones remain available after selection is
              cleared, so the next pointer-down can start a resize gesture. -->
         <Grid Panel.ZIndex="5" IsHitTestVisible="True">

@@ -16,7 +16,7 @@
 
 - 页面 (`Views`) 只负责布局、绑定和交互组合，不重复定义通用控件的视觉样式。
 - 当前阶段不自研基础控件库。业务页面的 `UserControl` 负责组合 Industrial.Controls 提供的控件和样式；后续用户提供的自定义库按授权范围接入。
-- 用户提供的 `Industrial.Controls` 通过本工程 `vendor/nuget` 的固定版本包接入，允许使用该库已封装的控件和模板；不得在页面中重写或复制其基础模板。当前锁定最新已发布 `1.2.0`，正式页面与预览使用同一资源入口。`F:\opencode\web_py\UI库\IndustrialKit` 源码只读。
+- 用户提供的 `Industrial.Controls` 通过本工程 `vendor/nuget` 的固定版本包接入，允许使用该库已封装的控件和模板；不得在页面中重写或复制其基础模板。当前锁定最新已发布 `1.0.0`，正式页面与预览使用同一资源入口。`F:\opencode\web_py\UI库\IndustrialKit` 源码只读。
 - 控件库版本更新必须发布新的包版本，不能覆盖同版本包。引用、主题适配和控件使用分离；不得引用 Gallery 工程或使 Domain/Application 依赖 UI 库。
 - 通用控件样式统一放在 `Themes/HandyControlStyles.xaml`，库资源由 `Themes/ResourceBootstrap.cs` 按依赖顺序加载并注册原包样式别名，外壳样式放在 `ShellStyles.xaml`，序列行模板放在 `Themes/EditorTemplates/StepListResources.xaml`。页面不复制这些视觉定义。控件不得反向依赖设备驱动、序列执行器或具体页面。
 - 公共按钮、表格、输入框、属性编辑器、工具栏、状态标记和空状态视图只能有一套可复用实现。页面需要通过属性、模板或数据绑定改变内容，而不是复制一份 XAML。

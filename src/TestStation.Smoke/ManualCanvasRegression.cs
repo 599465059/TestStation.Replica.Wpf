@@ -27,7 +27,7 @@ internal static class ManualCanvasRegression
         var dialogs = new WorkspaceDialogs();
         var vm = new ManualWorkspaceViewModel(editing, new ManualCanvasRepository(editing), new ManualCanvasDocumentService(), new ManualWorkspaceRepository(), dialogs);
         vm.OpenProject(root);
-        Require(vm.Documents.Count == 1 && vm.Documents[0].Name == "手动测试", "Manual workspace migration did not create the main tab");
+        Require(vm.Documents.Count == 1 && vm.Documents[0].Name == "未命名", "Manual workspace migration did not name the main tab");
         var second = vm.AddDocument();
         vm.Rename(second, "电源测试");
         Require(vm.Documents.Count == 2 && second.Name == "电源测试", "Manual workspace creation or rename failed");
@@ -46,11 +46,11 @@ internal static class ManualCanvasRegression
         public Task<SequenceUnsavedChoice> AskUnsavedAsync(string name) => Task.FromResult(SequenceUnsavedChoice.Save);
         public Task<string?> RenameAsync(string name) => Task.FromResult<string?>(name);
     }
-    public static ManualTestView CreateView()
+    public static ManualTestView CreateView(IThemeService? theme = null)
     {
         var editing = new ManualCanvasEditingService();
         var documentService = new ManualCanvasDocumentService();
-        return new(new(editing, new ManualCanvasRepository(editing), documentService));
+        return new(new(editing, new ManualCanvasRepository(editing), documentService), theme: theme);
     }
     public static void VerifyModel()
     {
@@ -59,7 +59,7 @@ internal static class ManualCanvasRegression
         Require(editing.Preview(original, CanvasGesture.Move, 23, -26, 16) == new GridBounds(11, 8, 14, 4), "Grid move rounding failed");
         Require(editing.Preview(original, CanvasGesture.Move, -999, -999, 16) == new GridBounds(0, 0, 14, 4), "Negative coordinates were allowed");
         Require(editing.Preview(original, CanvasGesture.West, 999, 0, 16) == new GridBounds(14, 10, 10, 4), "West resize failed to preserve right edge and minimum");
-        Require(editing.Preview(original, CanvasGesture.North, 0, 999, 16) == new GridBounds(10, 11, 14, 3), "North resize failed to preserve bottom edge and minimum");
+        Require(editing.Preview(original, CanvasGesture.North, 0, 999, 16) == new GridBounds(10, 12, 14, 2), "North resize failed to preserve bottom edge and minimum");
         Require(editing.Preview(original, CanvasGesture.SouthEast, 23, 26, 16) == new GridBounds(10, 10, 15, 6), "Corner resize rounding failed");
         var documentService = new ManualCanvasDocumentService();
         var document = new ManualCanvasDefinition();
@@ -146,7 +146,7 @@ internal static class ManualCanvasRegression
         var theme = new ThemeService();
         var main = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs());
         main.CreateProject(Path.Combine(Path.GetTempPath(), "canvas-ui", Guid.NewGuid().ToString("N")), "canvas");
-        var view = CreateView();
+        var view = CreateView(theme);
         var window = new MainWindow(main, theme, new SequenceInteractionService(new SequenceDropTargetService()),
             new ControlPreviewView(new ControlPreviewViewModel(), theme), ProtocolUiRegression.Create().Pages, new DiscardProtocolDialog(), view) { WindowState = WindowState.Maximized };
         try
@@ -157,12 +157,15 @@ internal static class ManualCanvasRegression
             window.UpdateLayout();
             NavigationSmokeHelper.Invoke(window, "手动测试"); Pump();
             Require(view.IsVisible && Window.GetWindow(view) == window, "Canvas was not embedded in manual-test page");
+            // Let navigation and maximize animations settle before calculating
+            // physical pointer coordinates for native mouse input.
+            for (var i = 0; i < 4; i++) Pump();
             var surface = (Grid)view.FindName("CanvasSurface");
             var items = (ItemsControl)view.FindName("CanvasItems");
             var scroll = (ScrollViewer)view.FindName("CanvasScroll");
             var widget = view.Model.Widgets.Single(); var initial = widget.Bounds;
             var presenter = (ContentPresenter)items.ItemContainerGenerator.ContainerFromItem(widget);
-            NativePointer.Drag(presenter.PointToScreen(new Point(90, 24)), presenter.PointToScreen(new Point(141, 51)), () =>
+            NativePointer.Drag(presenter.PointToScreen(new Point(90, 16)), presenter.PointToScreen(new Point(141, 43)), () =>
             { Require(view.IsManipulating, "Canvas did not enter dragging state"); Capture(window, "dragging"); }); Pump();
             Require(widget.Bounds.Column > initial.Column && widget.Bounds.Row > initial.Row &&
                 (widget.Bounds.Column - initial.Column) >= 1 && (widget.Bounds.Row - initial.Row) >= 1,
@@ -198,9 +201,10 @@ internal static class ManualCanvasRegression
                 }
             view.Model.Select(widget); view.Model.Nudge(1000, 800); Pump();
             Require(scroll.ScrollableWidth > 0 && scroll.ScrollableHeight > 0, "Canvas did not overflow with scrolling");
-            Require(widget.Width >= 160 && widget.Height >= 48, "Widget was compressed to fit viewport");
+            Require(widget.Width >= 160 && widget.Height >= 32, "Widget was compressed to fit viewport");
             var reloaded = CreateView(); reloaded.Model.OpenProject(main.ProjectPath!);
             Require(reloaded.Model.Widgets.Single().Bounds == widget.Bounds, "Actual drag/resize layout was not restored");
+            IndustrialCanvasRegression.Verify(view, window);
             NavigationSmokeHelper.Invoke(window, "自动测试"); Pump();
             Require(!view.IsVisible && !view.IsManipulating, "Manual page failed to detach");
             window.Close(); Pump();

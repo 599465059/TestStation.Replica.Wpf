@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Industrial.Controls.Instruments;
 using TestStation.App.Localization;
+using TestStation.App.Services;
 using TestStation.Application;
 using TestStation.Domain;
 
@@ -57,10 +58,11 @@ public sealed class ManualWidgetViewModel(ManualWidgetDefinition model, int grid
     // and editors clickable while the canvas is in design mode. They expose a
     // small name/handle area for moving instead of making the whole control a
     // drag surface.
-    public bool IsInput => Model.IsInput || Model.Kind is "serial" or "command";
+    public bool IsInput => Model.IsInput || ManualWidgetCatalog.Get(Model.Kind).Interactive;
     public bool IsDisplay => !IsInput;
-    public bool IsNumeric => Model.Kind is "numeric" or "input" or "gauge" or "status";
-    public bool IsCommand => Model.Kind is "input" or "command";
+    public bool HasCornerMoveHandle => ManualWidgetCatalog.Get(Model.Kind).HasCornerMoveHandle;
+    public bool IsNumeric => Model.Kind is "numeric" or "readout" or "input" or "gauge" or "status" or "slider" or "range" or "progress" or "ring";
+    public bool IsCommand => Model.Kind is "input" or "command" or "slider" or "toggle" or "mode" or "trigger";
     public bool IsSerial => Model.Kind == "serial";
     public bool IsGauge => Model.Kind == "gauge";
     public bool IsStatus => Model.Kind == "status";
@@ -112,17 +114,19 @@ public sealed class ManualWidgetViewModel(ManualWidgetDefinition model, int grid
         settings.Step = ParseDouble(Step, settings.Step); settings.WarningAbove = ParseDouble(WarningAbove, settings.WarningAbove);
         settings.ErrorAbove = ParseDouble(ErrorAbove, settings.ErrorAbove); settings.Encoding = Encoding;
         settings.Repeat = ParseInt(Repeat, settings.Repeat); settings.IntervalMilliseconds = ParseInt(CommandInterval, settings.IntervalMilliseconds);
-        var type = Model.Kind switch
-        {
-            "input" => nameof(RealtimeNumericInputControl),
-            "serial" => nameof(SerialDataDisplay),
-            "gauge" => nameof(GaugeControl),
-            "status" => nameof(StatusIndicatorControl),
-            "command" => nameof(CommandButtonControl),
-            _ => nameof(RealtimeNumericDisplayControl)
-        };
         Dictionary<string, string>? properties = null;
-        try { properties = JsonSerializer.Deserialize<InstrumentFiles.ConfigurationFile>(Model.ConfigurationJson)?.Properties; } catch (JsonException) { }
+        string? type = null;
+        try
+        {
+            var stored = JsonSerializer.Deserialize<InstrumentFiles.ConfigurationFile>(Model.ConfigurationJson);
+            properties = stored?.Properties; type = stored?.Type;
+        }
+        catch (JsonException) { }
+        if (string.IsNullOrWhiteSpace(type))
+        {
+            using var defaults = ManualWidgetCatalog.Create(Model.Kind);
+            type = defaults.GetType().Name;
+        }
         properties ??= new(StringComparer.Ordinal);
         properties["PollIntervalMilliseconds"] = PollInterval;
         if (Model.Kind == "serial")
@@ -137,9 +141,9 @@ public sealed class ManualWidgetViewModel(ManualWidgetDefinition model, int grid
     public void ReplaceModel(ManualWidgetDefinition model)
     {
         Model = model;
-        _bounds = model.Bounds;
-        _name = model.Name; _unit = model.Unit;
-        OnPropertyChanged(string.Empty);
+        Preview(model.Bounds);
+        Name = model.Name; Unit = model.Unit;
+        OnPropertyChanged(nameof(Model));
     }
     private static string Text(JsonElement root, string name, string fallback)
         => root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() ?? fallback : fallback;
@@ -186,17 +190,10 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
     private double _viewportWidth = 800, _viewportHeight = 600;
     private string _status = UiText.Get("ManualCanvasHint");
     public event Action<ManualWidgetViewModel>? WidgetConfigurationChanged;
+    public event Action? CaptureConfigurationsRequested;
     public ObservableCollection<ManualWidgetViewModel> Widgets { get; } = [];
     public ObservableCollection<ManualWidgetViewModel> SelectedWidgets { get; } = [];
-    public IReadOnlyList<ManualWidgetTool> WidgetTools { get; } =
-    [
-        new("numeric", "数值显示", "Numeric", "数值"),
-        new("input", "数值输入", "Pencil", "数值"),
-        new("status", "状态指示", "LedOn", "布尔与状态"),
-        new("gauge", "仪表", "Gauge", "仪表"),
-        new("command", "操作命令", "GestureTap", "操作与命令"),
-        new("serial", "串口控制台", "Console", "串口与通信")
-    ];
+    public IReadOnlyList<ManualWidgetTool> WidgetTools => ManualWidgetCatalog.Tools;
     public ManualWidgetViewModel? Selected { get; private set; }
     public ManualWidgetViewModel? LastInteracted { get; private set; }
     public int GridSize => _document.GridSize;
@@ -230,7 +227,25 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
         _root = root; _dirty = false; _loaded = true;
         try
         {
-            _document = _repository.Load(root, documentId) ?? new() { Widgets = [NewWidget(0)] };
+            var stored = _repository.Load(root, documentId);
+            _document = stored ?? new() { Widgets = [NewWidget(0)] };
+            if (_document.WidgetLibraryBaseline != "1.0.0")
+            {
+                if (stored is not null && _document.GridSize == 16)
+                    foreach (var widget in _document.Widgets.ToArray())
+                    {
+                        var previousDefault = widget.Kind switch
+                        {
+                            "numeric" => (18, 4), "input" => (20, 4), "gauge" => (18, 12),
+                            "status" => (18, 4), "command" => (14, 5), "serial" => (32, 15), _ => (0, 0)
+                        };
+                        if ((widget.Bounds.Columns, widget.Bounds.Rows) != previousDefault) continue;
+                        var spec = ManualWidgetCatalog.Get(widget.Kind);
+                        _documentService.UpdateBounds(_document, widget.Id, widget.Bounds with { Columns = spec.Columns, Rows = spec.Rows });
+                    }
+                _document.WidgetLibraryBaseline = "1.0.0";
+                _dirty = stored is not null;
+            }
             Rebuild(); Status = UiText.Get("ManualCanvasHint");
         }
         catch (Exception error)
@@ -254,6 +269,7 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
     {
         if (!_loaded || _root is null) return false;
         if (!SavePendingProperties()) return false;
+        CaptureConfigurationsRequested?.Invoke();
         _dirty = true; OnPropertyChanged(nameof(IsDirty));
         return Flush();
     }
@@ -323,14 +339,17 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
     public GridBounds Preview(ManualWidgetViewModel widget, GridBounds origin, CanvasGesture gesture, double dx, double dy, bool refreshExtent = false, bool updateStatus = false)
     {
         if (!IsDesignMode || !_loaded) return origin;
-        var bounds = CalculatePreview(origin, gesture, dx, dy);
+        var bounds = CalculatePreview(origin, gesture, dx, dy, widget);
         widget.Preview(bounds);
         if (refreshExtent) NotifyExtent();
         if (updateStatus) Status = UiText.Format("CanvasBounds", bounds.Column, bounds.Row, bounds.Columns, bounds.Rows, GridSize);
         return bounds;
     }
-    public GridBounds CalculatePreview(GridBounds origin, CanvasGesture gesture, double dx, double dy)
-        => _editing.Preview(origin, gesture, dx, dy, GridSize);
+    public GridBounds CalculatePreview(GridBounds origin, CanvasGesture gesture, double dx, double dy, ManualWidgetViewModel? widget = null)
+    {
+        var spec = widget is null ? null : ManualWidgetCatalog.Get(widget.Model.Kind);
+        return _editing.Preview(origin, gesture, dx, dy, GridSize, spec?.MinimumColumns ?? 10, spec?.MinimumRows ?? 2);
+    }
     public void CompleteGesture(ManualWidgetViewModel widget, GridBounds origin, bool cancel)
     {
         if (cancel) { widget.Preview(origin); NotifyExtent(); Status = UiText.Get("ManualCanvasHint"); return; }
@@ -370,16 +389,22 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
         var widget = new ManualWidgetViewModel(definition, GridSize);
         Widgets.Add(widget); Select(widget); NotifyExtent(); Changed();
     }
-    public void StoreWidgetConfiguration(ManualWidgetViewModel widget, string configurationJson)
+    public void StoreWidgetConfiguration(ManualWidgetViewModel widget, string configurationJson, bool persist = true)
     {
         if (!_loaded || string.IsNullOrWhiteSpace(configurationJson)) return;
         var index = _document.Widgets.FindIndex(item => item.Id == widget.Id);
         if (index < 0 || _document.Widgets[index].ConfigurationJson == configurationJson) return;
-        var updated = _document.Widgets[index] with { ConfigurationJson = configurationJson };
+        var stored = JsonSerializer.Deserialize<InstrumentFiles.ConfigurationFile>(configurationJson);
+        var updated = _document.Widgets[index] with
+        {
+            ConfigurationJson = configurationJson,
+            Name = stored?.Settings.Name ?? widget.Name,
+            Unit = stored?.Settings.Unit ?? widget.Unit
+        };
         if (!_documentService.UpdateWidget(_document, updated)) return;
         widget.ReplaceModel(updated);
         _dirty = true; OnPropertyChanged(nameof(IsDirty));
-        Flush();
+        if (persist) Flush();
     }
     private void ApplyWidgetProperties()
     {
@@ -426,25 +451,9 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
     private ManualWidgetDefinition NewWidget(int index) => NewWidget("numeric", index);
     private ManualWidgetDefinition NewWidget(string kind, int index)
     {
-        var bounds = kind switch
-        {
-            "serial" => new GridBounds(3 + index % 5 * 3, 3 + index % 4 * 3, 32, 15),
-            "gauge" => new GridBounds(3 + index % 5 * 3, 3 + index % 4 * 3, 18, 12),
-            "status" => new GridBounds(3 + index % 5 * 3, 3 + index % 4 * 3, 18, 4),
-            "command" => new GridBounds(3 + index % 5 * 3, 3 + index % 4 * 3, 14, 5),
-            "input" => new GridBounds(3 + index % 5 * 3, 3 + index % 4 * 3, 20, 4),
-            _ => new GridBounds(3 + index % 8 * 2, 3 + index % 8 * 4, 18, 4)
-        };
-        var (name, unit, isInput) = kind switch
-        {
-            "input" => ("设定值", "V", true),
-            "serial" => ("串口控制台", "", false),
-            "gauge" => ("仪表", "", false),
-            "status" => ("状态", "", false),
-            "command" => ("操作命令", "", true),
-            _ => (UiText.Get("CanvasVoltage"), "V", false)
-        };
-        return new(Guid.NewGuid().ToString("N"), kind, name, unit, bounds, isInput);
+        var spec = ManualWidgetCatalog.Get(kind);
+        var bounds = new GridBounds(3 + index % 5 * 3, 3 + index % 4 * 3, spec.Columns, spec.Rows);
+        return new(Guid.NewGuid().ToString("N"), kind, spec.Name, spec.Unit, bounds, spec.Interactive);
     }
     private void AddWidget()
     {

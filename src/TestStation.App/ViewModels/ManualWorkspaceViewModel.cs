@@ -43,7 +43,7 @@ public sealed partial class ManualWorkspaceViewModel : ObservableObject, IProjec
     {
         if (string.Equals(_projectRoot, root, StringComparison.OrdinalIgnoreCase)) return;
         var entries = _workspaces.Load(root).ToList();
-        if (entries.Count == 0) entries.Add(new ManualWorkspaceEntry("main", "手动测试"));
+        if (entries.Count == 0) entries.Add(new ManualWorkspaceEntry("main", "未命名"));
         if (entries.All(item => !item.IsOpen)) entries[0] = entries[0] with { IsOpen = true };
         _projectRoot = root; _catalog = entries; Documents.Clear();
         foreach (var entry in entries.Where(item => item.IsOpen)) Documents.Add(CreateTab(entry));

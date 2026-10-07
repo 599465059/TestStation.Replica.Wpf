@@ -11,10 +11,14 @@ public sealed class ManualWorkspaceRepository : IManualWorkspaceRepository
     public IReadOnlyList<ManualWorkspaceEntry> Load(string projectRoot)
     {
         var path = FilePath(projectRoot);
-        if (!File.Exists(path)) return [new("main", "手动测试")];
+        if (!File.Exists(path)) return [new("main", "未命名")];
         var entries = JsonSerializer.Deserialize<List<ManualWorkspaceEntry>>(File.ReadAllText(path), Options)
             ?? throw new InvalidDataException("手动测试工区目录为空");
         Validate(entries);
+        // Only migrate the old stock title; preserve user-assigned names.
+        for (var i = 0; i < entries.Count; i++)
+            if (entries[i].Id == "main" && entries[i].Name == "手动测试")
+                entries[i] = entries[i] with { Name = "未命名" };
         return entries;
     }
 

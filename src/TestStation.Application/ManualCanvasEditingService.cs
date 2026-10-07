@@ -6,7 +6,8 @@ namespace TestStation.Application;
 public enum CanvasGesture { Move, NorthWest, North, NorthEast, West, East, SouthWest, South, SouthEast }
 public interface IManualCanvasEditingService
 {
-    GridBounds Preview(GridBounds origin, CanvasGesture gesture, double dx, double dy, int gridSize);
+    GridBounds Preview(GridBounds origin, CanvasGesture gesture, double dx, double dy, int gridSize,
+        int minimumColumns = 10, int minimumRows = 2);
     void Validate(ManualCanvasDefinition document);
 }
 public interface IManualCanvasRepository
@@ -18,8 +19,9 @@ public interface IManualCanvasRepository
 public sealed class ManualCanvasEditingService : IManualCanvasEditingService
 {
     public const int MinimumColumns = 10;
-    public const int MinimumRows = 3;
-    public GridBounds Preview(GridBounds origin, CanvasGesture gesture, double dx, double dy, int gridSize)
+    public const int MinimumRows = 2;
+    public GridBounds Preview(GridBounds origin, CanvasGesture gesture, double dx, double dy, int gridSize,
+        int minimumColumns = MinimumColumns, int minimumRows = MinimumRows)
     {
         if (gridSize is < 4 or > 64 || !double.IsFinite(dx) || !double.IsFinite(dy))
             throw new ArgumentException("Invalid canvas gesture.");
@@ -28,14 +30,18 @@ public sealed class ManualCanvasEditingService : IManualCanvasEditingService
         if (gesture == CanvasGesture.Move)
             return origin with { Column = Math.Clamp(origin.Column + x, 0, 10000 - origin.Columns), Row = Math.Clamp(origin.Row + y, 0, 10000 - origin.Rows) };
         int left = origin.Column, top = origin.Row, right = left + origin.Columns, bottom = top + origin.Rows;
+        // Legacy documents may already be smaller than new library minima.
+        // Never jump their dimensions when the user starts a gesture.
+        minimumColumns = Math.Min(origin.Columns, Math.Max(MinimumColumns, minimumColumns));
+        minimumRows = Math.Min(origin.Rows, Math.Max(MinimumRows, minimumRows));
         if (gesture is CanvasGesture.NorthWest or CanvasGesture.West or CanvasGesture.SouthWest)
-            left = Math.Clamp(left + x, 0, right - MinimumColumns);
+            left = Math.Clamp(left + x, 0, right - minimumColumns);
         if (gesture is CanvasGesture.NorthEast or CanvasGesture.East or CanvasGesture.SouthEast)
-            right = Math.Clamp(right + x, left + MinimumColumns, 10000);
+            right = Math.Clamp(right + x, left + minimumColumns, 10000);
         if (gesture is CanvasGesture.NorthWest or CanvasGesture.North or CanvasGesture.NorthEast)
-            top = Math.Clamp(top + y, 0, bottom - MinimumRows);
+            top = Math.Clamp(top + y, 0, bottom - minimumRows);
         if (gesture is CanvasGesture.SouthWest or CanvasGesture.South or CanvasGesture.SouthEast)
-            bottom = Math.Clamp(bottom + y, top + MinimumRows, 10000);
+            bottom = Math.Clamp(bottom + y, top + minimumRows, 10000);
         return new(left, top, right - left, bottom - top);
     }
     public void Validate(ManualCanvasDefinition document)
@@ -46,7 +52,7 @@ public sealed class ManualCanvasEditingService : IManualCanvasEditingService
         foreach (var widget in document.Widgets)
         {
             if (widget is null || string.IsNullOrWhiteSpace(widget.Id) || !ids.Add(widget.Id) ||
-                widget.Kind is not ("numeric" or "input" or "serial" or "gauge" or "status" or "command") ||
+                !ManualWidgetKinds.IsSupported(widget.Kind) ||
                 widget.Name is null || widget.Unit is null || widget.Bounds.Column < 0 || widget.Bounds.Row < 0 ||
                 string.IsNullOrWhiteSpace(widget.ConfigurationJson) || !IsJsonObject(widget.ConfigurationJson) ||
                 widget.Bounds.Columns < MinimumColumns || widget.Bounds.Rows < MinimumRows ||
