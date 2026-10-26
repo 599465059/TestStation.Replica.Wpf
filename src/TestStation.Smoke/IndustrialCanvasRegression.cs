@@ -15,7 +15,7 @@ internal static class IndustrialCanvasRegression
 {
     public static void Verify(ManualTestView view, Window window)
     {
-        Require(typeof(InstrumentControl).Assembly.GetName().Version == new Version(1, 0, 0, 0), "Canvas did not load the 1.0.0 library");
+        Require(typeof(InstrumentControl).Assembly.GetName().Version == new Version(1, 1, 0, 0), "Canvas did not load the 1.1.0 library");
         var catalog = InstrumentCatalog.Default();
         Require(catalog.Items.Select(item => item.Key).Order().SequenceEqual(ManualWidgetCatalog.Items.Select(item => item.LibraryKey).Order()),
             "Canvas palette does not cover every published industrial instrument");

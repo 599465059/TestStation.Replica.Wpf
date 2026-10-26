@@ -24,6 +24,7 @@ public static class UiText
     public static string Variables => Get(nameof(Variables));
     public static string Simulation => Get(nameof(Simulation));
     public static string RunLog => Get(nameof(RunLog));
+    public static string LogLevel => Get(nameof(LogLevel));
     public static string StepProperties => Get(nameof(StepProperties));
     public static string Enabled => Get(nameof(Enabled));
     public static string Step => Get(nameof(Step));

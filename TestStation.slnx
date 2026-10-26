@@ -4,6 +4,11 @@
     <Project Path="src/TestStation.Application/TestStation.Application.csproj" />
     <Project Path="src/TestStation.Domain/TestStation.Domain.csproj" />
     <Project Path="src/TestStation.Infrastructure/TestStation.Infrastructure.csproj" />
+    <Project Path="src/TestStation.OpenTapHost/TestStation.OpenTapHost.csproj" />
+    <Project Path="src/TestStation.Contracts/TestStation.Contracts.csproj" />
     <Project Path="src/TestStation.Smoke/TestStation.Smoke.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/TestStation.Acceptance/TestStation.Acceptance.csproj" />
   </Folder>
 </Solution>

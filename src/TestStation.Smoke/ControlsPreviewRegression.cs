@@ -33,7 +33,7 @@ internal static class ControlsPreviewRegression
         Require(preview.IsLoaded && preview.IsVisible && Window.GetWindow(preview) == window, "Preview is not embedded in the shell");
         var previewScroll = (ScrollViewer)preview.FindName("PreviewScroll");
         Require(previewScroll.ComputedHorizontalScrollBarVisibility != Visibility.Visible, "Preview cards do not wrap to the viewport width");
-        Require(typeof(Dial).Assembly.GetName().Version?.ToString() == "1.0.0.0", "Unexpected packaged controls version");
+        Require(typeof(Dial).Assembly.GetName().Version?.ToString() == "1.1.0.0", "Unexpected packaged controls version");
         Require(ReferenceEquals(shellButtonStyle, resources[typeof(Button)]), "Library styles replaced the shell's global styles");
         var libraryButton = (Style)preview.FindResource("KitButton");
         var apply = (Button)preview.FindName("ApplyButton");

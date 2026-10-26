@@ -30,6 +30,10 @@ public partial class MainViewModel
     {
         var name = StepName.Trim();
         if (name.Length == 0) throw new InvalidDataException("步骤名称不能为空");
+        if (!int.TryParse(StepTimeoutMs.Trim(), out var timeoutMs) || timeoutMs < 0)
+            throw new InvalidDataException("超时必须是不小于 0 的整数毫秒数");
+        if (!FailureActions.Contains(StepOnFailure) || !FailureActions.Contains(StepOnComplete))
+            throw new InvalidDataException("失败动作无效");
         using var document = JsonDocument.Parse(StepParameters);
         if (document.RootElement.ValueKind != JsonValueKind.Object) throw new JsonException("参数必须是 JSON 对象");
         var parameters = document.RootElement.EnumerateObject().ToDictionary(pair => pair.Name, pair => pair.Value.Clone());
@@ -42,20 +46,44 @@ public partial class MainViewModel
                 "integer" when int.TryParse(value, out var number) && number >= 0 => JsonSerializer.SerializeToElement(number),
                 "integer" => throw new InvalidDataException($"{field.Label} 必须是不小于 0 的整数"),
                 "json" => ParseObject(value, field.Label),
+                "scalar" => ParseScalar(value),
+                "expression" => ParseExpression(value),
                 _ => JsonSerializer.SerializeToElement(value)
             };
         }
+        // Failure behavior has one source of truth in the common step properties.
+        if (step.Kind == "assert") parameters.Remove("failure_action");
+        if (step.Kind == "call_sequence") ApplyCallEditor(parameters);
+        if (step.Kind is "set_value" or "read_value") ApplySignalTable(parameters, step.Kind);
+        SequenceExpressionProgram.Parse(StepBeforeExpression);
+        SequenceExpressionProgram.Parse(StepAfterExpression);
         return new SequenceStep { Name = name == UiDisplay.StepName(step) ? step.Name : name,
-            Description = StepDescription, Params = parameters };
+            Description = StepDescription, TimeoutMs = timeoutMs, OnFailure = StepOnFailure, OnComplete = StepOnComplete,
+            FailureMessage = StepFailureMessage.Trim(), Precondition = StepPrecondition.Trim(),
+            BeforeExpression = StepBeforeExpression, AfterExpression = StepAfterExpression,
+            RecordResult = StepRecordResult, Params = parameters };
     }
 
     private static void ApplyStepUpdate(SequenceStep step, SequenceStep update)
-    { step.Name = update.Name; step.Description = update.Description; step.Params = update.Params; }
+    {
+        step.Name = update.Name;
+        step.Description = update.Description;
+        step.TimeoutMs = update.TimeoutMs;
+        step.OnFailure = update.OnFailure;
+        step.OnComplete = update.OnComplete;
+        step.FailureMessage = update.FailureMessage;
+        step.Precondition = update.Precondition;
+        step.BeforeExpression = update.BeforeExpression; step.AfterExpression = update.AfterExpression;
+        step.RecordResult = update.RecordResult;
+        step.Params = update.Params;
+    }
     private static bool IsEditorError(Exception error) =>
         error is InvalidDataException or JsonException or ArgumentException or FormatException or OverflowException;
 
     partial void OnSelectedRowChanged(SequenceRow? oldValue, SequenceRow? newValue)
     {
+        OnPropertyChanged(nameof(StepOutcomeLabel));
+        OnPropertyChanged(nameof(StepOutcomeAction));
         var value = newValue;
         if (!_loadingEditors && oldValue?.Step is { } previous && CaptureStepEditor() != _stepBaseline)
         {
@@ -77,13 +105,23 @@ public partial class MainViewModel
             foreach (var field in StepFields) field.PropertyChanged -= StepFieldChanged;
             StepName = value?.Step is { } selectedStep ? UiDisplay.StepName(selectedStep) : "";
             StepDescription = value?.Step?.Description ?? "";
+            StepTimeoutMs = value?.Step?.TimeoutMs.ToString(CultureInfo.InvariantCulture) ?? "0";
+            StepOnFailure = value?.Step?.OnFailure is { Length: > 0 } action ? action : "STOP";
+            StepOnComplete = value?.Step?.OnComplete is { Length: > 0 } complete ? complete : "CONTINUE";
+            StepFailureMessage = value?.Step?.FailureMessage ?? "";
+            StepPrecondition = value?.Step?.Precondition ?? "";
+            StepBeforeExpression = value?.Step?.BeforeExpression ?? "";
+            StepAfterExpression = value?.Step?.AfterExpression ?? "";
+            StepRecordResult = value?.Step?.RecordResult ?? true;
             StepParameters = value?.Step is { } step ? JsonSerializer.Serialize(
                 step.Params.Where(pair => !StepFieldCatalog.IsKnown(step.Kind, pair.Key))
                     .ToDictionary(pair => pair.Key, pair => pair.Value), new JsonSerializerOptions { WriteIndented = true }) : "{}";
             StepFields.Clear();
             if (value?.Step is { } selected)
-                foreach (var field in StepFieldCatalog.Create(selected.Kind, selected.Params))
+                foreach (var field in StepFieldCatalog.Create(selected.Kind, selected.Params).Where(_ => selected.Kind is not ("call_sequence" or "set_value" or "read_value")))
                 { field.PropertyChanged += StepFieldChanged; StepFields.Add(field); }
+            LoadCallEditor(value?.Step);
+            LoadSignalTable(value?.Step);
             _stepBaseline = CaptureStepEditor();
         }
         finally { _loadingEditors = loading; }
@@ -98,6 +136,38 @@ public partial class MainViewModel
         return document.RootElement.Clone();
     }
 
+    private static JsonElement ParseScalar(string value)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            if (document.RootElement.ValueKind is JsonValueKind.Object or JsonValueKind.Null)
+                throw new InvalidDataException("设置值或比较值只能是标量、一维数组或 ${变量引用}");
+            if (document.RootElement.ValueKind == JsonValueKind.Array && document.RootElement.EnumerateArray().Any(v => v.ValueKind is JsonValueKind.Array or JsonValueKind.Object or JsonValueKind.Null))
+                throw new InvalidDataException("只支持非空元素的一维数组");
+            if (document.RootElement.ValueKind == JsonValueKind.Array && document.RootElement.EnumerateArray().Any(v => v.ValueKind == JsonValueKind.Number && !double.IsFinite(v.GetDouble())))
+                throw new InvalidDataException("数组中的数值必须是有限数字");
+            if (document.RootElement.ValueKind == JsonValueKind.Number && !double.IsFinite(document.RootElement.GetDouble()))
+                throw new InvalidDataException("数值必须是有限数字");
+            if (SequenceParameterValue.IsReference(document.RootElement))
+                SequenceParameterValue.ValidateReference(document.RootElement.GetString()!);
+            return document.RootElement.Clone();
+        }
+        catch (JsonException error)
+        {
+            if (value.TrimStart().StartsWith('[')) throw new InvalidDataException("数组格式无效，请使用 JSON，例如 [1, 2, 3]", error);
+            var text = JsonSerializer.SerializeToElement(value);
+            if (SequenceParameterValue.IsReference(text)) SequenceParameterValue.ValidateReference(value);
+            return text;
+        }
+    }
+
+    private static JsonElement ParseExpression(string value)
+    {
+        SequenceExpression.ValidateSyntax(value);
+        return JsonSerializer.SerializeToElement(value);
+    }
+
     private void ReloadVariables()
     {
         var loading = _loadingEditors; _loadingEditors = true;
@@ -105,6 +175,8 @@ public partial class MainViewModel
         {
             Variables.Clear();
             foreach (var variable in _sequence?.Variables ?? []) Variables.Add(variable);
+            foreach (var variable in _activeSubproject?.GlobalVariables ?? []) Variables.Add(variable);
+            foreach (var variable in _stationVariables) Variables.Add(variable);
             SelectedVariable = null; ClearVariableEditor();
         }
         finally { _loadingEditors = loading; }
@@ -119,10 +191,7 @@ public partial class MainViewModel
             {
                 if (!CanEditSequence) throw new InvalidOperationException(UiText.ResolveChangesFirst);
                 var variable = BuildVariable(oldValue);
-                _document!.Edit(sequence => {
-                    if (oldValue is null) sequence.Variables.Add(variable);
-                    else sequence.Variables[sequence.Variables.IndexOf(oldValue)] = variable;
-                });
+                StoreVariable(oldValue, variable);
                 if (oldValue is null) Variables.Add(variable);
                 else Variables[Variables.IndexOf(oldValue)] = variable;
             }
@@ -149,10 +218,22 @@ public partial class MainViewModel
     }
 
     [RelayCommand(CanExecute = nameof(CanEditSequence))]
-    private void NewVariable()
+    private void NewVariable(string? scope)
     {
         if (!CanEditSequence || !TryCommitPendingSequenceEdits()) return;
-        SelectedVariable = null; ClearVariableEditor(); NotifyDocumentState();
+        var loading = _loadingEditors; _loadingEditors = true;
+        try
+        {
+            SelectedVariable = null; ClearVariableEditor();
+            VariableScope = VariableScopes.Contains(scope ?? "") ? scope! : "local";
+            var number = 1;
+            while (VariableOwner(VariableScope).Any(v => v.Name.Equals($"变量{number}", StringComparison.OrdinalIgnoreCase))) number++;
+            VariableName = $"变量{number}"; VariableDefault = "0";
+            var variable = BuildVariable(null);
+            StoreVariable(null, variable); ReloadVariables(); SelectedVariable = variable;
+        }
+        finally { _loadingEditors = loading; }
+        NotifyDocumentState(); Status = "变量已新建，可在属性区或右键菜单重命名";
     }
 
     private void ClearVariableEditor()
@@ -167,7 +248,7 @@ public partial class MainViewModel
     {
         var name = VariableName.Trim();
         if (!Regex.IsMatch(name, @"^[_\p{L}][_\p{L}\p{N}]*$")) throw new InvalidDataException("变量名称必须是有效标识符");
-        if (_sequence!.Variables.Any(item => item.Name == name && !ReferenceEquals(item, previous)))
+        if (VariableOwner(VariableScope).Any(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && !ReferenceEquals(item, previous)))
             throw new InvalidDataException($"变量已存在: {name}");
         if (!VariableTypes.Contains(VariableType) || !VariableScopes.Contains(VariableScope))
             throw new InvalidDataException("变量类型或作用域无效");
@@ -183,10 +264,7 @@ public partial class MainViewModel
         {
             var previous = SelectedVariable;
             var variable = BuildVariable(previous);
-            _document!.Edit(sequence => {
-                if (previous is null) sequence.Variables.Add(variable);
-                else sequence.Variables[sequence.Variables.IndexOf(previous)] = variable;
-            });
+            StoreVariable(previous, variable);
             var loading = _loadingEditors; _loadingEditors = true;
             try { ReloadVariables(); SelectedVariable = variable; }
             finally { _loadingEditors = loading; }
@@ -196,19 +274,87 @@ public partial class MainViewModel
     }
 
     [RelayCommand(CanExecute = nameof(CanEditSequence))]
-    private void DeleteVariable()
+    private async Task DeleteVariable()
     {
         if (!CanEditSequence || SelectedVariable is not { } variable) return;
-        _document!.Edit(sequence => sequence.Variables.Remove(variable));
-        ReloadVariables(); NotifyDocumentState();
-        Status = "变量已删除，保存序列后写入工程";
+        _documentOperation = true; NotifyDocumentState();
+        try
+        {
+            if (!await _sequenceDialogs.ConfirmDeleteItemAsync("变量（引用该变量的步骤需相应调整）", variable.Name)) return;
+            if (variable.Scope is "local" or "parameter") _document!.Edit(sequence => sequence.Variables.Remove(variable));
+            else VariableOwner(variable.Scope).Remove(variable);
+            ForgetRuntimeVariable(variable);
+            ReloadVariables(); Status = "变量已删除，保存工程后写入";
+        }
+        finally { _documentOperation = false; NotifyDocumentState(); }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanEditSequence))]
+    private async Task RenameVariable()
+    {
+        if (!CanEditSequence || SelectedVariable is not { } variable || !TryCommitPendingSequenceEdits()) return;
+        variable = SelectedVariable!;
+        _documentOperation = true; NotifyDocumentState();
+        try
+        {
+            var name = await _sequenceDialogs.RequestNameAsync("重命名变量", variable.Name);
+            if (name is null) return;
+            VariableName = name;
+            var update = BuildVariable(variable);
+            StoreVariable(variable, update);
+            ReloadVariables(); SelectedVariable = update;
+            Status = "变量已重命名；请同步调整引用该名称的步骤";
+        }
+        catch (Exception error) when (IsEditorError(error)) { Status = error.Message; }
+        finally { _documentOperation = false; NotifyDocumentState(); }
+    }
+
+    private List<SequenceVariable> VariableOwner(string scope) => scope switch
+    {
+        "global" => _activeSubproject?.GlobalVariables ?? throw new InvalidOperationException("没有活动序列子工程"),
+        "station" => _stationVariables,
+        _ => _sequence?.Variables ?? throw new InvalidOperationException("没有活动序列")
+    };
+
+    private void StoreVariable(SequenceVariable? previous, SequenceVariable variable)
+    {
+        // Shared definitions live outside the sequence's local undo history.
+        var previousLocal = previous is not null && (previous.Scope is "local" or "parameter");
+        var nextLocal = variable.Scope is "local" or "parameter";
+        if (previousLocal || nextLocal)
+            _document!.Edit(sequence =>
+            {
+                var index = previousLocal ? sequence.Variables.IndexOf(previous!) : -1;
+                if (previousLocal && nextLocal && index >= 0) sequence.Variables[index] = variable;
+                else
+                {
+                    if (previousLocal) sequence.Variables.Remove(previous!);
+                    if (nextLocal) sequence.Variables.Add(variable);
+                }
+            });
+        if (previous is not null && !previousLocal) VariableOwner(previous.Scope).Remove(previous);
+        if (!nextLocal) VariableOwner(variable.Scope).Add(variable);
+        if (previous is not null && (previous.Name != variable.Name || previous.Scope != variable.Scope ||
+            previous.DataType != variable.DataType || previous.Default?.GetRawText() != variable.Default?.GetRawText())) ForgetRuntimeVariable(previous);
+        NotifyDocumentState();
+    }
+
+    private void ForgetRuntimeVariable(SequenceVariable variable)
+    {
+        if (variable.Scope == "station") _stationRuntime.Remove(variable.Name);
+        if (variable.Scope == "global" && _activeSubproject is not null && _globalRuntime.TryGetValue(_activeSubproject.Id, out var values))
+            values.Remove(variable.Name);
     }
 
     private static JsonElement? ParseVariableDefault(string text, string type, string scope)
     {
+        if (type.EndsWith("[]", StringComparison.Ordinal))
+            return text.Length == 0 && scope == "parameter" ? null :
+                SequenceParameterValue.Parse(text.Length == 0 ? "[]" : text, type);
         if (text.Length == 0)
         {
-            if (scope == "local") throw new InvalidDataException("局部变量必须有默认值");
+            if (scope != "parameter")
+                return type switch { "text" => JsonSerializer.SerializeToElement(""), "boolean" => JsonSerializer.SerializeToElement(false), _ => JsonSerializer.SerializeToElement(0) };
             return null;
         }
         return type switch
@@ -226,7 +372,7 @@ public partial class MainViewModel
     }
 
     private void ReloadSimulationValues() => LoadSimulationValues(
-        _workspace is null ? new Dictionary<string, JsonElement>() : new SimulationRepository(_workspace.Root).Load());
+        _workspace is null ? new Dictionary<string, JsonElement>() : _workspaceService.LoadSimulation(_workspace));
 
     private void LoadSimulationValues(IReadOnlyDictionary<string, JsonElement> values)
     {
@@ -235,6 +381,7 @@ public partial class MainViewModel
         {
             SimulationValues.Clear();
             foreach (var pair in values.OrderBy(pair => pair.Key)) SimulationValues.Add(new SimulationValueRow(pair.Key, pair.Value));
+            RefreshSignalChannels();
             SelectedSimulationValue = null; SimulationChannel = ""; SimulationValue = "";
             _simulationBaseline = CaptureSimulationEditor();
         }
@@ -276,16 +423,17 @@ public partial class MainViewModel
             if (channel.Length == 0) throw new InvalidDataException("模拟通道 ID 不能为空");
             using var document = JsonDocument.Parse(SimulationValue);
             var value = document.RootElement.Clone();
-            var repository = new SimulationRepository(_workspace.Root);
-            var values = repository.Load();
+            var values = _workspaceService.LoadSimulation(_workspace)
+                .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
             if (previous?.Channel != channel && values.ContainsKey(channel))
                 throw new InvalidDataException($"模拟通道已存在: {channel}");
             if (previous is not null) values.Remove(previous.Channel);
             values[channel] = value;
-            repository.Save(values);
+            _workspaceService.SaveSimulation(_workspace, values);
             ReloadSimulationValues();
             SelectedSimulationValue = SimulationValues.First(item => item.Channel == channel);
             _simulationBaseline = CaptureSimulationEditor();
+            ActiveSimulationScenario = "当前模拟数据（已修改）";
             Status = $"模拟通道已保存: {channel}"; return true;
         }
         catch (Exception error) when (IsEditorError(error) || error is IOException or UnauthorizedAccessException)
@@ -298,9 +446,11 @@ public partial class MainViewModel
         if (!CanEditSimulation || SelectedSimulationValue is null) return;
         try
         {
-            var repository = new SimulationRepository(_workspace!.Root);
-            var values = repository.Load(); values.Remove(SelectedSimulationValue.Channel);
-            repository.Save(values); ReloadSimulationValues(); Status = "模拟通道已删除";
+            var values = _workspaceService.LoadSimulation(_workspace!);
+            values = values.Where(pair => !pair.Key.Equals(SelectedSimulationValue.Channel, StringComparison.OrdinalIgnoreCase))
+                .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
+            _workspaceService.SaveSimulation(_workspace!, values); ReloadSimulationValues(); Status = "模拟通道已删除";
+            ActiveSimulationScenario = "当前模拟数据（已修改）";
         }
         catch (Exception error) when (IsEditorError(error) || error is IOException or UnauthorizedAccessException) { Status = error.Message; }
     }

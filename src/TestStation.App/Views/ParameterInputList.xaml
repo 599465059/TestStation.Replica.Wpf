@@ -1,0 +1,18 @@
+<UserControl x:Class="TestStation.App.Views.ParameterInputList"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <ItemsControl ItemsSource="{Binding}">
+  <ItemsControl.ItemTemplate><DataTemplate>
+   <StackPanel Margin="0,0,0,12">
+    <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Text="{Binding TypeLabel}" Margin="12,0" Foreground="{DynamicResource MutedBrush}"/></StackPanel>
+    <TextBlock Text="{Binding DefaultLabel}" FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,3,0,5"/>
+    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="115"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode, Mode=TwoWay}" Margin="0,0,8,0" MinHeight="29"/>
+     <ComboBox Grid.Column="1" IsEditable="True" IsTextSearchEnabled="False" ItemsSource="{Binding Suggestions}"
+       Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsInputEnabled}" MinHeight="29"/>
+    </Grid>
+    <TextBlock Text="{Binding Error}" Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+   </StackPanel>
+  </DataTemplate></ItemsControl.ItemTemplate>
+ </ItemsControl>
+</UserControl>

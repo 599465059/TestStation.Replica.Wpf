@@ -1,0 +1,3606 @@
+{
+  "format": "test-station-sequence-workspace",
+  "version": 1,
+  "subprojects": [
+    {
+      "id": "functional",
+      "name": "01 正常功能与65秒运行",
+      "sequences": [
+        {
+          "id": "acceptance_main",
+          "name": "01 全功能主序列（约65秒）",
+          "version": 1,
+          "description": "全部步骤类型、全部变量类型和作用域、信号表、比较、表达式、嵌套调用；13次5秒等待保证运行超过1分钟。",
+          "role": "main",
+          "setup_steps": [
+            {
+              "id": "initialize",
+              "kind": "initialize",
+              "name": "初始化测量缓存",
+              "params": {},
+              "enabled": true,
+              "description": "自动测试验收：初始化测量缓存",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "reset_calls",
+              "kind": "statement",
+              "name": "reset_calls",
+              "params": {
+                "target_variable": "Globals.AT_Calls",
+                "expression": "0"
+              },
+              "enabled": true,
+              "description": "自动测试验收：reset_calls",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "increment_session",
+              "kind": "statement",
+              "name": "increment_session",
+              "params": {
+                "target_variable": "Station.AT_Session",
+                "expression": "Station.AT_Session + 1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：increment_session",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "setup_log",
+              "kind": "log",
+              "name": "准备完成",
+              "params": {
+                "level": "INFO",
+                "message": "进入65秒全功能验收，站计数=${Station.AT_Session}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：准备完成",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "steps": [
+            {
+              "id": "comment",
+              "kind": "comment",
+              "name": "覆盖备注、说明和步骤设置",
+              "params": {},
+              "enabled": true,
+              "description": "自动测试验收：覆盖备注、说明和步骤设置",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Number",
+              "kind": "statement",
+              "name": "parameter_Number",
+              "params": {
+                "target_variable": "Locals.AT_Number",
+                "expression": "Locals.P_Number"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Number",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Integer",
+              "kind": "statement",
+              "name": "parameter_Integer",
+              "params": {
+                "target_variable": "Locals.AT_Integer",
+                "expression": "Locals.P_Integer"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Integer",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Boolean",
+              "kind": "statement",
+              "name": "parameter_Boolean",
+              "params": {
+                "target_variable": "Locals.AT_Boolean",
+                "expression": "Locals.P_Boolean"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Boolean",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Text",
+              "kind": "statement",
+              "name": "parameter_Text",
+              "params": {
+                "target_variable": "Locals.AT_Text",
+                "expression": "Locals.P_Text"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Text",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Numbers",
+              "kind": "statement",
+              "name": "parameter_Numbers",
+              "params": {
+                "target_variable": "Locals.AT_Numbers",
+                "expression": "Locals.P_Numbers"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Numbers",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Integers",
+              "kind": "statement",
+              "name": "parameter_Integers",
+              "params": {
+                "target_variable": "Locals.AT_Integers",
+                "expression": "Locals.P_Integers"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Integers",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Booleans",
+              "kind": "statement",
+              "name": "parameter_Booleans",
+              "params": {
+                "target_variable": "Locals.AT_Booleans",
+                "expression": "Locals.P_Booleans"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Booleans",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "parameter_Texts",
+              "kind": "statement",
+              "name": "parameter_Texts",
+              "params": {
+                "target_variable": "Locals.AT_Texts",
+                "expression": "Locals.P_Texts"
+              },
+              "enabled": true,
+              "description": "自动测试验收：parameter_Texts",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "write_all_types",
+              "kind": "set_value",
+              "name": "write_all_types",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "expression",
+                    "value": "Locals.AT_Number",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integer",
+                    "data_type": "integer",
+                    "mode": "expression",
+                    "value": "Locals.AT_Integer",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Boolean",
+                    "data_type": "boolean",
+                    "mode": "expression",
+                    "value": "Locals.AT_Boolean",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "expression",
+                    "value": "Locals.AT_Text",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "expression",
+                    "value": "Locals.AT_Numbers",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integers",
+                    "data_type": "integer[]",
+                    "mode": "expression",
+                    "value": "Locals.AT_Integers",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Booleans",
+                    "data_type": "boolean[]",
+                    "mode": "expression",
+                    "value": "Locals.AT_Booleans",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Texts",
+                    "data_type": "text[]",
+                    "mode": "expression",
+                    "value": "Locals.AT_Texts",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：write_all_types",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "read_Locals",
+              "kind": "read_value",
+              "name": "read_Locals",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "Locals.AT_Number",
+                    "comparator": "==",
+                    "expected": "1.25",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integer",
+                    "data_type": "integer",
+                    "mode": "constant",
+                    "value": "Locals.AT_Integer",
+                    "comparator": "==",
+                    "expected": "7",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Boolean",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "Locals.AT_Boolean",
+                    "comparator": "==",
+                    "expected": "true",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "constant",
+                    "value": "Locals.AT_Text",
+                    "comparator": "==",
+                    "expected": "SN001",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "Locals.AT_Numbers",
+                    "comparator": "==",
+                    "expected": "[1.25,2.5,3.75]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integers",
+                    "data_type": "integer[]",
+                    "mode": "constant",
+                    "value": "Locals.AT_Integers",
+                    "comparator": "==",
+                    "expected": "[1,2,3]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Booleans",
+                    "data_type": "boolean[]",
+                    "mode": "constant",
+                    "value": "Locals.AT_Booleans",
+                    "comparator": "==",
+                    "expected": "[true,false,true]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Texts",
+                    "data_type": "text[]",
+                    "mode": "constant",
+                    "value": "Locals.AT_Texts",
+                    "comparator": "==",
+                    "expected": "[\"A\",\"B\",\"C\"]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：read_Locals",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "read_Globals",
+              "kind": "read_value",
+              "name": "read_Globals",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "Globals.AT_Number",
+                    "comparator": "==",
+                    "expected": "1.25",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integer",
+                    "data_type": "integer",
+                    "mode": "constant",
+                    "value": "Globals.AT_Integer",
+                    "comparator": "==",
+                    "expected": "7",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Boolean",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "Globals.AT_Boolean",
+                    "comparator": "==",
+                    "expected": "true",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "constant",
+                    "value": "Globals.AT_Text",
+                    "comparator": "==",
+                    "expected": "SN001",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "Globals.AT_Numbers",
+                    "comparator": "==",
+                    "expected": "[1.25,2.5,3.75]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integers",
+                    "data_type": "integer[]",
+                    "mode": "constant",
+                    "value": "Globals.AT_Integers",
+                    "comparator": "==",
+                    "expected": "[1,2,3]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Booleans",
+                    "data_type": "boolean[]",
+                    "mode": "constant",
+                    "value": "Globals.AT_Booleans",
+                    "comparator": "==",
+                    "expected": "[true,false,true]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Texts",
+                    "data_type": "text[]",
+                    "mode": "constant",
+                    "value": "Globals.AT_Texts",
+                    "comparator": "==",
+                    "expected": "[\"A\",\"B\",\"C\"]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：read_Globals",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "read_Station",
+              "kind": "read_value",
+              "name": "read_Station",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "Station.AT_Number",
+                    "comparator": "==",
+                    "expected": "1.25",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integer",
+                    "data_type": "integer",
+                    "mode": "constant",
+                    "value": "Station.AT_Integer",
+                    "comparator": "==",
+                    "expected": "7",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Boolean",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "Station.AT_Boolean",
+                    "comparator": "==",
+                    "expected": "true",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "constant",
+                    "value": "Station.AT_Text",
+                    "comparator": "==",
+                    "expected": "SN001",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "Station.AT_Numbers",
+                    "comparator": "==",
+                    "expected": "[1.25,2.5,3.75]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integers",
+                    "data_type": "integer[]",
+                    "mode": "constant",
+                    "value": "Station.AT_Integers",
+                    "comparator": "==",
+                    "expected": "[1,2,3]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Booleans",
+                    "data_type": "boolean[]",
+                    "mode": "constant",
+                    "value": "Station.AT_Booleans",
+                    "comparator": "==",
+                    "expected": "[true,false,true]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Texts",
+                    "data_type": "text[]",
+                    "mode": "constant",
+                    "value": "Station.AT_Texts",
+                    "comparator": "==",
+                    "expected": "[\"A\",\"B\",\"C\"]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：read_Station",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "scopes_and_parameters",
+              "kind": "if",
+              "name": "scopes_and_parameters",
+              "params": {
+                "expression": "Locals.AT_Number == Globals.AT_Number && Globals.AT_Number == Station.AT_Number && Locals.P_Number == Locals.AT_Number && Locals.AT_Integer == Globals.AT_Integer && Globals.AT_Integer == Station.AT_Integer && Locals.P_Integer == Locals.AT_Integer && Locals.AT_Boolean == Globals.AT_Boolean && Globals.AT_Boolean == Station.AT_Boolean && Locals.P_Boolean == Locals.AT_Boolean && Locals.AT_Text == Globals.AT_Text && Globals.AT_Text == Station.AT_Text && Locals.P_Text == Locals.AT_Text && Locals.AT_Numbers == Globals.AT_Numbers && Globals.AT_Numbers == Station.AT_Numbers && Locals.P_Numbers == Locals.AT_Numbers && Locals.AT_Integers == Globals.AT_Integers && Globals.AT_Integers == Station.AT_Integers && Locals.P_Integers == Locals.AT_Integers && Locals.AT_Booleans == Globals.AT_Booleans && Globals.AT_Booleans == Station.AT_Booleans && Locals.P_Booleans == Locals.AT_Booleans && Locals.AT_Texts == Globals.AT_Texts && Globals.AT_Texts == Station.AT_Texts && Locals.P_Texts == Locals.AT_Texts"
+              },
+              "enabled": true,
+              "description": "自动测试验收：scopes_and_parameters",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "scopes_and_parameters_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "scopes_and_parameters_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "hooks",
+              "kind": "comment",
+              "name": "执行前后表达式及顺序",
+              "params": {},
+              "enabled": true,
+              "description": "自动测试验收：执行前后表达式及顺序",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "Locals.hook = 1\nLocals.math = pow(2, 3) + sqrt(9)\nLocals.average = avg(Locals.AT_Numbers)",
+              "after_expression": "Locals.hook = Locals.hook + 2",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "hook_order",
+              "kind": "if",
+              "name": "hook_order",
+              "params": {
+                "expression": "Locals.hook == 3 && Locals.math == 11 && Locals.average == 2.5"
+              },
+              "enabled": true,
+              "description": "自动测试验收：hook_order",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "hook_order_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "hook_order_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "precondition_skip",
+              "kind": "statement",
+              "name": "precondition_skip",
+              "params": {
+                "target_variable": "Locals.hook",
+                "expression": "999"
+              },
+              "enabled": true,
+              "description": "自动测试验收：precondition_skip",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "false",
+              "before_expression": "Locals.hook = 998",
+              "after_expression": "Locals.hook = 997",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "disabled",
+              "kind": "statement",
+              "name": "disabled",
+              "params": {
+                "target_variable": "Locals.hook",
+                "expression": "996"
+              },
+              "enabled": false,
+              "description": "自动测试验收：disabled",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "unrecorded",
+              "kind": "log",
+              "name": "不记录结果的步骤",
+              "params": {
+                "level": "DEBUG",
+                "message": "应实时显示，但不进入报表"
+              },
+              "enabled": true,
+              "description": "自动测试验收：不记录结果的步骤",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": false,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "skip_did_not_mutate",
+              "kind": "if",
+              "name": "skip_did_not_mutate",
+              "params": {
+                "expression": "Locals.hook == 3"
+              },
+              "enabled": true,
+              "description": "自动测试验收：skip_did_not_mutate",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "skip_did_not_mutate_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "skip_did_not_mutate_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "math_functions",
+              "kind": "if",
+              "name": "math_functions",
+              "params": {
+                "expression": "abs(-3)==3 && sqrt(9)==3 && sin(0)==0 && cos(0)==1 && tan(0)==0 && abs(log(exp(1))-1)<1e-12 && log10(100)==2 && exp(0)==1 && floor(1.9)==1 && ceil(1.1)==2 && pow(2,3)==8 && round(1.234,2)==1.23 && clamp(12,0,10)==10 && min([1,2,3])==1 && max(1,2,3)==3 && sum([1,2,3])==6 && avg([1,2,3])==2 && length('abc')==3 && length(Locals.AT_Numbers)==3 && Locals.AT_Numbers[1]==2.5 && Math.PI>3 && Math.E>2 && 1e-3*1000==1 && (7%3)==1 && !(false || false)"
+              },
+              "enabled": true,
+              "description": "自动测试验收：math_functions",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "math_functions_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "math_functions_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "scalar_comparisons",
+              "kind": "read_value",
+              "name": "scalar_comparisons",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "1.25",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "!=",
+                    "expected": "2",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": ">",
+                    "expected": "1",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": ">=",
+                    "expected": "1.25",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "<",
+                    "expected": "2",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "<=",
+                    "expected": "1.25",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "expected": "",
+                    "minimum": "1",
+                    "maximum": "2",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "OUTSIDE_RANGE",
+                    "expected": "",
+                    "minimum": "2",
+                    "maximum": "3",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "ABS_TOL",
+                    "expected": "1.3",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0.1"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "REL_TOL",
+                    "expected": "1.3",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "5"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "expression",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "Locals.P_Number",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "expression",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "expected": "",
+                    "minimum": "Locals.P_Number-1",
+                    "maximum": "Locals.P_Number+1",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "expression",
+                    "value": "",
+                    "comparator": "ABS_TOL",
+                    "expected": "Locals.P_Number+0.05",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0.1"
+                  },
+                  {
+                    "channel_id": "Sim.Boolean",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "!=",
+                    "expected": "false",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "CONTAINS",
+                    "expected": "SN",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "REGEX",
+                    "expected": "^SN[0-9]{3}$",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "NONE",
+                    "expected": "",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：scalar_comparisons",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "array_comparisons",
+              "kind": "read_value",
+              "name": "array_comparisons",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "[1.25,2.5,3.75]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": ">",
+                    "expected": "0",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": ">",
+                    "expected": "3",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ANY",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "expected": "",
+                    "minimum": "1",
+                    "maximum": "4",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "expected": "",
+                    "minimum": "[1,2,3]",
+                    "maximum": "[2,3,4]",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "expression",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "Locals.P_Numbers",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "ABS_TOL",
+                    "expected": "[1.2,2.4,3.7]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0.11"
+                  },
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "REL_TOL",
+                    "expected": "[1.2,2.4,3.7]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "5"
+                  },
+                  {
+                    "channel_id": "Sim.Texts",
+                    "data_type": "text[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "REGEX",
+                    "expected": "^[A-C]$",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Integers",
+                    "data_type": "integer[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "!=",
+                    "expected": "0",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "Sim.Booleans",
+                    "data_type": "boolean[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "true",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ANY",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：array_comparisons",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "independent_assert",
+              "kind": "assert",
+              "name": "独立ASSERT数组逐项相等",
+              "params": {
+                "channel_id": "Sim.Numbers",
+                "comparator": "==",
+                "expected": [
+                  1.25,
+                  2.5,
+                  3.75
+                ],
+                "array_mode": "EXACT"
+              },
+              "enabled": true,
+              "description": "自动测试验收：独立ASSERT数组逐项相等",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "assert_reference",
+              "kind": "assert",
+              "name": "独立ASSERT引用变量",
+              "params": {
+                "channel_id": "Sim.Number",
+                "comparator": "==",
+                "expected": "${Locals.P_Number}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：独立ASSERT引用变量",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "true_branch",
+              "kind": "if",
+              "name": "IF真分支",
+              "params": {
+                "expression": "Locals.hook == 3"
+              },
+              "enabled": true,
+              "description": "自动测试验收：IF真分支",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "then_increment",
+                  "kind": "statement",
+                  "name": "then_increment",
+                  "params": {
+                    "target_variable": "Locals.hook",
+                    "expression": "Locals.hook+1"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：then_increment",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "wrong_else",
+                  "kind": "statement",
+                  "name": "wrong_else",
+                  "params": {
+                    "target_variable": "Locals.hook",
+                    "expression": "999"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：wrong_else",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "false_branch",
+              "kind": "if",
+              "name": "IF假分支",
+              "params": {
+                "expression": "false"
+              },
+              "enabled": true,
+              "description": "自动测试验收：IF假分支",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "wrong_then",
+                  "kind": "statement",
+                  "name": "wrong_then",
+                  "params": {
+                    "target_variable": "Locals.hook",
+                    "expression": "999"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：wrong_then",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "else_increment",
+                  "kind": "statement",
+                  "name": "else_increment",
+                  "params": {
+                    "target_variable": "Locals.hook",
+                    "expression": "Locals.hook+1"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：else_increment",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "for_continue_break",
+              "kind": "loop",
+              "name": "FOR、CONTINUE与BREAK",
+              "params": {
+                "variable": "i",
+                "from": 1,
+                "to": 5,
+                "step": 1,
+                "max_iterations": 10
+              },
+              "enabled": true,
+              "description": "自动测试验收：FOR、CONTINUE与BREAK",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "continue_if",
+                  "kind": "if",
+                  "name": "第二轮CONTINUE",
+                  "params": {
+                    "expression": "i == 2"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：第二轮CONTINUE",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [
+                    {
+                      "id": "continue",
+                      "kind": "continue",
+                      "name": "CONTINUE",
+                      "params": {},
+                      "enabled": true,
+                      "description": "自动测试验收：CONTINUE",
+                      "timeout_ms": 0,
+                      "on_failure": "STOP",
+                      "failure_message": "",
+                      "precondition": "",
+                      "before_expression": "",
+                      "after_expression": "",
+                      "record_result": true,
+                      "children": [],
+                      "else_children": []
+                    }
+                  ],
+                  "else_children": []
+                },
+                {
+                  "id": "for_increment",
+                  "kind": "statement",
+                  "name": "for_increment",
+                  "params": {
+                    "target_variable": "Locals.count",
+                    "expression": "Locals.count+1"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：for_increment",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                },
+                {
+                  "id": "break_if",
+                  "kind": "if",
+                  "name": "第四轮BREAK",
+                  "params": {
+                    "expression": "i == 4"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：第四轮BREAK",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [
+                    {
+                      "id": "break",
+                      "kind": "break",
+                      "name": "BREAK",
+                      "params": {},
+                      "enabled": true,
+                      "description": "自动测试验收：BREAK",
+                      "timeout_ms": 0,
+                      "on_failure": "STOP",
+                      "failure_message": "",
+                      "precondition": "",
+                      "before_expression": "",
+                      "after_expression": "",
+                      "record_result": true,
+                      "children": [],
+                      "else_children": []
+                    }
+                  ],
+                  "else_children": []
+                }
+              ],
+              "else_children": []
+            },
+            {
+              "id": "for_desc",
+              "kind": "loop",
+              "name": "FOR负步长",
+              "params": {
+                "variable": "j",
+                "from": 3,
+                "to": 1,
+                "step": -1,
+                "max_iterations": 10
+              },
+              "enabled": true,
+              "description": "自动测试验收：FOR负步长",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "desc_increment",
+                  "kind": "statement",
+                  "name": "desc_increment",
+                  "params": {
+                    "target_variable": "Locals.descCount",
+                    "expression": "Locals.descCount+1"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：desc_increment",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": []
+            },
+            {
+              "id": "while",
+              "kind": "while",
+              "name": "WHILE条件重新计算",
+              "params": {
+                "expression": "Locals.whileCount < 3",
+                "max_iterations": 4
+              },
+              "enabled": true,
+              "description": "自动测试验收：WHILE条件重新计算",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "while_increment",
+                  "kind": "statement",
+                  "name": "while_increment",
+                  "params": {
+                    "target_variable": "Locals.whileCount",
+                    "expression": "Locals.whileCount+1"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：while_increment",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": []
+            },
+            {
+              "id": "loop_results",
+              "kind": "if",
+              "name": "loop_results",
+              "params": {
+                "expression": "Locals.count == 3 && Locals.descCount == 3 && Locals.whileCount == 3 && Locals.hook == 5"
+              },
+              "enabled": true,
+              "description": "自动测试验收：loop_results",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "loop_results_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "loop_results_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "call_sub",
+              "kind": "call_sequence",
+              "name": "主序列调用子序列再调用子序列",
+              "params": {
+                "sequence_id": "acceptance_sub",
+                "arguments": {
+                  "input": "${Locals.P_Number * 2}",
+                  "items": "${Locals.P_Numbers}"
+                }
+              },
+              "enabled": true,
+              "description": "自动测试验收：主序列调用子序列再调用子序列",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "call_scope",
+              "kind": "if",
+              "name": "call_scope",
+              "params": {
+                "expression": "Locals.AT_Number == Locals.P_Number && Globals.AT_Calls == 2"
+              },
+              "enabled": true,
+              "description": "自动测试验收：call_scope",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "call_scope_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "call_scope_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "log_INFO",
+              "kind": "log",
+              "name": "日志级别INFO",
+              "params": {
+                "level": "INFO",
+                "message": "验收日志，不改变判定：${Locals.AT_Text}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：日志级别INFO",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "log_WARN",
+              "kind": "log",
+              "name": "日志级别WARN",
+              "params": {
+                "level": "WARN",
+                "message": "验收日志，不改变判定：${Locals.AT_Text}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：日志级别WARN",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "log_ERROR",
+              "kind": "log",
+              "name": "日志级别ERROR",
+              "params": {
+                "level": "ERROR",
+                "message": "验收日志，不改变判定：${Locals.AT_Text}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：日志级别ERROR",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "log_DEBUG",
+              "kind": "log",
+              "name": "日志级别DEBUG",
+              "params": {
+                "level": "DEBUG",
+                "message": "验收日志，不改变判定：${Locals.AT_Text}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：日志级别DEBUG",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "soak_loop",
+              "kind": "loop",
+              "name": "13轮×5秒持续运行",
+              "params": {
+                "variable": "tick",
+                "from": 1,
+                "to": 13,
+                "step": 1,
+                "max_iterations": 13
+              },
+              "enabled": true,
+              "description": "自动测试验收：13轮×5秒持续运行",
+              "timeout_ms": 90000,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "soak_log",
+                  "kind": "log",
+                  "name": "持续测试进度",
+                  "params": {
+                    "level": "INFO",
+                    "message": "持续测试 ${tick}/13，等待5秒"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：持续测试进度",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                },
+                {
+                  "id": "soak_wait",
+                  "kind": "wait",
+                  "name": "每轮等待5000毫秒",
+                  "params": {
+                    "timeout_ms": "5000"
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：每轮等待5000毫秒",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [
+            {
+              "id": "cleanup_log",
+              "kind": "log",
+              "name": "CLEANUP正常执行",
+              "params": {
+                "level": "INFO",
+                "message": "正常主序列清理完成"
+              },
+              "enabled": true,
+              "description": "自动测试验收：CLEANUP正常执行",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "cleanup_mark",
+              "kind": "statement",
+              "name": "cleanup_mark",
+              "params": {
+                "target_variable": "Globals.AT_Cleanup",
+                "expression": "Globals.AT_Cleanup+1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：cleanup_mark",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "variables": [
+            {
+              "name": "AT_Number",
+              "data_type": "number",
+              "default": 0,
+              "scope": "local"
+            },
+            {
+              "name": "AT_Integer",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            },
+            {
+              "name": "AT_Boolean",
+              "data_type": "boolean",
+              "default": false,
+              "scope": "local"
+            },
+            {
+              "name": "AT_Text",
+              "data_type": "text",
+              "default": "",
+              "scope": "local"
+            },
+            {
+              "name": "AT_Numbers",
+              "data_type": "number[]",
+              "default": [],
+              "scope": "local"
+            },
+            {
+              "name": "AT_Integers",
+              "data_type": "integer[]",
+              "default": [],
+              "scope": "local"
+            },
+            {
+              "name": "AT_Booleans",
+              "data_type": "boolean[]",
+              "default": [],
+              "scope": "local"
+            },
+            {
+              "name": "AT_Texts",
+              "data_type": "text[]",
+              "default": [],
+              "scope": "local"
+            },
+            {
+              "name": "P_Number",
+              "data_type": "number",
+              "default": 1.25,
+              "scope": "parameter"
+            },
+            {
+              "name": "P_Integer",
+              "data_type": "integer",
+              "default": 7,
+              "scope": "parameter"
+            },
+            {
+              "name": "P_Boolean",
+              "data_type": "boolean",
+              "default": true,
+              "scope": "parameter"
+            },
+            {
+              "name": "P_Text",
+              "data_type": "text",
+              "default": "SN001",
+              "scope": "parameter"
+            },
+            {
+              "name": "P_Numbers",
+              "data_type": "number[]",
+              "default": [
+                1.25,
+                2.5,
+                3.75
+              ],
+              "scope": "parameter"
+            },
+            {
+              "name": "P_Integers",
+              "data_type": "integer[]",
+              "default": [
+                1,
+                2,
+                3
+              ],
+              "scope": "parameter"
+            },
+            {
+              "name": "P_Booleans",
+              "data_type": "boolean[]",
+              "default": [
+                true,
+                false,
+                true
+              ],
+              "scope": "parameter"
+            },
+            {
+              "name": "P_Texts",
+              "data_type": "text[]",
+              "default": [
+                "A",
+                "B",
+                "C"
+              ],
+              "scope": "parameter"
+            },
+            {
+              "name": "hook",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            },
+            {
+              "name": "count",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            },
+            {
+              "name": "whileCount",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            },
+            {
+              "name": "descCount",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            },
+            {
+              "name": "math",
+              "data_type": "number",
+              "default": 0,
+              "scope": "local"
+            },
+            {
+              "name": "average",
+              "data_type": "number",
+              "default": 0,
+              "scope": "local"
+            }
+          ]
+        },
+        {
+          "id": "acceptance_quick",
+          "name": "02 同标签页共享值复核",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "shared_retained",
+              "kind": "if",
+              "name": "shared_retained",
+              "params": {
+                "expression": "Globals.AT_Number == 1.25 && Globals.AT_Cleanup >= 1 && Station.AT_Number == 1.25 && Station.AT_Session >= 1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：shared_retained",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "shared_retained_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "shared_retained_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "acceptance_sub",
+          "name": "子序列A（可单独调试）",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "sub_parameter",
+              "kind": "if",
+              "name": "sub_parameter",
+              "params": {
+                "expression": "Locals.input == 2.5 && sum(Locals.items) == 7.5 && Locals.AT_Number == -999"
+              },
+              "enabled": true,
+              "description": "自动测试验收：sub_parameter",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "sub_parameter_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "sub_parameter_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "sub_local",
+              "kind": "statement",
+              "name": "sub_local",
+              "params": {
+                "target_variable": "Locals.AT_Number",
+                "expression": "123"
+              },
+              "enabled": true,
+              "description": "自动测试验收：sub_local",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "sub_shared",
+              "kind": "statement",
+              "name": "sub_shared",
+              "params": {
+                "target_variable": "Globals.AT_Calls",
+                "expression": "Globals.AT_Calls+1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：sub_shared",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "nested_call",
+              "kind": "call_sequence",
+              "name": "子序列A调用B",
+              "params": {
+                "sequence_id": "acceptance_leaf",
+                "arguments": {
+                  "input": "${Locals.input}"
+                }
+              },
+              "enabled": true,
+              "description": "自动测试验收：子序列A调用B",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [
+            {
+              "id": "sub_cleanup",
+              "kind": "comment",
+              "name": "子序列A清理",
+              "params": {},
+              "enabled": true,
+              "description": "自动测试验收：子序列A清理",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "variables": [
+            {
+              "name": "input",
+              "data_type": "number",
+              "default": 2.5,
+              "scope": "parameter"
+            },
+            {
+              "name": "items",
+              "data_type": "number[]",
+              "default": [
+                1.25,
+                2.5,
+                3.75
+              ],
+              "scope": "parameter"
+            },
+            {
+              "name": "AT_Number",
+              "data_type": "number",
+              "default": -999,
+              "scope": "local"
+            }
+          ]
+        },
+        {
+          "id": "acceptance_leaf",
+          "name": "子序列B",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "leaf_parameter",
+              "kind": "if",
+              "name": "leaf_parameter",
+              "params": {
+                "expression": "Locals.input == 2.5"
+              },
+              "enabled": true,
+              "description": "自动测试验收：leaf_parameter",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "leaf_parameter_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "leaf_parameter_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "leaf_shared",
+              "kind": "statement",
+              "name": "leaf_shared",
+              "params": {
+                "target_variable": "Globals.AT_Calls",
+                "expression": "Globals.AT_Calls+1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：leaf_shared",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [
+            {
+              "id": "leaf_cleanup",
+              "kind": "comment",
+              "name": "子序列B清理",
+              "params": {},
+              "enabled": true,
+              "description": "自动测试验收：子序列B清理",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "variables": [
+            {
+              "name": "input",
+              "data_type": "number",
+              "default": 2.5,
+              "scope": "parameter"
+            }
+          ]
+        }
+      ],
+      "global_variables": [
+        {
+          "name": "AT_Number",
+          "data_type": "number",
+          "default": 0,
+          "scope": "global"
+        },
+        {
+          "name": "AT_Integer",
+          "data_type": "integer",
+          "default": 0,
+          "scope": "global"
+        },
+        {
+          "name": "AT_Boolean",
+          "data_type": "boolean",
+          "default": false,
+          "scope": "global"
+        },
+        {
+          "name": "AT_Text",
+          "data_type": "text",
+          "default": "",
+          "scope": "global"
+        },
+        {
+          "name": "AT_Numbers",
+          "data_type": "number[]",
+          "default": [],
+          "scope": "global"
+        },
+        {
+          "name": "AT_Integers",
+          "data_type": "integer[]",
+          "default": [],
+          "scope": "global"
+        },
+        {
+          "name": "AT_Booleans",
+          "data_type": "boolean[]",
+          "default": [],
+          "scope": "global"
+        },
+        {
+          "name": "AT_Texts",
+          "data_type": "text[]",
+          "default": [],
+          "scope": "global"
+        },
+        {
+          "name": "AT_Calls",
+          "data_type": "integer",
+          "default": 0,
+          "scope": "global"
+        },
+        {
+          "name": "AT_Cleanup",
+          "data_type": "integer",
+          "default": 0,
+          "scope": "global"
+        }
+      ]
+    },
+    {
+      "id": "negative",
+      "name": "02 隔离、异常与控制测试",
+      "sequences": [
+        {
+          "id": "tab_isolation",
+          "name": "01 标签页隔离与站共享",
+          "version": 1,
+          "description": "",
+          "role": "main",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "tab_global_isolated",
+              "kind": "if",
+              "name": "tab_global_isolated",
+              "params": {
+                "expression": "Globals.AT_Number == -20 && Station.AT_Number == 1.25 && Station.AT_Session >= 1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：tab_global_isolated",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "tab_global_isolated_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "tab_global_isolated_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            },
+            {
+              "id": "tab_global_write",
+              "kind": "statement",
+              "name": "tab_global_write",
+              "params": {
+                "target_variable": "Globals.AT_Number",
+                "expression": "-21"
+              },
+              "enabled": true,
+              "description": "自动测试验收：tab_global_write",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "failure_continue",
+          "name": "预期FAIL · CONTINUE",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "failure",
+              "kind": "read_value",
+              "name": "failure",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "expected": "",
+                    "minimum": "100",
+                    "maximum": "200",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：failure",
+              "timeout_ms": 0,
+              "on_failure": "CONTINUE",
+              "failure_message": "预期的范围判定失败：CONTINUE",
+              "precondition": "",
+              "before_expression": "Locals.hook = 1",
+              "after_expression": "Locals.hook = Locals.hook+1",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "after_failure",
+              "kind": "statement",
+              "name": "after_failure",
+              "params": {
+                "target_variable": "Locals.hook",
+                "expression": "Locals.hook+10"
+              },
+              "enabled": true,
+              "description": "自动测试验收：after_failure",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [
+            {
+              "id": "failure_cleanup",
+              "kind": "log",
+              "name": "异常路径CLEANUP",
+              "params": {
+                "level": "INFO",
+                "message": "失败后的hook=${Locals.hook}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：异常路径CLEANUP",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "failure_cleanup_mark",
+              "kind": "statement",
+              "name": "failure_cleanup_mark",
+              "params": {
+                "target_variable": "Globals.AT_Cleanup",
+                "expression": "Globals.AT_Cleanup+1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：failure_cleanup_mark",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "variables": [
+            {
+              "name": "hook",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            }
+          ]
+        },
+        {
+          "id": "failure_goto_cleanup",
+          "name": "预期FAIL · GOTO_CLEANUP",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "failure",
+              "kind": "read_value",
+              "name": "failure",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "expected": "",
+                    "minimum": "100",
+                    "maximum": "200",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：failure",
+              "timeout_ms": 0,
+              "on_failure": "GOTO_CLEANUP",
+              "failure_message": "预期的范围判定失败：GOTO_CLEANUP",
+              "precondition": "",
+              "before_expression": "Locals.hook = 1",
+              "after_expression": "Locals.hook = Locals.hook+1",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "after_failure",
+              "kind": "statement",
+              "name": "after_failure",
+              "params": {
+                "target_variable": "Locals.hook",
+                "expression": "Locals.hook+10"
+              },
+              "enabled": true,
+              "description": "自动测试验收：after_failure",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [
+            {
+              "id": "failure_cleanup",
+              "kind": "log",
+              "name": "异常路径CLEANUP",
+              "params": {
+                "level": "INFO",
+                "message": "失败后的hook=${Locals.hook}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：异常路径CLEANUP",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "failure_cleanup_mark",
+              "kind": "statement",
+              "name": "failure_cleanup_mark",
+              "params": {
+                "target_variable": "Globals.AT_Cleanup",
+                "expression": "Globals.AT_Cleanup+1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：failure_cleanup_mark",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "variables": [
+            {
+              "name": "hook",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            }
+          ]
+        },
+        {
+          "id": "failure_stop",
+          "name": "预期FAIL · STOP",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "failure",
+              "kind": "read_value",
+              "name": "failure",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Number",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "expected": "",
+                    "minimum": "100",
+                    "maximum": "200",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：failure",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "预期的范围判定失败：STOP",
+              "precondition": "",
+              "before_expression": "Locals.hook = 1",
+              "after_expression": "Locals.hook = Locals.hook+1",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "after_failure",
+              "kind": "statement",
+              "name": "after_failure",
+              "params": {
+                "target_variable": "Locals.hook",
+                "expression": "Locals.hook+10"
+              },
+              "enabled": true,
+              "description": "自动测试验收：after_failure",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [
+            {
+              "id": "failure_cleanup",
+              "kind": "log",
+              "name": "异常路径CLEANUP",
+              "params": {
+                "level": "INFO",
+                "message": "失败后的hook=${Locals.hook}"
+              },
+              "enabled": true,
+              "description": "自动测试验收：异常路径CLEANUP",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "failure_cleanup_mark",
+              "kind": "statement",
+              "name": "failure_cleanup_mark",
+              "params": {
+                "target_variable": "Globals.AT_Cleanup",
+                "expression": "Globals.AT_Cleanup+1"
+              },
+              "enabled": true,
+              "description": "自动测试验收：failure_cleanup_mark",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "variables": [
+            {
+              "name": "hook",
+              "data_type": "integer",
+              "default": 0,
+              "scope": "local"
+            }
+          ]
+        },
+        {
+          "id": "timeout",
+          "name": "预期FAIL · 步骤超时",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "timeout_wait",
+              "kind": "wait",
+              "name": "步骤超时",
+              "params": {
+                "timeout_ms": "500"
+              },
+              "enabled": true,
+              "description": "自动测试验收：步骤超时",
+              "timeout_ms": 100,
+              "on_failure": "GOTO_CLEANUP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [
+            {
+              "id": "timeout_cleanup",
+              "kind": "comment",
+              "name": "超时后清理",
+              "params": {},
+              "enabled": true,
+              "description": "自动测试验收：超时后清理",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "variables": []
+        },
+        {
+          "id": "cancel",
+          "name": "取消与暂停（需手动停止）",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "cancel_wait",
+              "kind": "wait",
+              "name": "等待30秒，供停止测试",
+              "params": {
+                "timeout_ms": "30000"
+              },
+              "enabled": true,
+              "description": "自动测试验收：等待30秒，供停止测试",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "array_mismatch",
+          "name": "预期FAIL · array_mismatch",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "array_mismatch",
+              "kind": "read_value",
+              "name": "array_mismatch",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "[1.25,2.5,99]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：array_mismatch",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "array_length",
+          "name": "预期FAIL · array_length",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "array_length",
+              "kind": "read_value",
+              "name": "array_length",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "[1.25,2.5]",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "EXACT",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：array_length",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "empty_array",
+          "name": "预期FAIL · empty_array",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "empty_array",
+              "kind": "read_value",
+              "name": "empty_array",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Empty",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": ">",
+                    "expected": "0",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：empty_array",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "any_array_fail",
+          "name": "预期FAIL · any_array_fail",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "any_array_fail",
+              "kind": "read_value",
+              "name": "any_array_fail",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Numbers",
+                    "data_type": "number[]",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": ">",
+                    "expected": "100",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ANY",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：any_array_fail",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "boolean_mismatch",
+          "name": "预期FAIL · boolean_mismatch",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "boolean_mismatch",
+              "kind": "read_value",
+              "name": "boolean_mismatch",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Boolean",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "false",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：boolean_mismatch",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "text_mismatch",
+          "name": "预期FAIL · text_mismatch",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "text_mismatch",
+              "kind": "read_value",
+              "name": "text_mismatch",
+              "params": {
+                "signals": [
+                  {
+                    "channel_id": "Sim.Text",
+                    "data_type": "text",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "REGEX",
+                    "expected": "^INVALID$",
+                    "minimum": "",
+                    "maximum": "",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
+                ]
+              },
+              "enabled": true,
+              "description": "自动测试验收：text_mismatch",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "divide_zero",
+          "name": "预期ERROR · 除零",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "bad_formula",
+              "kind": "comment",
+              "name": "除零错误",
+              "params": {},
+              "enabled": true,
+              "description": "自动测试验收：除零错误",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "Locals.result = 1 / 0",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": [
+            {
+              "name": "result",
+              "data_type": "number",
+              "default": 0,
+              "scope": "local"
+            }
+          ]
+        },
+        {
+          "id": "required_parameter",
+          "name": "必填运行参数",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [
+            {
+              "id": "required_received",
+              "kind": "if",
+              "name": "required_received",
+              "params": {
+                "expression": "Locals.required == 42"
+              },
+              "enabled": true,
+              "description": "自动测试验收：required_received",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "required_received_pass",
+                  "kind": "comment",
+                  "name": "检查通过",
+                  "params": {},
+                  "enabled": true,
+                  "description": "自动测试验收：检查通过",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": [
+                {
+                  "id": "required_received_fail",
+                  "kind": "assert",
+                  "name": "检查失败",
+                  "params": {
+                    "channel_id": "Sim.Number",
+                    "comparator": "==",
+                    "expected": -9999
+                  },
+                  "enabled": true,
+                  "description": "自动测试验收：检查失败",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ]
+            }
+          ],
+          "cleanup_steps": [],
+          "variables": [
+            {
+              "name": "required",
+              "data_type": "integer",
+              "default": null,
+              "scope": "parameter"
+            }
+          ]
+        }
+      ],
+      "global_variables": [
+        {
+          "name": "AT_Number",
+          "data_type": "number",
+          "default": -20,
+          "scope": "global"
+        },
+        {
+          "name": "AT_Cleanup",
+          "data_type": "integer",
+          "default": 0,
+          "scope": "global"
+        }
+      ]
+    }
+  ]
+}

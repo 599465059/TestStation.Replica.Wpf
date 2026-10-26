@@ -27,7 +27,9 @@ public sealed record StepRunResult(
     string FinishedAt,
     long DurationMs,
     string SequenceId = "",
-    string Section = "");
+    string Section = "",
+    string StepRunId = "",
+    string Path = "");
 
 public sealed record SequenceRunResult(
     string Id,
@@ -40,7 +42,8 @@ public sealed record SequenceRunResult(
     IReadOnlyDictionary<string, object?> Values,
     string Error,
     IReadOnlyDictionary<string, object?> Parameters,
-    IReadOnlyDictionary<string, object?> SimulationValues);
+    IReadOnlyDictionary<string, object?> SimulationValues,
+    IReadOnlyDictionary<string, object?>? FinalSimulationValues = null);
 
 public sealed record SequencePreflightIssue(string Code, string Message, string StepId = "", string Path = "");
 
@@ -81,8 +84,7 @@ public sealed class SimulatedChannelGateway : IChannelGateway
 
 public static class SequencePreflightService
 {
-    private static readonly HashSet<string> SupportedKinds =
-    ["initialize", "set_value", "read_value", "wait", "assert", "if", "loop", "call_sequence", "comment"];
+    private static readonly ISequenceStepCatalog StepCatalog = new BuiltInSequenceStepCatalog();
 
     public static SequencePreflightReport Validate(SequenceDefinition? sequence)
     {
@@ -103,7 +105,7 @@ public static class SequencePreflightService
         foreach (var variable in sequence.Variables)
         {
             if (string.IsNullOrWhiteSpace(variable.Name)) issues.Add(new("variable.name_required", "变量名称不能为空"));
-            if (!new[] { "number", "integer", "boolean", "text" }.Contains(variable.DataType))
+            if (!SequenceValueOperations.DataTypes.Contains(variable.DataType))
                 issues.Add(new("variable.type_invalid", $"变量类型无效: {variable.DataType}"));
             if (!new[] { "local", "parameter" }.Contains(variable.Scope))
                 issues.Add(new("variable.scope_invalid", $"变量作用域无效: {variable.Scope}"));
@@ -119,22 +121,35 @@ public static class SequencePreflightService
             if (string.IsNullOrWhiteSpace(step.Id)) issues.Add(new("step.id_required", $"{path}: 步骤 ID 不能为空"));
             else if (!ids.Add(step.Id)) issues.Add(new("step.id_duplicate", $"步骤 ID 重复: {step.Id}", step.Id, path));
             if (string.IsNullOrWhiteSpace(step.Name)) issues.Add(new("step.name_required", $"{path}: 步骤名称不能为空", step.Id, path));
-            if (!SupportedKinds.Contains(step.Kind)) issues.Add(new("step.kind_invalid", $"缺少步骤处理器: {step.Kind}", step.Id, path));
-            if (step.Kind is not ("if" or "loop") && step.Children.Count > 0)
-                issues.Add(new("step.children_invalid", $"只有 IF 或 FOR 可以包含子步骤: {step.Id}", step.Id, path));
+            if (step.TimeoutMs < 0) issues.Add(new("step.timeout_invalid", $"{path}: 超时不能小于 0", step.Id, path));
+            if (step.OnFailure is not ("STOP" or "CONTINUE" or "GOTO_CLEANUP"))
+                issues.Add(new("step.on_failure_invalid", $"{path}: 失败动作无效", step.Id, path));
+            if (step.OnComplete is not ("STOP" or "CONTINUE" or "GOTO_CLEANUP"))
+                issues.Add(new("step.on_complete_invalid", $"{path}: 完成动作无效", step.Id, path));
+            if (StepCatalog.Find(step.Kind) is null) issues.Add(new("step.kind_invalid", $"缺少步骤处理器: {step.Kind}", step.Id, path));
+            if (step.Kind is not ("if" or "loop" or "while") && step.Children.Count > 0)
+                issues.Add(new("step.children_invalid", $"只有 IF、FOR 或 WHILE 可以包含子步骤: {step.Id}", step.Id, path));
             if (step.Kind != "if" && step.ElseChildren.Count > 0)
                 issues.Add(new("step.else_invalid", $"只有 IF 可以包含 ELSE: {step.Id}", step.Id, path));
             switch (step.Kind)
             {
-                case "set_value": Require(step, "channel_id", "SET VALUE 缺少通道", issues); Require(step, "value", "SET VALUE 缺少设置值", issues); break;
-                case "read_value": Require(step, "channel_id", "GET VALUE 缺少通道", issues); break;
+                case "set_value":
+                    if (!step.Params.ContainsKey("signals")) { Require(step, "channel_id", "SET VALUE 缺少通道", issues); Require(step, "value", "SET VALUE 缺少设置值", issues); }
+                    break;
+                case "read_value": if (!step.Params.ContainsKey("signals")) Require(step, "channel_id", "GET VALUE 缺少通道", issues); break;
                 case "wait": Require(step, "timeout_ms", "WAIT 缺少时间", issues); break;
                 case "if": Require(step, "expression", "IF 缺少条件表达式", issues); break;
                 case "loop": Require(step, "variable", "FOR 缺少循环变量", issues); break;
+                case "while":
+                    Require(step, "expression", "WHILE 缺少条件表达式", issues);
+                    if (GetInt(step, "max_iterations", 1000) <= 0) issues.Add(new("while.max_iterations_invalid", "WHILE 最大循环次数必须大于 0", step.Id, path));
+                    break;
+                case "log": Require(step, "message", "LOG 缺少消息", issues); break;
+                case "statement": Require(step, "target_variable", "STATEMENT 缺少目标变量", issues); Require(step, "expression", "STATEMENT 缺少表达式", issues); break;
                 case "call_sequence": Require(step, "sequence_id", "SEQUENCE CALL 缺少目标序列", issues); break;
                 case "assert":
                     var comparator = GetString(step, "comparator", "==");
-                    if (!new[] { "==", "!=", ">", ">=", "<", "<=", "IN_RANGE" }.Contains(comparator))
+                    if (!SequenceValueOperations.Comparators.Where(c => c != "NONE").Contains(comparator))
                         issues.Add(new("assert.comparator_invalid", $"ASSERT 比较方式无效: {comparator}", step.Id, path));
                     if (GetString(step, "failure_action", "STOP") is not ("STOP" or "CONTINUE" or "LOG"))
                         issues.Add(new("assert.failure_action_invalid", "ASSERT 失败动作无效", step.Id, path));
@@ -154,6 +169,9 @@ public static class SequencePreflightService
 
     private static string GetString(SequenceStep step, string key, string fallback) =>
         step.Params.TryGetValue(key, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() ?? fallback : fallback;
+
+    private static int GetInt(SequenceStep step, string key, int fallback) =>
+        int.TryParse(GetString(step, key, fallback.ToString(CultureInfo.InvariantCulture)), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : fallback;
 }
 
 public sealed class SequenceExecutionEngine
@@ -276,7 +294,12 @@ public sealed class SequenceExecutionEngine
         {
             if (!step.Enabled) { PublishStep(step, "skipped", "步骤已禁用", section, sequenceId, DateTimeOffset.UtcNow, 0); continue; }
             var stepSuccess = await ExecuteStepAsync(step, section, token, sequenceId, callStack);
-            if (!stepSuccess) { success = false; break; }
+            if (!stepSuccess)
+            {
+                success = false;
+                if (step.OnFailure == "CONTINUE") continue;
+                break;
+            }
         }
         return success;
     }
@@ -315,11 +338,41 @@ public sealed class SequenceExecutionEngine
                         {
                             if (++count > 1000) throw new InvalidDataException("FOR 循环次数超过 1000");
                             _variables[variable] = index;
-                            if (!await ExecuteListAsync(step.Children, section, token, sequenceId, callStack)) { success = false; break; }
+                            try
+                            {
+                                if (!await ExecuteListAsync(step.Children, section, token, sequenceId, callStack)) { success = false; break; }
+                            }
+                            catch (ContinueSignal) { continue; }
+                            catch (BreakSignal) { break; }
                         }
                     }
                     finally { if (hadValue) _variables[variable] = oldValue; else _variables.Remove(variable); }
                     message = $"FOR {variable}: {count} 次"; break;
+                case "while":
+                    var maxIterations = Integer(step, "max_iterations", 1000);
+                    if (maxIterations <= 0) throw new InvalidDataException("WHILE 最大循环次数必须大于 0");
+                    var whileCount = 0;
+                    while (SequenceExpression.Evaluate(StringValue(step, "expression", ""), MergeValues()))
+                    {
+                        if (++whileCount > maxIterations) throw new InvalidDataException($"WHILE 循环次数超过 {maxIterations}");
+                        try
+                        {
+                            if (!await ExecuteListAsync(step.Children, section, token, sequenceId, callStack)) { success = false; break; }
+                        }
+                        catch (ContinueSignal) { }
+                        catch (BreakSignal) { break; }
+                    }
+                    message = $"WHILE: {whileCount} 次"; break;
+                case "break": throw new BreakSignal();
+                case "continue": throw new ContinueSignal();
+                case "log":
+                    var level = StringValue(step, "level", "INFO").ToUpperInvariant();
+                    Log(level, Resolve(StringValue(step, "message", ""))?.ToString() ?? "");
+                    message = StringValue(step, "message", ""); break;
+                case "statement":
+                    var targetVariable = Required(step, "target_variable");
+                    _variables[targetVariable] = Resolve(Value(step, "expression"));
+                    message = $"{targetVariable} = {_variables[targetVariable]}"; break;
                 case "call_sequence":
                     var targetId = Required(step, "sequence_id");
                     if (_sequenceResolver is null) throw new InvalidDataException("未配置序列调用解析器");
@@ -338,17 +391,24 @@ public sealed class SequenceExecutionEngine
                 case "comment": message = step.Description.Length == 0 ? "备注" : step.Description; break;
                 default: throw new InvalidDataException($"不支持的步骤类型: {step.Kind}");
             }
+            if (!success && !string.IsNullOrWhiteSpace(step.FailureMessage)) message = step.FailureMessage;
             if (!success) Log("WARN", message);
+        }
+        catch (Exception exception) when (exception is BreakSignal or ContinueSignal)
+        {
+            throw;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            success = false; status = "failed"; message = exception.Message; Log("ERROR", message);
+            success = false; status = "failed"; message = string.IsNullOrWhiteSpace(step.FailureMessage) ? exception.Message : step.FailureMessage; Log("ERROR", message);
         }
         PublishStep(step, success ? status : "failed", message, section, sequenceId, startedAt, ElapsedMs(started));
         return success;
     }
 
     private bool IsContinueFailure(SequenceStep step) => step.Kind == "assert" && StringValue(step, "failure_action", "STOP") is "CONTINUE" or "LOG";
+    private sealed class BreakSignal : Exception;
+    private sealed class ContinueSignal : Exception;
     private void PublishStep(SequenceStep step, string status, string message, string section, string sequenceId, DateTimeOffset startedAt, long duration)
     {
         var result = new StepRunResult(step.Id, step.Name, step.Kind, status, message,

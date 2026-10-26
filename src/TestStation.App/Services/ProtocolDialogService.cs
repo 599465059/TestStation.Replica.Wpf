@@ -17,7 +17,7 @@ public interface IProtocolDialogService
     Task ShowInfoAsync(FrameworkElement owner, string title, string message);
     Task<string?> TextAsync(FrameworkElement owner, string title, string initialValue);
 }
-public sealed class ProtocolDialogService : IProtocolDialogService, ISequenceDialogService, IManualWorkspaceDialogService
+public sealed class ProtocolDialogService : IProtocolDialogService, IAppDialogService, ISequenceDialogService, IManualWorkspaceDialogService
 {
     public async Task<SequenceUnsavedChoice> AskUnsavedAsync(string name)
     {
@@ -59,9 +59,42 @@ public sealed class ProtocolDialogService : IProtocolDialogService, ISequenceDia
         var value = await new IndustrialDialogService(Host()).TextAsync(UiText.RenameSequence, name, false, false);
         return value.Accepted ? value.Value : null;
     }
+    public async Task<string?> RequestNameAsync(string title, string name)
+    {
+        var value = await new IndustrialDialogService(Host()).TextAsync(title, name, false, false);
+        return value.Accepted ? value.Value : null;
+    }
+    public async Task<bool> ConfirmDeleteItemAsync(string kind, string name) =>
+        await Host().ShowAsync(new DialogOptions { Title = $"删除{kind}", PrimaryText = UiText.Delete, CloseText = UiText.Cancel },
+            Content($"确认删除{kind}“{name}”？保存工程后生效。")) == IndustrialDialogResult.Primary;
     public async Task<bool> ConfirmStopExecutionAsync() =>
         await Host().ShowAsync(new DialogOptions { Title = UiText.ExecutionInProgress,
             PrimaryText = UiText.StopAndContinue, CloseText = UiText.Cancel }, Content(UiText.StopBeforeLeaving)) == IndustrialDialogResult.Primary;
+
+    public async Task<IReadOnlyDictionary<string, System.Text.Json.JsonElement>?> RequestRunParametersAsync(
+        string sequenceName, IReadOnlyList<TestStation.App.ViewModels.ParameterInputRow> parameters)
+    {
+        var errorMessage = "";
+        while (true)
+        {
+            var panel = new StackPanel { Width = 520, Margin = new Thickness(8) };
+            panel.Children.Add(Content("本次填写仅用于运行，不修改序列的参数默认值。"));
+            panel.Children.Add(new ScrollViewer { Content = new Views.ParameterInputList { DataContext = parameters },
+                MaxHeight = 420, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+            panel.Children.Add(Content(errorMessage));
+            if (await Host().ShowAsync(new DialogOptions { Title = $"运行参数 — {sequenceName}",
+                PrimaryText = "开始运行", CloseText = UiText.Cancel }, panel) != IndustrialDialogResult.Primary) return null;
+            var values = new Dictionary<string, System.Text.Json.JsonElement>(StringComparer.OrdinalIgnoreCase);
+            var errors = new List<string>();
+            foreach (var row in parameters)
+            {
+                try { if (row.ReadValue() is { } value) values.Add(row.Name, value); }
+                catch (System.IO.InvalidDataException failure) { errors.Add(failure.Message); }
+            }
+            if (errors.Count == 0) return values;
+            errorMessage = string.Join(Environment.NewLine, errors);
+        }
+    }
     public ProtocolUnsavedChoice AskUnsaved()
     {
         var task = Host().ShowAsync(new DialogOptions { Title = UiText.SwitchProtocol, PrimaryText = UiText.Save, SecondaryText = UiText.Discard, CloseText = UiText.Cancel }, Content(UiText.UnsavedProtocolPrompt));

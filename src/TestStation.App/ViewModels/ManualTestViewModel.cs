@@ -190,7 +190,6 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
     private double _viewportWidth = 800, _viewportHeight = 600;
     private string _status = UiText.Get("ManualCanvasHint");
     public event Action<ManualWidgetViewModel>? WidgetConfigurationChanged;
-    public event Action? CaptureConfigurationsRequested;
     public ObservableCollection<ManualWidgetViewModel> Widgets { get; } = [];
     public ObservableCollection<ManualWidgetViewModel> SelectedWidgets { get; } = [];
     public IReadOnlyList<ManualWidgetTool> WidgetTools => ManualWidgetCatalog.Tools;
@@ -205,6 +204,8 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
     public string ModeCaption => UiText.Get(IsDesignMode ? "CanvasSwitchToRun" : "CanvasSwitchToDesign");
     public string LibraryCaption => UiText.Get("CanvasWidgetLibrary");
     public string LibraryHint => UiText.Get("CanvasWidgetLibraryHint");
+    /// <summary>Stable manual subpage identifier supplied to plugin view providers.</summary>
+    public string DocumentId => _documentId;
     public string Status { get => _status; private set => SetProperty(ref _status, value); }
     public double SurfaceWidth => Math.Max(_viewportWidth, Widgets.Select(w => w.X + w.Width + 32).DefaultIfEmpty(0).Max());
     public double SurfaceHeight => Math.Max(_viewportHeight, Widgets.Select(w => w.Y + w.Height + 32).DefaultIfEmpty(0).Max());
@@ -225,40 +226,19 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
         if (_root == root && _documentId == documentId) return;
         _documentId = documentId;
         _root = root; _dirty = false; _loaded = true;
-        try
-        {
-            var stored = _repository.Load(root, documentId);
-            _document = stored ?? new() { Widgets = [NewWidget(0)] };
-            if (_document.WidgetLibraryBaseline != "1.0.0")
-            {
-                if (stored is not null && _document.GridSize == 16)
-                    foreach (var widget in _document.Widgets.ToArray())
-                    {
-                        var previousDefault = widget.Kind switch
-                        {
-                            "numeric" => (18, 4), "input" => (20, 4), "gauge" => (18, 12),
-                            "status" => (18, 4), "command" => (14, 5), "serial" => (32, 15), _ => (0, 0)
-                        };
-                        if ((widget.Bounds.Columns, widget.Bounds.Rows) != previousDefault) continue;
-                        var spec = ManualWidgetCatalog.Get(widget.Kind);
-                        _documentService.UpdateBounds(_document, widget.Id, widget.Bounds with { Columns = spec.Columns, Rows = spec.Rows });
-                    }
-                _document.WidgetLibraryBaseline = "1.0.0";
-                _dirty = stored is not null;
-            }
-            Rebuild(); Status = UiText.Get("ManualCanvasHint");
-        }
-        catch (Exception error)
-        {
-            _loaded = false; _document = new(); Rebuild(); Status = UiText.Format("CanvasLoadFailed", error.Message);
-        }
+        _document = new();
+        Widgets.Clear();
+        SelectedWidgets.Clear();
+        Selected = null;
+        LastInteracted = null;
+        Status = "等待插件界面";
         OnPropertyChanged(nameof(GridSize)); NotifyCommands();
     }
     public bool Flush()
     {
-        if (!_dirty || _root is null) return true;
-        try { _repository.Save(_root, _document, _documentId); _dirty = false; OnPropertyChanged(nameof(IsDirty)); return true; }
-        catch (Exception error) { Status = UiText.Format("CanvasSaveFailed", error.Message); return false; }
+        _dirty = false;
+        OnPropertyChanged(nameof(IsDirty));
+        return true;
     }
     public bool SavePendingProperties()
     {
@@ -267,11 +247,7 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
     }
     public bool SaveDocument()
     {
-        if (!_loaded || _root is null) return false;
-        if (!SavePendingProperties()) return false;
-        CaptureConfigurationsRequested?.Invoke();
-        _dirty = true; OnPropertyChanged(nameof(IsDirty));
-        return Flush();
+        return _loaded;
     }
     public string SaveSection => "手动测试";
     public TestStation.App.Services.ProjectSaveResult SaveProjectChanges() => _root is null || SaveDocument()
@@ -389,6 +365,7 @@ public sealed class ManualTestViewModel : ObservableObject, TestStation.App.Serv
         var widget = new ManualWidgetViewModel(definition, GridSize);
         Widgets.Add(widget); Select(widget); NotifyExtent(); Changed();
     }
+
     public void StoreWidgetConfiguration(ManualWidgetViewModel widget, string configurationJson, bool persist = true)
     {
         if (!_loaded || string.IsNullOrWhiteSpace(configurationJson)) return;

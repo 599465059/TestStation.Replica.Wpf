@@ -14,6 +14,7 @@ public sealed class UiValueConverter : IValueConverter
         return parameter?.ToString() switch
         {
             "State" => UiDisplay.State(text), "LogLevel" => UiDisplay.LogLevel(text),
+            "Section" => UiDisplay.Section(text),
             "LogMessage" => UiDisplay.LogMessage(text),
             "Dirty" => value is true ? UiText.Unsaved : UiText.Saved,
             _ => UiDisplay.Option(text)

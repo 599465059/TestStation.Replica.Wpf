@@ -82,10 +82,10 @@ public sealed class AutoTestDisplayService : IAutoTestDisplayService
             Number = number,
             Status = statuses.GetValueOrDefault(step.Id, ""),
             BeforeTarget = new(section, parentId, branch == "else", index),
-            AfterTarget = step.Kind is "if" or "loop"
+            AfterTarget = step.Kind is "if" or "loop" or "while"
                 ? new(section, step.Id, false, 0)
                 : new(section, parentId, branch == "else", index + 1),
-            IntoTarget = step.Kind is "if" or "loop" ? new(section, step.Id, false, 0) : null
+            IntoTarget = step.Kind is "if" or "loop" or "while" ? new(section, step.Id, false, 0) : null
         });
 
         if (step.Kind == "if")
@@ -118,7 +118,7 @@ public sealed class AutoTestDisplayService : IAutoTestDisplayService
                 AppendStep(rows, step.ElseChildren[childIndex], section, step.Id, "else", childIndex,
                     depth + 1, $"{number}.else.{childIndex + 1}", statuses);
         }
-        if (step.Kind is "if" or "loop")
+        if (step.Kind is "if" or "loop" or "while")
             rows.Add(new SequenceRow
             {
                 RowType = "end", Section = section, ParentId = parentId, ListIndex = index + 1,

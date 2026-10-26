@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Allow a machine with only .NET 10 to launch this isolated net9 Host. -->
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TestStation.Contracts\TestStation.Contracts.csproj" />
+    <PackageReference Include="OpenTAP" Version="9.35.0" />
+    <Compile Include="..\TestStation.Application\SequenceExpression.cs" Link="Expressions\SequenceExpression.cs" />
+    <Compile Include="..\TestStation.Application\SequenceValueOperations.cs" Link="Expressions\SequenceValueOperations.cs" />
+    <Compile Include="..\TestStation.Application\SequenceSignalOperation.cs" Link="Expressions\SequenceSignalOperation.cs" />
+  </ItemGroup>
+</Project>

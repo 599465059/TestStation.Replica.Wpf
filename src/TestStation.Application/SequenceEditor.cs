@@ -10,12 +10,17 @@ public static class SequenceEditor
     {
         ["IF"] = "if",
         ["FOR"] = "loop",
+        ["WHILE"] = "while",
+        ["BREAK"] = "break",
+        ["CONTINUE"] = "continue",
         ["INITIALIZE"] = "initialize",
         ["SET VALUE"] = "set_value",
         ["GET VALUE"] = "read_value",
         ["WAIT"] = "wait",
         ["ASSERT"] = "assert",
         ["SEQUENCE CALL"] = "call_sequence",
+        ["LOG"] = "log",
+        ["STATEMENT"] = "statement",
         ["COMMENT"] = "comment"
     };
 
@@ -28,6 +33,8 @@ public static class SequenceEditor
         var id = kind;
         for (var number = 2; used.Contains(id); number++) id = $"{kind}_{number}";
         var step = new SequenceStep { Id = id, Kind = kind, Name = displayKind };
+        if (kind is "set_value" or "read_value")
+            step.Params["signals"] = System.Text.Json.JsonSerializer.SerializeToElement(Array.Empty<SequenceSignalOperation>());
         destination.Insert(Math.Clamp(target.Index, 0, destination.Count), step);
         return step;
     }
@@ -95,7 +102,7 @@ public static class SequenceEditor
             if (parent.Kind != "if") throw new ArgumentException("只有 IF 有 ELSE 分支", nameof(target));
             return parent.ElseChildren;
         }
-        if (parent.Kind is not ("if" or "loop"))
+        if (parent.Kind is not ("if" or "loop" or "while"))
             throw new ArgumentException("目标步骤不能包含子步骤", nameof(target));
         return parent.Children;
     }

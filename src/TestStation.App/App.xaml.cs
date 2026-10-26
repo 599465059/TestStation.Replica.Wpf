@@ -12,10 +12,7 @@ public partial class App : Prism.DryIoc.PrismApplication
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
         _shellModule.RegisterTypes(containerRegistry);
-        new Modules.ProtocolModule().RegisterTypes(containerRegistry);
         new Modules.ManualTestModule().RegisterTypes(containerRegistry);
-        new Modules.ResourceModule().RegisterTypes(containerRegistry);
-        new Modules.ResourceModule().RegisterTypes(containerRegistry);
     }
 }
 

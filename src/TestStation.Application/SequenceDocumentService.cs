@@ -84,7 +84,7 @@ public sealed class SequenceDocumentSession
     {
         var restored = JsonSerializer.Deserialize<SequenceDefinition>(snapshot)!;
         Model.Id = restored.Id; Model.Name = restored.Name; Model.Version = restored.Version;
-        Model.Description = restored.Description;
+        Model.Description = restored.Description; Model.Role = restored.Role;
         Model.SetupSteps = restored.SetupSteps; Model.Steps = restored.Steps;
         Model.CleanupSteps = restored.CleanupSteps; Model.Variables = restored.Variables;
     }

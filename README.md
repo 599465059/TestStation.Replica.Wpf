@@ -1,6 +1,6 @@
 # Test Station — C# / WPF
 
-独立工程，采用 Prism.DryIoc + MVVM + 分层模块化。自动测试编辑器嵌入主窗口，使用用户提供的 Industrial.Controls 样式（未封装类型按缺项清单回退）、MaterialDesign 图标和 AvalonDock 停靠面板，保留现有序列模型、文件格式和模拟执行引擎。
+独立工程，采用 Prism.DryIoc + MVVM + 分层模块化。自动测试编辑器嵌入主窗口，使用用户提供的 Industrial.Controls 样式（未封装类型按缺项清单回退）、MaterialDesign 图标和 AvalonDock 停靠面板；自有序列模型由独立 OpenTAP Host 执行。
 
 ## 启动
 
@@ -24,6 +24,8 @@ dotnet build TestStation.slnx --no-restore
 .NET 10 升级范围、兼容调整和验证结果见 [docs/NET10_UPGRADE.md](docs/NET10_UPGRADE.md)。
 
 验收示例工程位于 `artifacts/demo-project`，包含嵌套编辑示例和可运行的模拟序列，启动后可以通过打开工程目录查看。
+
+最新全功能验收工程位于 `examples/自动测试全功能验收`，正常主序列包含 65 秒等待。双击其中的 `打开验收工程.cmd` 可准备专用站变量并打开工程。重复自动验收的命令与覆盖范围见 [自动测试全功能验收记录](docs/自动测试全功能验收记录.md)。
 
 ## 控件库预览
 
@@ -57,6 +59,8 @@ dotnet build TestStation.slnx --no-restore
 - 主窗口工具栏只放工程操作。自动测试页顶部使用控件库的紧凑 ToolBar，提供新建/保存序列、运行、预检、暂停/继续、停止及运行状态；切换其他页面后随自动测试页面隐藏。暂停后按钮文字和图标自动切换为“继续”。标题栏不再提供页面搜索框。
 
 当前工作范围是自动测试编辑体验与现有模拟执行；其他导航中的占位页及新的硬件驱动不属于本轮扩展。
+
+手动测试当前只保留工区标签、标签/窗口/平铺/层叠布局和插件界面宿主。插件通过 `IManualPluginViewProvider` 提供界面，由 `IManualPluginViewRegistry` 注册；同一工区可用“标签查看”或“平铺查看”同时查看多个插件界面。插件目录扫描、安装包管理以及设备通道与 OpenTAP 步骤的实际注册仍属于后续插件系统工作。
 
 ## 分层
 

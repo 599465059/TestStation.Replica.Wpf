@@ -1,0 +1,70 @@
+<UserControl x:Class="TestStation.App.Views.CanTestView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+ Background="{DynamicResource ContentBrush}" Foreground="{DynamicResource TextBrush}">
+ <UserControl.Resources>
+  <BooleanToVisibilityConverter x:Key="VisibleWhenTrue"/>
+  <ContextMenu x:Key="CanvasMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+   <MenuItem Header="添加 CAN 信号监视" Command="{Binding AddMonitorCommand}"/>
+   <MenuItem Header="添加 DBC 发送" Command="{Binding AddSendCommand}"/>
+   <MenuItem Header="添加 CAN 报文树" Command="{Binding AddTreeCommand}"/>
+   <MenuItem Header="添加手动发送" Command="{Binding AddManualCommand}"/>
+  </ContextMenu>
+  <ContextMenu x:Key="WidgetMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+   <MenuItem Header="删除控件" Click="DeleteWidgetMenu_Click"/>
+  </ContextMenu>
+ <Style x:Key="PanelCard" TargetType="Border">
+   <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="4"/><Setter Property="Padding" Value="8"/>
+  </Style>
+  <HierarchicalDataTemplate x:Key="CanTreeNodeTemplate" ItemsSource="{Binding Children}">
+   <StackPanel Orientation="Horizontal">
+    <md:PackIcon Kind="FileTreeOutline" Width="16" Height="16" Margin="0,0,6,0" Foreground="{DynamicResource AccentBrush}"/>
+    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+   </StackPanel>
+  </HierarchicalDataTemplate>
+  <DataTemplate x:Key="CanSignalMonitorTemplate">
+   <DataGrid ItemsSource="{Binding DataContext.Signals, RelativeSource={RelativeSource AncestorType=UserControl}}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
+    <DataGrid.Columns><DataGridTextColumn Header="信号名" Binding="{Binding Name}" Width="2*"/><DataGridTextColumn Header="数值" Binding="{Binding Value}" Width="*"/><DataGridTextColumn Header="单位" Binding="{Binding Unit}" Width="*"/><DataGridTextColumn Header="时间" Binding="{Binding Timestamp,StringFormat=HH:mm:ss.fff}" Width="1.4*"/></DataGrid.Columns>
+   </DataGrid>
+  </DataTemplate>
+  <DataTemplate x:Key="CanMessageTreeTemplate">
+   <TreeView ItemsSource="{Binding DataContext.MessageTree, RelativeSource={RelativeSource AncestorType=UserControl}}" ItemTemplate="{StaticResource CanTreeNodeTemplate}" SelectedItemChanged="MessageTree_SelectedItemChanged"/>
+  </DataTemplate>
+  <DataTemplate x:Key="CanDbcSendTemplate">
+   <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <StackPanel Orientation="Horizontal" Margin="0,0,0,6"><TextBlock Text="{Binding DataContext.SelectedMessage.Name, RelativeSource={RelativeSource AncestorType=UserControl}, TargetNullValue=请选择左侧报文}" Foreground="{DynamicResource MutedBrush}"/><TextBlock Text="  ID=" Foreground="{DynamicResource MutedBrush}"/><TextBlock Text="{Binding DataContext.SelectedMessage.Id, RelativeSource={RelativeSource AncestorType=UserControl}, StringFormat=0x{0:X3}, TargetNullValue=--}" Foreground="{DynamicResource MutedBrush}"/></StackPanel>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,6"><TextBlock Text="周期(ms)" VerticalAlignment="Center" Margin="0,0,6,0"/><TextBox Width="72" Text="{Binding DataContext.DbcPeriodMs, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,0"/><Button Content="发送一次" Command="{Binding DataContext.SendDbcCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" Style="{StaticResource AccentButton}" Padding="12,3"/><Button Content="{Binding DataContext.DbcPeriodicCaption, RelativeSource={RelativeSource AncestorType=UserControl}}" Command="{Binding DataContext.ToggleDbcPeriodicCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" Style="{StaticResource AccentButton}" Padding="12,3" Margin="8,0,0,0"/></StackPanel>
+    <DataGrid Grid.Row="2" ItemsSource="{Binding DataContext.SelectedMessageSignals, RelativeSource={RelativeSource AncestorType=UserControl}}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="False"><DataGrid.Columns><DataGridTextColumn Header="信号名" Binding="{Binding Name}" IsReadOnly="True" Width="1.5*"/><DataGridTextColumn Header="值" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Width="*"/><DataGridTextColumn Header="起始位" Binding="{Binding StartBit}" IsReadOnly="True" Width="*"/><DataGridTextColumn Header="长度" Binding="{Binding Length}" IsReadOnly="True" Width="*"/><DataGridTextColumn Header="字节序" Binding="{Binding Endian}" IsReadOnly="True" Width="*"/><DataGridTextColumn Header="类型" Binding="{Binding DataType}" IsReadOnly="True" Width="*"/><DataGridTextColumn Header="单位" Binding="{Binding Unit}" IsReadOnly="True" Width="*"/></DataGrid.Columns></DataGrid>
+   </Grid>
+  </DataTemplate>
+  <DataTemplate x:Key="CanManualSendTemplate">
+   <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Grid Grid.Row="0"><Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="CAN ID" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding DataContext.ManualId, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}"/></Grid>
+    <Grid Grid.Row="1" Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="DLC" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding DataContext.ManualDlc, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}"/></Grid>
+    <Grid Grid.Row="2" Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="数据" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding DataContext.ManualData, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}"/></Grid>
+    <Button Grid.Row="3" Content="发送" Command="{Binding DataContext.SendCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" HorizontalAlignment="Left" Margin="0,12,0,0" Style="{StaticResource AccentButton}"/>
+   </Grid>
+  </DataTemplate>
+ </UserControl.Resources>
+ <Grid Margin="8" AutomationProperties.AutomationId="CanTestWorkspace" PreviewKeyDown="OnKeyDown">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+  <ToolBar Grid.Row="0" Style="{StaticResource AppToolBarStyle}">
+   <Button Command="{Binding ToggleCommand}" Style="{StaticResource AppToolBarButtonStyle}" Content="启动/停止模拟 CAN"/>
+   <Button Command="{Binding ToggleDesignModeCommand}" Style="{StaticResource AppToolBarButtonStyle}" Content="{Binding ModeCaption}"/>
+   <Separator/><TextBlock Text="CAN 通道" VerticalAlignment="Center" Margin="8,0,4,0"/><ComboBox Width="170" ItemsSource="{Binding Channels}" SelectedItem="{Binding SelectedChannel}"/>
+   <TextBlock Text="DBC" VerticalAlignment="Center" Margin="12,0,4,0"/><ComboBox Width="220" ItemsSource="{Binding DbcFiles}" SelectedItem="{Binding SelectedDbc}"/><TextBlock Text="{Binding Status}" Foreground="{DynamicResource MutedBrush}" Margin="16,0,0,0"/>
+  </ToolBar>
+  <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"><Canvas MinWidth="990" MinHeight="690" Background="{DynamicResource ContentBrush}" ContextMenu="{StaticResource CanvasMenu}">
+   <ItemsControl x:Name="CanvasWidgets" ItemsSource="{Binding Widgets}" PreviewMouseLeftButtonDown="Widget_MouseDown" PreviewMouseMove="Widget_MouseMove" PreviewMouseLeftButtonUp="Widget_MouseUp">
+    <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+    <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter"><Setter Property="Canvas.Left" Value="{Binding Left}"/><Setter Property="Canvas.Top" Value="{Binding Top}"/><Setter Property="Panel.ZIndex" Value="0"/><Style.Triggers><DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter Property="Panel.ZIndex" Value="100"/></DataTrigger></Style.Triggers></Style></ItemsControl.ItemContainerStyle>
+    <ItemsControl.ItemTemplate><DataTemplate><Border x:Name="WidgetBorder" Width="{Binding Width}" Height="{Binding Height}" Padding="6" ContextMenu="{StaticResource WidgetMenu}"><Border.Style><Style TargetType="Border" BasedOn="{StaticResource PanelCard}"><Style.Triggers><DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="BorderThickness" Value="2"/></DataTrigger></Style.Triggers></Style></Border.Style><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Border Tag="CanWidgetMoveHandle" Background="Transparent" Cursor="SizeAll" Padding="2,0,2,5"><StackPanel Orientation="Horizontal"><md:PackIcon Kind="ViewDashboardOutline" Foreground="{DynamicResource AccentBrush}" Width="16" Height="16" Margin="0,0,6,0"/><TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel></Border><ContentControl Grid.Row="1" Content="{Binding}"><ContentControl.Style><Style TargetType="ContentControl"><Setter Property="ContentTemplate" Value="{StaticResource CanSignalMonitorTemplate}"/><Style.Triggers><DataTrigger Binding="{Binding Kind}" Value="message_tree"><Setter Property="ContentTemplate" Value="{StaticResource CanMessageTreeTemplate}"/></DataTrigger><DataTrigger Binding="{Binding Kind}" Value="dbc_send"><Setter Property="ContentTemplate" Value="{StaticResource CanDbcSendTemplate}"/></DataTrigger><DataTrigger Binding="{Binding Kind}" Value="manual_send"><Setter Property="ContentTemplate" Value="{StaticResource CanManualSendTemplate}"/></DataTrigger></Style.Triggers></Style></ContentControl.Style></ContentControl><Grid Panel.ZIndex="5" IsHitTestVisible="{Binding DataContext.IsDesignMode, RelativeSource={RelativeSource AncestorType=UserControl}}"><Border Tag="CanResizeNW" Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNWSE"/><Border Tag="CanResizeN" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNS"/><Border Tag="CanResizeNE" Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNESW"/><Border Tag="CanResizeW" Width="10" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="Transparent" Cursor="SizeWE"/><Border Tag="CanResizeE" Width="10" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" Cursor="SizeWE"/><Border Tag="CanResizeSW" Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeNESW"/><Border Tag="CanResizeS" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeNS"/><Border Tag="CanResizeSE" Width="10" Height="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="Transparent" Cursor="SizeNWSE"/></Grid></Grid></Border></DataTemplate></ItemsControl.ItemTemplate>
+   </ItemsControl>
+  </Canvas></ScrollViewer>
+ </Grid>
+</UserControl>
+
+

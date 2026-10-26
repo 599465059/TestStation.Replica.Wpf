@@ -12,7 +12,10 @@ namespace TestStation.App.ViewModels;
 
 public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
 {
-    private readonly SequenceExecutionEngine _executionEngine;
+    private readonly ISequenceExecutionHost _executionHost;
+    private readonly ISequenceRunPersistence _runPersistence;
+    private readonly IAutomaticWorkspaceService _workspaceService;
+    private readonly ISequenceReportService _reportService;
     private readonly IAutoTestDisplayService _displayService;
     private readonly ISequenceEditingService _editingService;
     private readonly ProjectSaveService _projectSaving = new();
@@ -33,7 +36,15 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
     [ObservableProperty] private SequenceDefinition? _selectedSequence;
     [ObservableProperty] private string _stepName = "";
     [ObservableProperty] private string _stepDescription = "";
+    [ObservableProperty] private string _stepTimeoutMs = "0";
+    [ObservableProperty] private string _stepOnFailure = "STOP";
+    [ObservableProperty] private string _stepOnComplete = "CONTINUE";
+    [ObservableProperty] private string _stepFailureMessage = "";
+    [ObservableProperty] private string _stepPrecondition = "";
+    [ObservableProperty] private bool _stepRecordResult = true;
     [ObservableProperty] private string _stepParameters = "{}";
+    [ObservableProperty] private string _stepBeforeExpression = "";
+    [ObservableProperty] private string _stepAfterExpression = "";
     [ObservableProperty] private string _sequenceName = "";
     [ObservableProperty] private string _sequenceDescription = "";
     [ObservableProperty] private SequenceVariable? _selectedVariable;
@@ -50,17 +61,37 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
     public ObservableCollection<SequenceDefinition> Sequences { get; } = [];
     public ObservableCollection<SequenceRow> Rows { get; } = [];
     public ObservableCollection<StepParameterField> StepFields { get; } = [];
+    public ObservableCollection<SignalValueRow> SignalValueRows { get; } = [];
+    public bool IsSignalTableStep => SelectedRow?.Step?.Kind is "set_value" or "read_value";
+    public IReadOnlyList<string> SignalDataTypes => SequenceValueOperations.DataTypes;
+    public IReadOnlyList<string> SignalInputModes { get; } = ["constant", "expression"];
+    public IReadOnlyList<string> SignalComparators => SequenceValueOperations.Comparators;
+    public IReadOnlyList<string> SignalArrayModes => SequenceValueOperations.ArrayModes;
     public ObservableCollection<SequenceVariable> Variables { get; } = [];
     public ObservableCollection<SimulationValueRow> SimulationValues { get; } = [];
     public ObservableCollection<SequenceLogEntry> RunLogs { get; } = [];
-    public IReadOnlyList<string> VariableTypes { get; } = ["number", "integer", "boolean", "text"];
-    public IReadOnlyList<string> VariableScopes { get; } = ["local", "parameter"];
+    public IReadOnlyList<string> VariableTypes => SequenceValueOperations.DataTypes;
+    public IReadOnlyList<string> VariableScopes { get; } = ["local", "global", "station", "parameter"];
+    public IReadOnlyList<string> FailureActions { get; } = ["STOP", "CONTINUE", "GOTO_CLEANUP"];
+    public string StepOutcomeLabel => SelectedRow?.HasJudgment == true ? "失败后的动作" : "完成后的动作";
+    public string StepOutcomeAction
+    {
+        get => SelectedRow?.HasJudgment == true ? StepOnFailure : StepOnComplete;
+        set
+        {
+            if (SelectedRow?.HasJudgment == true) StepOnFailure = value;
+            else StepOnComplete = value;
+            OnPropertyChanged();
+        }
+    }
     public IReadOnlyList<StepPaletteGroup> StepGroups { get; } =
     [
-        new(UiText.FlowControl, [new("IF", "flow"), new("FOR", "flow")]),
+        new(UiText.FlowControl, [new("IF", "flow"), new("FOR", "flow"), new("WHILE", "flow"),
+            new("BREAK", "flow"), new("CONTINUE", "flow")]),
         new(UiText.TestActions, [new("INITIALIZE", "action"), new("SET VALUE", "action"),
             new("GET VALUE", "action"), new("WAIT", "timing"), new("ASSERT", "comparison")]),
-        new(UiText.Utility, [new("SEQUENCE CALL", "sequence"), new("COMMENT", "utility")])
+        new(UiText.Utility, [new("SEQUENCE CALL", "sequence"), new("LOG", "utility"),
+            new("STATEMENT", "utility"), new("COMMENT", "utility")])
     ];
     public string? ProjectPath => _workspace?.Root;
     public bool CanRunSequence => CanEditSequence;
@@ -69,39 +100,27 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
     public string PauseResumeIcon => ExecutionState == "PAUSED" ? "Play" : "Pause";
 
     public MainViewModel(IAutoTestDisplayService displayService, ISequenceEditingService editingService,
-        ISequenceDocumentService? documents = null, ISequenceDialogService? sequenceDialogs = null)
+        ISequenceDocumentService? documents = null, ISequenceDialogService? sequenceDialogs = null,
+        IEnumerable<ISequenceChannelProvider>? channelProviders = null,
+        ISequenceExecutionHost? executionHost = null,
+        ISequenceRunPersistence? runPersistence = null,
+        IAutomaticWorkspaceService? workspaceService = null,
+        ISequenceReportService? reportService = null)
     {
+        _channelProviders = channelProviders?.ToArray() ?? [];
+        _executionHost = executionHost ?? new OpenTapHostClient();
+        _runPersistence = runPersistence ?? new SequenceRunPersistence();
+        _workspaceService = workspaceService ?? new AutomaticWorkspaceService();
+        _reportService = reportService ?? new SequenceReportService();
         _displayService = displayService;
         _projectSaving.Register(this);
         _editingService = editingService;
         _documents = documents ?? new SequenceDocumentService();
         _sequenceDialogs = sequenceDialogs ?? new CancelSequenceDialogs();
-        _executionEngine = new SequenceExecutionEngine(sequenceResolver: id => _runSequences.GetValueOrDefault(id));
-        _executionEngine.StateChanged += state => OnUi(() =>
-        {
-            if (state == SequenceRunState.Running) _runStarted?.TrySetResult();
-            ExecutionState = state.ToString().ToUpperInvariant();
-            NotifyDocumentState();
-        });
-        _executionEngine.CurrentStepChanged += id => OnUi(() =>
-        {
-            foreach (var row in Rows.Where(row => row.RowType == "step")) row.IsCurrent = row.Step?.Id == id;
-        });
-        _executionEngine.StepChanged += update => OnUi(() =>
-        {
-            _stepStatuses[update.StepId] = update.Status.ToUpperInvariant();
-            foreach (var row in Rows.Where(row => row.Step?.Id == update.StepId)) row.Status = update.Status.ToUpperInvariant();
-        });
-        _executionEngine.LogRaised += entry => OnUi(() => RunLogs.Add(entry));
-        _executionEngine.Completed += result => OnUi(() =>
-        {
-            ExecutionSummary = UiText.Format(nameof(UiText.ExecutionSummary), UiDisplay.State(result.Status), result.Steps.Count);
-            if (_workspace is not null)
-            {
-                try { new RunResultRepository(_workspace.Root).Save(result); }
-                catch (Exception error) { Status = $"运行结果保存失败: {error.Message}"; }
-            }
-        });
+        _executionHost.EventReceived += value => OnUi(() => HandleHostEvent(value));
+        // Station variables are loaded with the active automatic workspace so
+        // the ViewModel does not own a repository implementation.
+        _stationBaseline = JsonSerializer.Serialize(_stationVariables);
     }
 
     public void OpenProject(string path)
@@ -121,24 +140,37 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
     private void LoadWorkspace(ProjectWorkspace candidate)
     {
         // Read and validate candidate files before replacing the current document.
-        var sequences = candidate.LoadSequences().ToArray();
-        var simulation = new SimulationRepository(candidate.Root).Load();
+        var snapshot = _workspaceService.Load(candidate);
+        var subprojects = snapshot.Subprojects;
+        var simulation = snapshot.SimulationValues;
         AttachSequence(null);
         _documents.Clear();
         _workspace = candidate;
         ProjectName = candidate.Name;
         IsProjectOpen = true;
         OnPropertyChanged(nameof(ProjectPath));
-        _selectionSync = true;
+        _selectionSync = true; _changingSubproject = true;
         try
         {
-            Sequences.Clear();
-            foreach (var sequence in sequences) { _documents.Track(sequence); Sequences.Add(sequence); }
+            SequenceSubprojects.Clear();
+            _tabSelections.Clear();
+            foreach (var project in subprojects)
+            {
+                SequenceSubprojects.Add(project);
+                foreach (var sequence in project.Sequences) _documents.Track(sequence);
+            }
+            _globalRuntime.Clear();
+            _stationVariables.Clear(); _stationVariables.AddRange(snapshot.StationVariables);
+            _workspaceBaseline = JsonSerializer.Serialize(SequenceSubprojects);
         }
-        finally { _selectionSync = false; }
+        finally { _selectionSync = false; _changingSubproject = false; }
         LoadSimulationValues(simulation);
-        AttachSequence(Sequences.FirstOrDefault());
+        ActivateSubproject(SequenceSubprojects.FirstOrDefault());
         ExecutionState = "IDLE"; ExecutionSummary = ""; RunLogs.Clear();
+        ResetRunInspection(); CurrentCallPath = "尚未运行"; ResultDescription = "尚无运行结果";
+        SelectedRunReport = null;
+        SimulationScenarioName = ""; ActiveSimulationScenario = "当前模拟数据";
+        LoadSimulationScenarios(); LoadRunReports();
     }
 
     public void SelectSequence(SequenceDefinition? sequence) => _ = SelectSequenceAsync(sequence);
@@ -158,11 +190,12 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
         try
         {
             if (!await ResolveUnsavedSequenceAsync()) return;
+            if (_activeSubproject is null) return;
             var number = 1;
-            while (Sequences.Any(sequence => string.Equals(sequence.Id, $"sequence_{number}", StringComparison.OrdinalIgnoreCase))) number++;
-            var sequence = new SequenceDefinition { Id = $"sequence_{number}", Name = UiText.Format(nameof(UiText.SequenceDefaultName), number) };
+            while (Sequences.Any(sequence => sequence.Name == $"子序列 {number}")) number++;
+            var sequence = new SequenceDefinition { Id = Guid.NewGuid().ToString("N"), Name = $"子序列 {number}", Role = "sub" };
             _documents.Track(sequence, saved: false);
-            Sequences.Add(sequence); AttachSequence(sequence);
+            _activeSubproject.Sequences.Add(sequence); Sequences.Add(sequence); AttachSequence(sequence);
             Status = UiText.NewSequenceUnsaved;
         }
         finally { _documentOperation = false; NotifyDocumentState(); }
@@ -184,13 +217,7 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
         if (!CanSaveProject || _workspace is null) return new(false, "当前工程不可保存");
         if (_sequence is not null && !TryCommitPendingSequenceEdits()) return new(false, Status);
         if (HasPendingSimulationEdits && !TryApplySimulation()) return new(false, Status);
-        foreach (var sequence in Sequences)
-        {
-            var document = _documents.Track(sequence);
-            if (!document.IsDirty) continue;
-            try { _workspace.SaveSequence(sequence); document.MarkSaved(); }
-            catch (Exception error) { return new(false, error.Message); }
-        }
+        if (!SaveAutomaticWorkspace()) return new(false, Status);
         NotifyDocumentState();
         return new(true);
     }

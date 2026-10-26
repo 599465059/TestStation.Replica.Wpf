@@ -11,6 +11,16 @@ if (args.Contains("--canvas-model"))
     ManualCanvasRegression.VerifyModel();
     return;
 }
+if (args.Contains("--can-model"))
+{
+    CanCanvasRegression.VerifyModel();
+    return;
+}
+if (args.Contains("--ui-can"))
+{
+    CanCanvasUiRegression.Run();
+    return;
+}
 if (args.Contains("--ui-canvas"))
 {
     try { ManualCanvasRegression.RunUi(); }
@@ -162,6 +172,10 @@ var runRepository = new RunResultRepository(workspace.Root);
 runRepository.Save(run);
 if (runRepository.LoadAll().Count != 1 || runRepository.LoadAll()[0].GetProperty("format").GetString() != "test-station-sequence-run")
     throw new Exception("Sequence run result was not persisted.");
+var reportPath = runRepository.ReportPath(run.Id);
+if (!File.Exists(reportPath) || !File.ReadAllText(reportPath).Contains("Runnable case", StringComparison.Ordinal) ||
+    runRepository.LoadSummaries().Single(item => item.Id == run.Id).StepCount != run.Steps.Count)
+    throw new Exception("HTML test report was not generated or indexed.");
 var storedRun = runRepository.LoadAll()[0].GetProperty("result");
 if (storedRun.GetProperty("sequence_id").GetString() != runnable.Id ||
     storedRun.GetProperty("status").GetString() != "completed" ||

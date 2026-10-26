@@ -4,16 +4,53 @@
                     xmlns:text="clr-namespace:TestStation.App.Localization"
              xmlns:xcad="https://github.com/Dirkster99/AvalonDock"
              xmlns:vm="clr-namespace:TestStation.App.ViewModels"
+             xmlns:views="clr-namespace:TestStation.App.Views"
              xmlns:themes="clr-namespace:TestStation.App.Themes"
              xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-             Background="{DynamicResource WindowBrush}">
+             Background="{DynamicResource WindowBrush}" x:Name="WorkspaceRoot">
     <UserControl.Resources>
         <ResourceDictionary><ResourceDictionary.MergedDictionaries>
             <ResourceDictionary Source="Themes/EditorTemplates/StepListResources.xaml"/>
-        </ResourceDictionary.MergedDictionaries></ResourceDictionary>
+        </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolVisibility"/>
+            <DataTemplate x:Key="SequenceSubprojectTabTemplate">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="▣" Foreground="#60A5FA" Margin="0,0,6,0"/><TextBlock Text="{Binding Name}"/></StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="SequenceRoleTemplate">
+                <StackPanel Orientation="Horizontal" Margin="2,4">
+                    <TextBlock x:Name="RoleIcon" Text="↳" Foreground="#34D399" FontSize="16" Margin="0,0,6,0"/>
+                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="RoleLabel" Text="子序列" Foreground="#34D399" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <DataTemplate.Triggers><DataTrigger Binding="{Binding IsMain}" Value="True">
+                    <Setter TargetName="RoleIcon" Property="Text" Value="▶"/><Setter TargetName="RoleIcon" Property="Foreground" Value="#60A5FA"/>
+                    <Setter TargetName="RoleLabel" Property="Text" Value="主序列"/><Setter TargetName="RoleLabel" Property="Foreground" Value="#60A5FA"/>
+                </DataTrigger></DataTemplate.Triggers>
+            </DataTemplate>
+            <DataTemplate x:Key="VariableScopeTemplate">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="ScopeIcon" Text="●" Foreground="#60A5FA" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="ScopeLabel" Text="局部" Foreground="#60A5FA"/>
+                </StackPanel>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Scope}" Value="global">
+                        <Setter TargetName="ScopeIcon" Property="Text" Value="◆"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="#34D399"/>
+                        <Setter TargetName="ScopeLabel" Property="Text" Value="全局"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="#34D399"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Scope}" Value="station">
+                        <Setter TargetName="ScopeIcon" Property="Text" Value="★"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="#FBBF24"/>
+                        <Setter TargetName="ScopeLabel" Property="Text" Value="站变量"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="#FBBF24"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Scope}" Value="parameter">
+                        <Setter TargetName="ScopeIcon" Property="Text" Value="→"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="#C084FC"/>
+                        <Setter TargetName="ScopeLabel" Property="Text" Value="运行参数"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="#C084FC"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+        </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <ToolBarTray Background="{DynamicResource SurfaceBrush}">
             <ToolBar x:Name="SequenceToolBar" Style="{StaticResource AppToolBarStyle}" AutomationProperties.AutomationId="SequenceToolBar">
                 <Button Content="{x:Static text:UiText.NewSequence}" Style="{StaticResource AppToolBarButtonStyle}" Command="{Binding NewSequenceCommand}"/>
@@ -25,8 +62,8 @@
                 </Button>
                 <TextBlock x:Name="DocumentStatus" Text="{Binding SequenceDocumentStatus}" Margin="8,0" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
                 <Separator/>
-                <Button x:Name="RunButton" ToolTip="{x:Static text:UiText.RunCurrentSequence}" Style="{StaticResource AppToolBarButtonStyle}" Command="{Binding RunSequenceCommand}" AutomationProperties.AutomationId="RunSequence">
-                    <StackPanel Orientation="Horizontal"><md:PackIcon Kind="Play" Width="13" Height="13" Margin="0,0,4,0"/><TextBlock Text="{x:Static text:UiText.Run}" FontSize="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/></StackPanel>
+                <Button x:Name="RunButton" ToolTip="{Binding RunEntryDescription}" Style="{StaticResource AppToolBarButtonStyle}" Command="{Binding RunSequenceCommand}" AutomationProperties.AutomationId="RunSequence">
+                    <StackPanel Orientation="Horizontal"><md:PackIcon Kind="Play" Width="13" Height="13" Margin="0,0,4,0"/><TextBlock Text="{Binding RunEntryLabel}" FontSize="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/></StackPanel>
                 </Button>
                 <Button ToolTip="{x:Static text:UiText.PreflightTooltip}" Style="{StaticResource AppToolBarButtonStyle}" Command="{Binding ValidateSequenceCommand}" AutomationProperties.AutomationId="ValidateSequence">
                     <StackPanel Orientation="Horizontal"><md:PackIcon Kind="ClipboardCheckOutline" Width="13" Height="13" Margin="0,0,4,0"/><TextBlock Text="{x:Static text:UiText.Preflight}" FontSize="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/></StackPanel>
@@ -42,7 +79,20 @@
                 <TextBlock Text="{Binding ExecutionSummary}" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
             </ToolBar>
         </ToolBarTray>
-    <xcad:DockingManager x:Name="DockManager" Grid.Row="1" Background="{DynamicResource WindowBrush}" AllowMixedOrientation="True">
+        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="8,4,8,3">
+            <DockPanel LastChildFill="True">
+                <WrapPanel DockPanel.Dock="Right">
+                    <Button Content="新建标签页" Command="{Binding NewSubprojectCommand}" Margin="4,0"/>
+                    <Button Content="重命名" Command="{Binding RenameSubprojectCommand}" Margin="4,0"/>
+                    <Button Content="删除标签页" Command="{Binding DeleteSubprojectCommand}" Margin="4,0"/>
+                </WrapPanel>
+                <TabControl ItemsSource="{Binding SequenceSubprojects}" SelectedItem="{Binding SelectedSubproject, Mode=TwoWay}"
+                            ItemTemplate="{StaticResource SequenceSubprojectTabTemplate}" Background="Transparent" BorderThickness="0" IsEnabled="{Binding CanManageSequences}">
+                    <TabControl.ContentTemplate><DataTemplate><Grid/></DataTemplate></TabControl.ContentTemplate>
+                </TabControl>
+            </DockPanel>
+        </Border>
+    <xcad:DockingManager x:Name="DockManager" Grid.Row="2" Background="{DynamicResource WindowBrush}" AllowMixedOrientation="True">
             <xcad:DockingManager.Theme><themes:CustomTheme/></xcad:DockingManager.Theme>
             <xcad:LayoutRoot>
                 <xcad:LayoutPanel Orientation="Vertical">
@@ -91,7 +141,11 @@
                                         </DataGridTemplateColumn>
                                         <DataGridTextColumn Header="{x:Static text:UiText.Type}" Binding="{Binding Type}" Width="110" MinWidth="85" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
                                         <DataGridTextColumn Header="{x:Static text:UiText.SettingsSummary}" Binding="{Binding Settings}" Width="210" MinWidth="120" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
-                                        <DataGridTextColumn Header="{x:Static text:UiText.Status}" Binding="{Binding StatusText}" Width="*" MinWidth="100" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+                                        <DataGridTemplateColumn Header="{x:Static text:UiText.Status}" Width="*" MinWidth="100">
+                                            <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                                 <Canvas IsHitTestVisible="False" ClipToBounds="True"><Line x:Name="InsertionLine" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
@@ -105,7 +159,19 @@
                             <xcad:LayoutAnchorable Title="{x:Static text:UiText.SequenceList}" ContentId="Sequences" CanClose="False">
                                 <Grid Background="{DynamicResource SurfaceBrush}" Margin="8">
                                     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                                    <ListBox x:Name="SequenceList" ItemsSource="{Binding Sequences}" SelectedItem="{Binding SelectedSequence, Mode=TwoWay}" IsEnabled="{Binding CanManageSequences}" DisplayMemberPath="Name"/>
+                                    <ListBox x:Name="SequenceList" ItemsSource="{Binding Sequences}" SelectedItem="{Binding SelectedSequence, Mode=TwoWay}" IsEnabled="{Binding CanManageSequences}"
+                                             ItemTemplate="{StaticResource SequenceRoleTemplate}" PreviewMouseRightButtonDown="SequenceListRightClick" ContextMenuOpening="SequenceMenuOpening">
+                                        <ListBox.ContextMenu><ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                            <MenuItem Header="新建子序列" Command="{Binding NewSequenceCommand}"/>
+                                            <Separator/>
+                                            <MenuItem Header="运行 / 调试当前序列" Tag="SelectedItem" Command="{Binding RunSequenceCommand}"/>
+                                            <MenuItem Header="重命名" Tag="SelectedItem" Command="{Binding RenameSequenceCommand}"/>
+                                            <MenuItem Header="复制为新的子序列" Tag="SelectedItem" Command="{Binding DuplicateSequenceCommand}"/>
+                                            <MenuItem Header="复制子序列及依赖（跨标签页）" Tag="SelectedItem" Command="{Binding CopySubsequenceCommand}"/>
+                                            <MenuItem Header="粘贴子序列及依赖" Command="{Binding PasteSubsequenceCommand}"/>
+                                            <Separator/><MenuItem Header="删除" Tag="SelectedItem" Command="{Binding DeleteSequenceCommand}"/>
+                                        </ContextMenu></ListBox.ContextMenu>
+                                    </ListBox>
                                     <TextBox Grid.Row="1" IsEnabled="{Binding CanEditSequence}" Text="{Binding SequenceName, UpdateSourceTrigger=PropertyChanged}" Margin="0,7,0,0"/>
                                     <TextBox Grid.Row="2" IsEnabled="{Binding CanEditSequence}" Text="{Binding SequenceDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0"/>
                                     <WrapPanel Grid.Row="3" Margin="0,7,0,0">
@@ -119,16 +185,25 @@
                             <xcad:LayoutAnchorable Title="{x:Static text:UiText.Variables}" ContentId="Variables" CanClose="False">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource SurfaceBrush}">
                                     <StackPanel MinWidth="270" Margin="8" IsEnabled="{Binding CanEditSequence}">
-                                        <DataGrid ItemsSource="{Binding Variables}" SelectedItem="{Binding SelectedVariable, Mode=TwoWay}" Height="130"
+                                        <TextBlock Text="● 局部　◆ 全局（本标签页）　★ 站变量" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,0,0,5"/>
+                                        <DataGrid x:Name="VariableGrid" ItemsSource="{Binding Variables}" SelectedItem="{Binding SelectedVariable, Mode=TwoWay}" Height="160" PreviewMouseRightButtonDown="VariableGridRightClick" ContextMenuOpening="VariableMenuOpening"
                                                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
                                                   CanUserResizeColumns="True" RowHeight="24" ColumnHeaderHeight="26" RowHeaderWidth="0"
                                                   Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"
                                                    >
+                                            <DataGrid.ContextMenu><ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                                <MenuItem Header="新建局部变量" Command="{Binding NewVariableCommand}" CommandParameter="local"/>
+                                                <MenuItem Header="新建全局变量（当前标签页）" Command="{Binding NewVariableCommand}" CommandParameter="global"/>
+                                                <MenuItem Header="新建站变量（整个软件）" Command="{Binding NewVariableCommand}" CommandParameter="station"/>
+                                                <MenuItem Header="新建运行参数" Command="{Binding NewVariableCommand}" CommandParameter="parameter"/>
+                                                <Separator/><MenuItem Header="重命名" Tag="SelectedItem" Command="{Binding RenameVariableCommand}"/>
+                                                <MenuItem Header="删除" Tag="SelectedItem" Command="{Binding DeleteVariableCommand}"/>
+                                            </ContextMenu></DataGrid.ContextMenu>
                                             <DataGrid.Columns>
+                                                <DataGridTemplateColumn Header="作用域" Width="92" CellTemplate="{StaticResource VariableScopeTemplate}"/>
                                                 <DataGridTextColumn Header="{x:Static text:UiText.Name}" Binding="{Binding Name}" Width="110" MinWidth="110" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
                                                 <DataGridTextColumn Header="{x:Static text:UiText.DefaultValue}" Binding="{Binding Default}" Width="100" MinWidth="100" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
                                                 <DataGridTextColumn Header="{x:Static text:UiText.Type}" Binding="{Binding DataType, Converter={StaticResource UiValue}}" Width="85" MinWidth="85" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
-                                                <DataGridTextColumn Header="{x:Static text:UiText.Scope}" Binding="{Binding Scope, Converter={StaticResource UiValue}}" Width="95" MinWidth="95" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
                                             </DataGrid.Columns>
                                         </DataGrid>
                                         <TextBlock Text="{x:Static text:UiText.Name}" Margin="0,8,0,3"/><TextBox Text="{Binding VariableName, UpdateSourceTrigger=PropertyChanged}"/>
@@ -136,9 +211,12 @@
                                         <ComboBox ItemsSource="{Binding VariableTypes}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding VariableType, Mode=TwoWay}" MinHeight="29"/>
                                         <TextBlock Text="{x:Static text:UiText.Scope}" Margin="0,6,0,3"/>
                                         <ComboBox ItemsSource="{Binding VariableScopes}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding VariableScope, Mode=TwoWay}" MinHeight="29"/>
+                                        <TextBlock Text="引用：Locals.名称 / Globals.名称 / Station.名称" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/>
                                         <TextBlock Text="{x:Static text:UiText.DefaultValue}" Margin="0,6,0,3"/><TextBox Text="{Binding VariableDefault, UpdateSourceTrigger=PropertyChanged}"/>
                                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                             <Button Content="{x:Static text:UiText.New}" Command="{Binding NewVariableCommand}" Margin="0,0,5,0"/>
+                                            <Button Content="重命名" Command="{Binding RenameVariableCommand}" Margin="0,0,5,0"/>
+                                            <Button Content="校验" Command="{Binding ValidateVariableCommand}" Margin="0,0,5,0"/>
                                             <Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteVariableCommand}" Margin="0,0,5,0"/>
                                             <Button Content="{x:Static text:UiText.Apply}" Command="{Binding ApplyVariableCommand}"/>
                                         </StackPanel>
@@ -148,6 +226,12 @@
                             <xcad:LayoutAnchorable Title="{x:Static text:UiText.Simulation}" ContentId="Simulation" CanClose="False">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource SurfaceBrush}">
                                     <StackPanel MinWidth="270" Margin="8" IsEnabled="{Binding CanEditSimulation}">
+                                        <TextBlock Text="模拟场景" FontWeight="SemiBold"/>
+                                        <Button Content="添加示例模拟通道" Command="{Binding AddDemoChannelsCommand}" HorizontalAlignment="Left" Margin="0,5"/>
+                                        <ComboBox ItemsSource="{Binding SimulationScenarios}" SelectedItem="{Binding SelectedSimulationScenario}" DisplayMemberPath="Name" Margin="0,5" MinHeight="29"/>
+                                        <TextBox Text="{Binding SimulationScenarioName, UpdateSourceTrigger=PropertyChanged}" ToolTip="填写场景名称；同名保存会更新已有场景"/>
+                                        <WrapPanel Margin="0,6,0,5"><Button Content="载入" Command="{Binding LoadSimulationScenarioCommand}" Margin="0,0,5,0"/><Button Content="保存当前数据" Command="{Binding SaveSimulationScenarioCommand}" Margin="0,0,5,0"/><Button Content="删除场景" Command="{Binding DeleteSimulationScenarioCommand}"/></WrapPanel>
+                                        <TextBlock Text="{Binding ActiveSimulationScenario, StringFormat='当前：{0}'}" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,8"/>
                                         <DataGrid ItemsSource="{Binding SimulationValues}" SelectedItem="{Binding SelectedSimulationValue, Mode=TwoWay}" Height="145"
                                                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
                                                   CanUserResizeColumns="True" RowHeight="24" ColumnHeaderHeight="26" RowHeaderWidth="0"
@@ -187,48 +271,129 @@
                     </xcad:LayoutPanel>
                     <xcad:LayoutAnchorablePane DockHeight="3*" DockMinHeight="100">
                         <xcad:LayoutAnchorable Title="{x:Static text:UiText.StepProperties}" ContentId="StepSettings" CanClose="False">
-                            <ScrollViewer x:Name="PropertyScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource SurfaceBrush}">
-                                <StackPanel MinWidth="540" Margin="12" IsEnabled="{Binding CanEditSequence}">
-                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="{x:Static text:UiText.StepId}"/><TextBlock Grid.Column="1" Text="{Binding SelectedRow.Step.Id}" Foreground="{DynamicResource MutedBrush}"/>
-                                    </Grid>
-                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="{x:Static text:UiText.Name}"/><TextBox Grid.Column="1" AutomationProperties.AutomationId="StepName" Text="{Binding StepName, UpdateSourceTrigger=PropertyChanged}"/>
-                                    </Grid>
-                                    <ItemsControl ItemsSource="{Binding StepFields}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding Label}"/>
-                                                    <TextBox x:Name="FieldText" Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
-                                                    <ComboBox x:Name="FieldChoice" Grid.Column="1" ItemsSource="{Binding Options}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding Value, Mode=TwoWay}" Visibility="Collapsed"
-                                                              MinHeight="29" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"/>
-                                                </Grid>
-                                                <DataTemplate.Triggers>
-                                                    <DataTrigger Binding="{Binding FieldType}" Value="combo">
-                                                        <Setter TargetName="FieldText" Property="Visibility" Value="Collapsed"/>
-                                                        <Setter TargetName="FieldChoice" Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </DataTemplate.Triggers>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="{x:Static text:UiText.Description}"/><TextBox Grid.Column="1" Text="{Binding StepDescription, UpdateSourceTrigger=PropertyChanged}"/>
-                                    </Grid>
-                                    <Expander Header="{x:Static text:UiText.AdditionalParameters}" Foreground="{DynamicResource TextBrush}" Margin="0,3,0,8">
-                                        <TextBox Text="{Binding StepParameters, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="85" Margin="0,5,0,0" VerticalScrollBarVisibility="Auto"/>
-                                    </Expander>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                        <Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteStepCommand}" Margin="0,0,6,0"/>
-                                        <Button Content="{x:Static text:UiText.Apply}" Command="{Binding ApplyStepCommand}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </ScrollViewer>
-                        </xcad:LayoutAnchorable>
+                                                        
+                                <Grid Background="{DynamicResource SurfaceBrush}">
+                                    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                    <ScrollViewer x:Name="PropertyScroll" Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <TabControl Margin="12" IsEnabled="{Binding CanEditSequence}">
+                                            <TabItem Header="通用属性">
+                                                <StackPanel MinWidth="540" Margin="8">
+                                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{x:Static text:UiText.StepId}"/><TextBlock Grid.Column="1" Text="{Binding SelectedRow.Step.Id}" Foreground="{DynamicResource MutedBrush}"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{x:Static text:UiText.Name}"/><TextBox Grid.Column="1" AutomationProperties.AutomationId="StepName" Text="{Binding StepName, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{x:Static text:UiText.Description}"/><TextBox Grid.Column="1" Text="{Binding StepDescription, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="超时 (ms)"/><TextBox Grid.Column="1" Text="{Binding StepTimeoutMs, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="前置条件"/><TextBox Grid.Column="1" Text="{Binding StepPrecondition, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </Grid>
+                                                    <CheckBox Content="记录执行结果" IsChecked="{Binding StepRecordResult, Mode=TwoWay}" Margin="120,0,0,8"/>
+                                                    <TextBlock Text="通用属性适用于所有步骤；步骤独有字段请切换到“步骤专属”。" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,8,0,0"/>
+                                                </StackPanel>
+                                            </TabItem>
+                                            <TabItem Header="执行与判定">
+                                                <StackPanel MinWidth="540" Margin="8">
+                                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding StepOutcomeLabel}"/><ComboBox Grid.Column="1" ItemsSource="{Binding FailureActions}" SelectedItem="{Binding StepOutcomeAction, Mode=TwoWay}" ItemTemplate="{StaticResource UiOptionTemplate}" MinHeight="29"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="失败信息"/><TextBox Grid.Column="1" Text="{Binding StepFailureMessage, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </Grid>
+                                                    <Expander Header="执行前 / 执行后表达式" IsExpanded="True" Foreground="{DynamicResource TextBrush}" Margin="0,3,0,8">
+                                                        <StackPanel Margin="8">
+                                                            <TextBlock Text="执行前处理（前置条件通过后执行）"/>
+                                                            <TextBox Text="{Binding StepBeforeExpression, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="60" VerticalScrollBarVisibility="Auto" Margin="0,4,0,7"/>
+                                                            <TextBlock Text="执行后处理（步骤主体已执行时运行；取消或跳过时不运行）"/>
+                                                            <TextBox Text="{Binding StepAfterExpression, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="60" VerticalScrollBarVisibility="Auto" Margin="0,4,0,5"/>
+                                                        </StackPanel>
+                                                    </Expander>
+                                                    <TextBlock Text="带有判定的步骤显示“通过 / 失败”；普通步骤显示“完成 / 未完成”。" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+                                                    <Button Content="校验公式与变量" Command="{Binding ValidateStepExpressionsCommand}" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+                                                </StackPanel>
+                                            </TabItem>
+                                            <TabItem Header="步骤专属">
+                                                <StackPanel MinWidth="540" Margin="8">
+                                                    <ItemsControl ItemsSource="{Binding StepFields}" Margin="0,0,0,8">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                                    <TextBlock Text="{Binding Label}"/>
+                                                                    <TextBox x:Name="FieldText" Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                    <ComboBox x:Name="FieldChoice" Grid.Column="1" ItemsSource="{Binding Options}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding Value, Mode=TwoWay}" Visibility="Collapsed" MinHeight="29" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"/>
+                                                                </Grid>
+                                                                <DataTemplate.Triggers><DataTrigger Binding="{Binding FieldType}" Value="combo"><Setter TargetName="FieldText" Property="Visibility" Value="Collapsed"/><Setter TargetName="FieldChoice" Property="Visibility" Value="Visible"/></DataTrigger></DataTemplate.Triggers>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <StackPanel Visibility="{Binding IsSignalTableStep, Converter={StaticResource BoolVisibility}}" Margin="0,0,0,12">
+                                                        <WrapPanel Margin="0,0,0,6"><TextBlock Text="信号读写表" FontWeight="SemiBold" Margin="0,0,12,0" VerticalAlignment="Center"/><Button Content="添加空行" Command="{Binding AddSignalRowCommand}" Margin="0,0,6,0"/><Button x:Name="BatchAddChannelsButton" Content="批量添加通道" Click="OpenSignalChannelPicker" Margin="0,0,6,0"/><Button Content="删除选中行" Command="{Binding RemoveSignalRowCommand}" Margin="0,0,6,0"/><Button Content="校验公式与引用" Command="{Binding ValidateStepExpressionsCommand}"/></WrapPanel>
+                                                        <TextBlock Text="设置值：填入常量、变量名或公式；读取值：填入接收变量名。" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,5"/>
+                                                        <DataGrid x:Name="SignalValueGrid" ItemsSource="{Binding SignalValueRows}" SelectedItem="{Binding SelectedSignalValueRow}"
+                                                                  Style="{StaticResource AppDataGridStyle}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                                                  CanUserResizeColumns="True" CanUserReorderColumns="False" MinColumnWidth="90" IsReadOnly="True"
+                                                                  MinHeight="150" MaxHeight="300" RowHeight="38" HeadersVisibility="Column" RowHeaderWidth="0" SelectionMode="Single"
+                                                                  ScrollViewer.HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Stretch">
+                                                            <DataGrid.Columns>
+                                                                <DataGridTemplateColumn Header="信号通道" Width="2*" MinWidth="240">
+                                                                    <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                                        <ComboBox ItemsSource="{Binding DataContext.SignalChannelChoices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                                  SelectedItem="{Binding Target, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                                  HorizontalAlignment="Stretch" IsTextSearchEnabled="True" ToolTip="从通道定义中选择；数据类型自动带出"/>
+                                                                    </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                                                </DataGridTemplateColumn>
+                                                                <DataGridTextColumn Header="数据类型" Width="120" MinWidth="110" Binding="{Binding DataType, Converter={StaticResource UiValue}}"
+                                                                                    IsReadOnly="True" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+                                                                <DataGridTemplateColumn Header="写入值 / 接收变量" Width="3*" MinWidth="260">
+                                                                    <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"
+                                                                                 ToolTip="常量按通道类型填写；变量或公式需选择对应输入方式，数组使用 [1, 2, 3]"/>
+                                                                    </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                                                </DataGridTemplateColumn>
+                                                                <DataGridTemplateColumn Header="输入方式" Width="150" MinWidth="140">
+                                                                    <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                                        <ComboBox ItemsSource="{Binding DataContext.SignalInputModes, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                                  SelectedItem="{Binding Mode, Mode=TwoWay}" ItemTemplate="{StaticResource UiOptionTemplate}"/>
+                                                                    </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                                                </DataGridTemplateColumn>
+                                                                <DataGridTemplateColumn Header="操作" Width="80" MinWidth="80">
+                                                                    <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                                        <Button Content="删除" Command="{Binding DataContext.RemoveSignalRowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
+                                                                    </DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                                                </DataGridTemplateColumn>
+                                                            </DataGrid.Columns>
+                                                        </DataGrid>
+                                                        <TextBlock Foreground="{DynamicResource MutedBrush}" Margin="0,6,0,0">
+                                                            <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SignalValueRows.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                                            尚无通道。添加空行逐项选择，或批量选择通道；数据类型由通道定义提供。
+                                                        </TextBlock>
+                                                        <StackPanel Visibility="{Binding IsReadSignalTableStep, Converter={StaticResource BoolVisibility}}" Margin="0,8,0,0">
+                                                            <TextBlock Text="读取判定（不满足时该步骤失败）" FontWeight="SemiBold"/><WrapPanel Margin="0,5"><TextBlock Text="比较方式" VerticalAlignment="Center" Margin="0,0,6,0"/><ComboBox ItemsSource="{Binding SignalComparators}" SelectedItem="{Binding SelectedSignalValueRow.Comparator, Mode=TwoWay}" ItemTemplate="{StaticResource UiOptionTemplate}" Width="145" Margin="0,0,12,0"/><TextBlock Text="数组规则" VerticalAlignment="Center" Margin="0,0,6,0"/><ComboBox ItemsSource="{Binding SignalArrayModes}" SelectedItem="{Binding SelectedSignalValueRow.ArrayMode, Mode=TwoWay}" ItemTemplate="{StaticResource UiOptionTemplate}" Width="170"/></WrapPanel>
+                                                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,8,0"><TextBlock Text="期望值"/><TextBox Text="{Binding SelectedSignalValueRow.Expected, UpdateSourceTrigger=PropertyChanged}"/></StackPanel><StackPanel Grid.Column="1" Margin="0,0,8,0"><TextBlock Text="下限（含）"/><TextBox Text="{Binding SelectedSignalValueRow.Minimum, UpdateSourceTrigger=PropertyChanged}"/></StackPanel><StackPanel Grid.Column="2" Margin="0,0,8,0"><TextBlock Text="上限（含）"/><TextBox Text="{Binding SelectedSignalValueRow.Maximum, UpdateSourceTrigger=PropertyChanged}"/></StackPanel><StackPanel Grid.Column="3"><TextBlock Text="容差（相对为 %）"/><TextBox Text="{Binding SelectedSignalValueRow.Tolerance, UpdateSourceTrigger=PropertyChanged}"/></StackPanel></Grid>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <StackPanel Visibility="{Binding IsCallStep, Converter={StaticResource BoolVisibility}}" Margin="0,0,0,8"><Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="目标子序列"/><ComboBox Grid.Column="1" ItemsSource="{Binding CallSequenceChoices}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectedValue="{Binding CallSequenceId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinHeight="29"/></Grid><TextBlock Text="{Binding CallEditorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="120,0,0,8"/><views:ParameterInputList DataContext="{Binding CallArguments}" Margin="120,0,0,0"/></StackPanel>
+                                                </StackPanel>
+                                            </TabItem>
+                                            <TabItem Header="高级参数">
+                                                <StackPanel MinWidth="540" Margin="8"><TextBlock Text="未被步骤类型识别的扩展参数（JSON）" Foreground="{DynamicResource MutedBrush}"/><TextBox Text="{Binding StepParameters, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="180" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto"/></StackPanel>
+                                            </TabItem>
+                                        </TabControl>
+                                    </ScrollViewer>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,0,12,10"><TextBlock Text="{Binding ExpressionValidationMessage}" TextWrapping="Wrap" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/><Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteStepCommand}" Margin="0,0,6,0"/><Button Content="{x:Static text:UiText.Apply}" Command="{Binding ApplyStepCommand}"/></StackPanel>
+                                </Grid>
+                            </xcad:LayoutAnchorable>
                     </xcad:LayoutAnchorablePane>
                 </xcad:LayoutPanel>
             </xcad:LayoutRoot>
     </xcad:DockingManager>
     </Grid>
 </UserControl>
+
+
+

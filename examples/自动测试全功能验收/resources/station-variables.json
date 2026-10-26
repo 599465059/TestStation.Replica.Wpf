@@ -1,0 +1,56 @@
+[
+  {
+    "name": "AT_Number",
+    "data_type": "number",
+    "default": 0,
+    "scope": "station"
+  },
+  {
+    "name": "AT_Integer",
+    "data_type": "integer",
+    "default": 0,
+    "scope": "station"
+  },
+  {
+    "name": "AT_Boolean",
+    "data_type": "boolean",
+    "default": false,
+    "scope": "station"
+  },
+  {
+    "name": "AT_Text",
+    "data_type": "text",
+    "default": "",
+    "scope": "station"
+  },
+  {
+    "name": "AT_Numbers",
+    "data_type": "number[]",
+    "default": [],
+    "scope": "station"
+  },
+  {
+    "name": "AT_Integers",
+    "data_type": "integer[]",
+    "default": [],
+    "scope": "station"
+  },
+  {
+    "name": "AT_Booleans",
+    "data_type": "boolean[]",
+    "default": [],
+    "scope": "station"
+  },
+  {
+    "name": "AT_Texts",
+    "data_type": "text[]",
+    "default": [],
+    "scope": "station"
+  },
+  {
+    "name": "AT_Session",
+    "data_type": "integer",
+    "default": 0,
+    "scope": "station"
+  }
+]

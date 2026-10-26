@@ -67,8 +67,24 @@ public sealed class ManualCanvasInteractionController
             node = WalkParent(node);
         }
         if (widget is null) { BeginSelection(e); return; }
+
+        // Let the published industrial control receive its own interaction.
+        // The canvas handler is attached with PreviewMouseLeftButtonDown, so
+        // handling a ComboBox, toggle, button, editor, slider, or other
+        // selector here would otherwise select the widget and reload its
+        // persisted snapshot before the control processes the click. That
+        // makes values appear to jump back immediately and also blocks command
+        // buttons. Move/resize handles remain owned by the canvas.
+        if (interactivePart && _gesture == CanvasGesture.Move && !moveHandle)
+            return;
         _model.SetSelection([widget], (Keyboard.Modifiers & ModifierKeys.Control) != 0);
-        var canMove = _gesture != CanvasGesture.Move || moveHandle || (widget.IsDisplay && !interactivePart);
+        // Display controls can move from any non-interactive surface. Complex
+        // interactive instruments (serial console and oscilloscope) use their
+        // own outer frame/empty surface as the move target; their buttons,
+        // editors and plot gestures remain available because interactive
+        // descendants are excluded here.
+        var canMove = _gesture != CanvasGesture.Move || moveHandle ||
+            (widget.IsDisplay && !interactivePart);
         if (!canMove) return;
 
         _surface.Focus();

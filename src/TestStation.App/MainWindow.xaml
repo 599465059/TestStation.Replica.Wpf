@@ -17,7 +17,7 @@
     <kit:DialogHost x:Name="AppDialogHost" Background="{DynamicResource WindowBrush}">
     <Border x:Name="ShellFrame" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0" Background="{DynamicResource WindowBrush}">
     <Grid x:Name="ShellRoot">
-        <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="30"/><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="0"/><RowDefinition Height="26"/></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="30"/><RowDefinition Height="*" MinHeight="0"/><RowDefinition Height="26"/></Grid.RowDefinitions>
         <Grid Grid.Row="0" Background="{DynamicResource WindowBrush}">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0">
@@ -51,24 +51,15 @@
             </MenuItem>
             <MenuItem Header="{x:Static text:UiText.View}" Style="{StaticResource ShellMenuItem}">
                 <MenuItem Header="{x:Static text:UiText.ToggleNavigation}" Click="ToggleNavigation_Click"/>
-                <MenuItem Header="{x:Static text:UiText.Overview}" Tag="工程概览" Click="NavigateMenu_Click"/>
+                <MenuItem Header="{x:Static text:UiText.ManualTest}" Tag="手动测试" Click="NavigateMenu_Click"/>
                 <MenuItem Header="{x:Static text:UiText.AutomaticTest}" Tag="自动测试" Click="NavigateMenu_Click"/>
-                <MenuItem Header="{x:Static text:UiText.ControlPreview}" Tag="控件预览" Click="NavigateMenu_Click" AutomationProperties.AutomationId="OpenControlPreview"/>
                 <MenuItem Header="{x:Static text:UiText.RestoreLayout}" Click="RestoreLayout_Click"/>
             </MenuItem>
             <MenuItem Header="{x:Static text:UiText.Help}" Style="{StaticResource ShellMenuItem}">
                 <MenuItem Header="{x:Static text:UiText.About}" Click="About_Click"/>
             </MenuItem>
         </Menu>
-        <ToolBarTray Grid.Row="2" Background="{DynamicResource SurfaceBrush}">
-            <ToolBar x:Name="ProjectToolBar" Style="{StaticResource AppToolBarStyle}" AutomationProperties.AutomationId="ProjectToolBar">
-                <Button ToolTip="{x:Static text:UiText.CollapseNavigation}" Style="{StaticResource IconButton}" Click="ToggleNavigation_Click"><md:PackIcon Kind="MenuOpen" Width="16" Height="16"/></Button>
-                <Button Content="{x:Static text:UiText.NewProject}" ToolTip="{x:Static text:UiText.NewProject}" Style="{StaticResource AppToolBarButtonStyle}" Click="CreateProject_Click"/>
-                <Button Content="{x:Static text:UiText.OpenProject}" ToolTip="{x:Static text:UiText.OpenProject}" Style="{StaticResource AppToolBarButtonStyle}" Click="OpenProject_Click"/>
-                <Button x:Name="SaveProjectButton" Content="{x:Static text:UiText.SaveProject}" ToolTip="{x:Static text:UiText.SaveProject}" Style="{StaticResource AppToolBarButtonStyle}" Command="{Binding SaveProjectCommand}" AutomationProperties.AutomationId="SaveProject"/>
-            </ToolBar>
-        </ToolBarTray>
-            <Grid Grid.Row="3" MinHeight="0" ClipToBounds="True">
+            <Grid Grid.Row="2" MinHeight="0" ClipToBounds="True">
             <StackPanel x:Name="StartupView" VerticalAlignment="Center" HorizontalAlignment="Center" Width="560">
                 <TextBlock Text="{x:Static text:UiText.ProductName}" FontSize="25" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                 <TextBlock Text="{x:Static text:UiText.StartupHint}" Margin="0,12,0,28" HorizontalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
@@ -92,7 +83,15 @@
             <Grid x:Name="WorkspaceView" Visibility="Collapsed">
                 <Grid.ColumnDefinitions><ColumnDefinition x:Name="NavigationColumn" Width="228" MinWidth="76"/><ColumnDefinition Width="*" MinWidth="0"/></Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                    <kit:NavigationView x:Name="NavigationItems" Width="228" MinWidth="76" IsExpanded="True" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <kit:NavigationView x:Name="NavigationItems" Grid.Row="0" Width="228" MinWidth="76" IsExpanded="True" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
+                        <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="4,3" HorizontalAlignment="Stretch">
+                            <Button x:Name="NavigationToggleButton" ToolTip="{x:Static text:UiText.CollapseNavigation}" Style="{StaticResource IconButton}" Click="ToggleNavigation_Click" HorizontalAlignment="Left" Width="34" Height="30" Padding="0">
+                                <md:PackIcon x:Name="NavigationToggleIcon" Kind="MenuOpen" Width="16" Height="16"/>
+                            </Button>
+                        </Border>
+                    </Grid>
                 </Border>
                 <Grid Grid.Column="1">
                     <Grid x:Name="OverviewView" Visibility="Collapsed">
@@ -115,6 +114,8 @@
                         </StackPanel>
                     </Grid>
                     <ContentControl x:Name="ManualTestHost" Visibility="Collapsed"/>
+                    <ContentControl x:Name="CanTestHost" Visibility="Collapsed"/>
+                    <ContentControl x:Name="RunHistoryHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="ResourceHost" Visibility="Collapsed"/>
                     <Grid x:Name="PlaceholderView" Visibility="Collapsed">
                         <StackPanel Margin="28,22,28,0">
@@ -128,7 +129,7 @@
                 </Grid>
             </Grid>
         </Grid>
-        <StatusBar Grid.Row="4" Background="{DynamicResource SurfaceBrush}">
+        <StatusBar Grid.Row="3" Background="{DynamicResource SurfaceBrush}">
             <TextBlock Text="{Binding Status}" Foreground="{DynamicResource MutedBrush}"/>
         </StatusBar>
     </Grid>

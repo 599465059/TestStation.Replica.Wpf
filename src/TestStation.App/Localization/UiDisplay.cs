@@ -9,6 +9,8 @@ public static class UiDisplay
     public static string StepType(string kind) => kind.ToUpperInvariant() switch
     {
         "IF" => "IF", "LOOP" or "FOR" => "FOR",
+        "WHILE" => "WHILE", "BREAK" => "BREAK", "CONTINUE" => "CONTINUE",
+        "LOG" => "LOG", "STATEMENT" => "STATEMENT",
         "INITIALIZE" => UiText.Initialize,
         "SET_VALUE" or "SET VALUE" => UiText.SetValue,
         "READ_VALUE" or "READ VALUE" or "GET VALUE" => UiText.GetValue,
@@ -36,9 +38,35 @@ public static class UiDisplay
     public static string State(string state) => state.ToUpperInvariant() switch
     {
         "IDLE" => UiText.Idle, "RUNNING" => UiText.Running, "PAUSED" => UiText.Paused,
-        "PASSED" => UiText.Passed, "FAILED" => UiText.Failed, "STOPPED" => UiText.Stopped,
+        "PASSED" or "COMPLETED" => UiText.Passed, "FAILED" => UiText.Failed, "STOPPED" => UiText.Stopped,
         "SKIPPED" => UiText.Skipped, "PENDING" => UiText.Pending, _ => state
     };
+
+    public static string StepState(string state, bool hasJudgment)
+    {
+        if (hasJudgment) return state.ToUpperInvariant() switch
+        {
+            "PASSED" or "COMPLETED" => "通过", "FAILED" => "失败", "RUNNING" or "PENDING" => "未完成",
+            "SKIPPED" or "STOPPED" => "未完成", _ => string.IsNullOrWhiteSpace(state) ? "未完成" : state
+        };
+        return state.ToUpperInvariant() switch
+        {
+            "PASSED" or "COMPLETED" => "完成", "RUNNING" or "PENDING" or "FAILED" or "STOPPED" or "SKIPPED" => "未完成",
+            _ => string.IsNullOrWhiteSpace(state) ? "未完成" : state
+        };
+    }
+
+    public static string StepStateColor(string state, bool hasJudgment)
+    {
+        if (hasJudgment) return state.ToUpperInvariant() switch
+        {
+            "PASSED" or "COMPLETED" => "#22C55E", "FAILED" => "#EF4444", "RUNNING" => "#C084FC", _ => "#F59E0B"
+        };
+        return state.ToUpperInvariant() switch
+        {
+            "PASSED" or "COMPLETED" => "#60A5FA", "RUNNING" => "#C084FC", _ => "#F59E0B"
+        };
+    }
 
     public static string LogLevel(string level) => level.ToUpperInvariant() switch
     {
@@ -49,8 +77,11 @@ public static class UiDisplay
     public static string Option(string value) => value switch
     {
         "number" => UiText.Number, "integer" => UiText.Integer, "boolean" => UiText.Boolean,
-        "text" => UiText.Text, "local" => UiText.Local, "parameter" => UiText.Parameter,
+        "text" => UiText.Text, "local" => "局部", "global" => "全局（当前标签页）", "station" => "站变量（整个软件）", "parameter" => "运行参数（局部）",
         "STOP" => UiText.StopOnFailure, "CONTINUE" => UiText.ContinueOnFailure,
+        "number[]" => "数字数组", "integer[]" => "整数数组", "boolean[]" => "布尔数组", "text[]" => "文本数组",
+        "constant" => "常量", "expression" => "变量 / 公式", "NONE" => "不比较", "ALL" => "全部元素满足", "ANY" => "任一元素满足", "EXACT" => "同长度逐项满足",
+        "OUTSIDE_RANGE" => "范围外", "ABS_TOL" => "绝对容差", "REL_TOL" => "相对容差 (%)", "CONTAINS" => "包含文本", "REGEX" => "正则匹配",
         "LOG" => UiText.LogOnly, "IN_RANGE" => UiText.InRange,
         "read_request" => UiText.ReadRequest, "read_response" => UiText.ReadResponse,
         "write_request" => UiText.WriteRequest, "write_response" => UiText.WriteResponse, "event" => UiText.Event,
@@ -75,6 +106,8 @@ public static class UiDisplay
         "maximum" => UiText.Maximum, "failure_action" => UiText.OnFailure, "expression" => UiText.Condition,
         "variable" => UiText.Variable, "from" => UiText.From, "to" => UiText.To, "step" => UiText.Increment,
         "sequence_id" => UiText.Sequence, "arguments" => UiText.Arguments,
+        "max_iterations" => "最大循环次数", "level" => "日志级别", "message" => "日志消息",
+        "target_variable" => UiText.Variable,
         _ => key
     };
 

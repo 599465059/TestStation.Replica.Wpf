@@ -53,7 +53,7 @@ Infrastructure implementation
 
 页面只负责布局和事件组合。ViewModel 负责页面状态、命令和验证结果。结构修改必须经过应用服务，执行引擎只接收领域模型副本。任何新页面先注册到 Prism 模块，再接入导航；不得在 `MainWindow.xaml.cs` 中堆叠业务逻辑。
 
-手动画布遵循同一边界：`ManualTestView` 负责布局和事件转发，`ManualCanvasInteractionController` 负责 WPF 命中测试、选择、拖拽、缩放和键盘手势，`ManualInstrumentFactory` 负责创建已发布的 Industrial.Controls 控件，`ManualWidgetConfigurationAdapter` 负责配置快照与控件属性互转，`ManualTestViewModel` 维护选择、状态和命令，`IManualCanvasDocumentService` 负责对 `ManualCanvasDefinition` 的新增、更新和删除，`IManualCanvasEditingService` 负责网格预览与格式校验，`IManualCanvasRepository` 负责持久化。ViewModel 不直接改变画布文档的控件集合。
+当前手动测试页只保留工区标签、平铺/层叠外壳和插件界面宿主。`IManualPluginViewProvider` 描述插件界面，`IManualPluginViewRegistry` 管理注册变化，`ManualTestView` 在同一个工区内提供标签查看或平铺查看。旧画布服务仍保留用于历史工程格式兼容，但不应再成为新插件页面的依赖。
 
 ## 模块拆分计划
 
@@ -84,3 +84,15 @@ Infrastructure implementation
 - 当前仍使用模拟传输和模拟设备，真实串口、TCP、CAN、Modbus 适配器不在本阶段接入。
 
 后续每增加一个项目或 PackageReference，必须同时更新本文件和 `docs/INTERFACE_CATALOG.md`。
+
+## 当前架构整理状态（2026-10）
+
+本轮将自动测试和手动测试作为当前产品入口，主窗口不再启动协议、CAN、设备资源模块；协议和资源代码仍保留在仓库中，作为后续模块恢复时的独立实现。通用对话框通过 Shell 提供的 `IAppDialogService` 注册，自动测试不再通过协议模块解析对话框。工程文件、序列工作区、站变量、模拟通道和模拟场景的读写已经集中到 `IAutomaticWorkspaceService`，运行报告读取集中到 `ISequenceReportService`，ViewModel 不再直接创建这些仓储。
+
+步骤属性中的普通步骤和判定步骤已经分开保存：普通步骤使用 `on_complete`，判定步骤使用 `on_failure`。`ISequenceStepCatalog` / `BuiltInSequenceStepCatalog` 为步骤元数据和后续插件注册提供应用层边界；预检使用该目录识别内置步骤。
+
+自动测试 ViewModel 通过 `ISequenceExecutionHost` 依赖执行宿主，当前实现为独立进程 `OpenTapHostClient`。OpenTAP Host 仍维护自己的 JSON 编译清单，这是进程隔离下的临时边界；接入外部步骤插件前，需要把步骤描述、版本和执行能力抽成共享契约，并让 Host 根据插件目录加载。
+
+跨进程命令和事件的版本号现在由 `TestStation.Contracts` 中的 `ExecutionProtocol` 统一维护，Host 会拒绝不兼容的协议版本。步骤定义和插件执行适配仍需要继续接入同一契约。
+
+仍需后续处理的架构债务：`MainViewModel` 仍包含工程、编辑、变量和执行状态；旧的 `SequenceExecutionEngine` 仍保留供 Smoke 使用；手动测试旧画布模型和仓储仍在工程中。它们本轮没有删除，以免破坏已有工程格式和历史回归入口，正式硬件插件接入前应继续隔离或迁移。

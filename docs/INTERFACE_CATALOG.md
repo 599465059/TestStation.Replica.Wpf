@@ -34,6 +34,8 @@
 | `IIndustrialControlsThemeAdapter` | 将应用语义资源映射到 Industrial.Controls | 不调用库的全局主题覆盖 |
 | `ISequenceDialogService` | 序列未保存、删除和切换确认 | 使用发布控件库弹窗 |
 | `IProtocolDialogService` | 协议未保存、删除和导入提示 | 使用发布控件库弹窗 |
+| `IManualPluginViewProvider` | 提供一个设备插件的手动测试界面及版本信息 | `ManualTestView` 宿主；插件加载器尚未接入 |
+| `IManualPluginViewRegistry` | 注册、移除和通知手动插件界面 | `ManualPluginViewRegistry` |
 
 ## 通信和设备接口
 
@@ -68,6 +70,6 @@
 1. ~~定义 `ITransport`、`ITransportFactory`、`IProtocolCodec` 和 `IChannelService` 的领域无关契约。~~ 已完成第一版契约，并提供模拟工厂、透传编解码和驱动目录。
 2. ~~用内存实现和模拟设备实现自动测试，保证执行引擎不依赖真实硬件。~~ 已完成内存传输、模拟设备、读写、事件和周期轮询 Smoke 验收。
 3. 再实现串口、TCP、CAN、Modbus 适配器及厂商 DLL 包装。
-4. 最后定义插件注册和打包接口，把设备配置和驱动实现纳入插件系统。
+4. 实现插件注册和打包接口，把设备配置、驱动、自动测试步骤和手动界面纳入插件系统。手动界面宿主已具备标签查看/平铺查看能力，但当前仍需插件目录扫描和程序集加载器。
 
 接口完成后，必须为每个实现增加 Smoke 或单元测试；硬件测试使用可替换的 `ITransport`，不把设备依赖写入 UI 回归。

@@ -13,7 +13,14 @@ public sealed class ManualInstrumentFactory(ManualWidgetConfigurationAdapter con
     {
         var control = ManualWidgetCatalog.Create(widget.Model.Kind);
         configuration.Apply(control, widget);
-        control.DataSource = backend;
+        // The fresh demonstration layout shows two independent live traces;
+        // existing saved configurations keep their own channel selection.
+        if (control is OscilloscopeControl && (string.IsNullOrWhiteSpace(widget.Model.ConfigurationJson) || widget.Model.ConfigurationJson == "{}"))
+            ((OscilloscopeControl)control).SetVisibleChannels(["CH1", "CH2"]);
+        // Command-oriented inputs submit to the transport but do not consume
+        // the channel feedback stream. Otherwise a simulated/real feedback
+        // frame immediately overwrites the value the operator just selected.
+        control.DataSource = IsCommandInput(widget.Model.Kind) ? null : backend;
         control.CommandSink = backend;
         control.Width = double.NaN;
         control.Height = double.NaN;
@@ -35,20 +42,26 @@ public sealed class ManualInstrumentFactory(ManualWidgetConfigurationAdapter con
         return control;
     }
 
+    private static bool IsCommandInput(string kind) => kind is
+        "input" or "slider" or "range" or "toggle" or "mode" or "command" or "trigger";
+
     private static void ConfigureMoveTargets(InstrumentControl control, ManualWidgetViewModel widget)
     {
-        if (!widget.IsInput || widget.HasCornerMoveHandle) return;
-        foreach (var label in Descendants<TextBlock>(control).Where(label => label.Text == control.Settings.Name ||
-                     (control is NumericFieldControl && label.Text == control.DataSource?.Channels.FirstOrDefault(channel => channel.Id == control.Channel)?.Name)))
+        if (!widget.IsInput) return;
+        var labels = Descendants<TextBlock>(control)
+            .Where(label => label.Text == control.Settings.Name ||
+                (control is NumericFieldControl && label.Text == control.DataSource?.Channels.FirstOrDefault(channel => channel.Id == control.Channel)?.Name))
+            .ToList();
+        // Industrial.Controls 1.1.0 displays the channel id when the input
+        // control has no feedback DataSource. Use its first visible label as
+        // the name/drag region rather than making the whole input draggable.
+        if (labels.Count == 0)
+            labels = Descendants<TextBlock>(control).Where(label => !string.IsNullOrWhiteSpace(label.Text)).Take(1).ToList();
+        foreach (var label in labels)
         {
             label.Tag = "MoveHandle";
             label.Cursor = Cursors.SizeAll;
             label.ToolTip = "拖动名称移动控件";
-            if (control is NumericFieldControl && LogicalTreeHelper.GetParent(label) is Border surface)
-            {
-                surface.Tag = "MoveHandle";
-                surface.Cursor = Cursors.SizeAll;
-            }
         }
     }
 

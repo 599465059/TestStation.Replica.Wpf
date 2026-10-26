@@ -19,7 +19,6 @@ public partial class MainViewModel
     private bool _documentOperation;
     private bool _runInProgress;
     private Task? _runTask;
-    private TaskCompletionSource? _runStarted;
     private string _stepBaseline = "";
     private string _variableBaseline = "";
     private string _simulationBaseline = "";
@@ -28,7 +27,7 @@ public partial class MainViewModel
     public bool CanEditSimulation => IsProjectOpen && !IsExecutionBusy && !_documentOperation;
     public bool CanUndoSequence => CanEditSequence && (_document?.CanUndo == true || HasPendingSequenceEdits);
     public bool CanRedoSequence => CanEditSequence && _document?.CanRedo == true && !HasPendingSequenceEdits;
-    public bool IsSequenceDirty => _document?.IsDirty == true || HasPendingSequenceEdits;
+    public bool IsSequenceDirty => _document?.IsDirty == true || HasPendingSequenceEdits || HasWorkspaceChanges;
     public string SequenceDocumentStatus => _sequence is null ? "" : IsSequenceDirty ? UiText.Unsaved : UiText.Saved;
     public string SequenceDirtyMarker => IsSequenceDirty ? " *" : "";
     public string SequenceEditorTitle => UiText.SequenceEditor + SequenceDirtyMarker;
@@ -38,40 +37,63 @@ public partial class MainViewModel
     private bool HasPendingSequenceEdits => _sequence is not null &&
         (SequenceName != _sequence.Name || SequenceDescription != _sequence.Description || HasPendingStepEdits || HasPendingVariableEdits);
 
-    private string CaptureStepEditor() => JsonSerializer.Serialize(new { StepName, StepDescription, StepParameters,
-        Fields = StepFields.Select(field => new { field.Key, field.Value }).ToArray() });
+    private string CaptureStepEditor() => JsonSerializer.Serialize(new { StepName, StepDescription, StepTimeoutMs,
+        StepOnFailure, StepOnComplete, StepFailureMessage, StepPrecondition, StepBeforeExpression, StepAfterExpression, StepRecordResult, StepParameters,
+        Signals = SignalValueRows.Select(row => new { row.Target, row.DataType, row.Mode, row.Value, row.Comparator, row.Expected, row.Minimum, row.Maximum, row.ArrayMode, row.Tolerance }).ToArray(),
+        Fields = StepFields.Select(field => new { field.Key, field.Value }).ToArray(),
+        CallSequenceId, Arguments = CallArguments.Select(row => new { row.Name, row.Mode, row.Value }).ToArray() });
     private string CaptureVariableEditor() => JsonSerializer.Serialize(new { VariableName, VariableType, VariableScope, VariableDefault });
     private string CaptureSimulationEditor() => JsonSerializer.Serialize(new { SimulationChannel, SimulationValue });
     private void CaptureEditorBaselines()
     {
         _stepBaseline = CaptureStepEditor(); _variableBaseline = CaptureVariableEditor();
     }
-    private void OnEditorChanged() { if (!_loadingEditors) NotifyDocumentState(); }
+    private void OnEditorChanged()
+    {
+        if (_loadingEditors) return;
+        ExpressionValidationMessage = "";
+        NotifyDocumentState();
+    }
     partial void OnSequenceNameChanged(string value) => OnEditorChanged();
     partial void OnSequenceDescriptionChanged(string value) => OnEditorChanged();
     partial void OnStepNameChanged(string value) => OnEditorChanged();
     partial void OnStepDescriptionChanged(string value) => OnEditorChanged();
+    partial void OnStepTimeoutMsChanged(string value) => OnEditorChanged();
+    partial void OnStepOnFailureChanged(string value) => OnEditorChanged();
+    partial void OnStepOnCompleteChanged(string value) { OnPropertyChanged(nameof(StepOutcomeAction)); OnEditorChanged(); }
+    partial void OnStepFailureMessageChanged(string value) => OnEditorChanged();
+    partial void OnStepPreconditionChanged(string value) => OnEditorChanged();
+    partial void OnStepBeforeExpressionChanged(string value) => OnEditorChanged();
+    partial void OnStepAfterExpressionChanged(string value) => OnEditorChanged();
+    partial void OnStepRecordResultChanged(bool value) => OnEditorChanged();
     partial void OnStepParametersChanged(string value) => OnEditorChanged();
     partial void OnVariableNameChanged(string value) => OnEditorChanged();
     partial void OnVariableTypeChanged(string value) => OnEditorChanged();
     partial void OnVariableScopeChanged(string value) => OnEditorChanged();
     partial void OnVariableDefaultChanged(string value) => OnEditorChanged();
-    private void StepFieldChanged(object? sender, PropertyChangedEventArgs args) => OnEditorChanged();
+    private void StepFieldChanged(object? sender, PropertyChangedEventArgs args)
+    { if (args.PropertyName is "Value" or "Mode") OnEditorChanged(); }
 
     private void NotifyDocumentState()
     {
         foreach (var property in new[] { nameof(CanEditSequence), nameof(CanManageSequences), nameof(CanEditSimulation),
             nameof(CanRunSequence), nameof(CanUndoSequence), nameof(CanRedoSequence), nameof(IsSequenceDirty),
-            nameof(SequenceDocumentStatus), nameof(SequenceDirtyMarker), nameof(SequenceEditorTitle), nameof(IsExecutionBusy) }) OnPropertyChanged(property);
+            nameof(RunEntryLabel), nameof(RunEntryDescription), nameof(SequenceDocumentStatus), nameof(SequenceDirtyMarker), nameof(SequenceEditorTitle), nameof(IsExecutionBusy) }) OnPropertyChanged(property);
         foreach (var row in Rows) row.CanEdit = CanEditSequence;
         OnPropertyChanged(nameof(CanSaveProject));
         SaveProjectCommand.NotifyCanExecuteChanged();
         NewSequenceCommand.NotifyCanExecuteChanged(); SaveSequenceCommand.NotifyCanExecuteChanged();
+        NewSubprojectCommand.NotifyCanExecuteChanged(); RenameSubprojectCommand.NotifyCanExecuteChanged(); DeleteSubprojectCommand.NotifyCanExecuteChanged();
+        NewMainSequenceCommand.NotifyCanExecuteChanged(); CopySubsequenceCommand.NotifyCanExecuteChanged(); PasteSubsequenceCommand.NotifyCanExecuteChanged();
+        RenameVariableCommand.NotifyCanExecuteChanged();
+        AddSignalRowCommand.NotifyCanExecuteChanged(); RemoveSignalRowCommand.NotifyCanExecuteChanged();
+        ValidateStepExpressionsCommand.NotifyCanExecuteChanged(); ValidateVariableCommand.NotifyCanExecuteChanged(); AddDemoChannelsCommand.NotifyCanExecuteChanged();
         RenameSequenceCommand.NotifyCanExecuteChanged(); DuplicateSequenceCommand.NotifyCanExecuteChanged(); DeleteSequenceCommand.NotifyCanExecuteChanged();
         UndoSequenceCommand.NotifyCanExecuteChanged(); RedoSequenceCommand.NotifyCanExecuteChanged();
         DeleteStepCommand.NotifyCanExecuteChanged(); ApplyStepCommand.NotifyCanExecuteChanged();
         NewVariableCommand.NotifyCanExecuteChanged(); ApplyVariableCommand.NotifyCanExecuteChanged(); DeleteVariableCommand.NotifyCanExecuteChanged();
         NewSimulationValueCommand.NotifyCanExecuteChanged(); ApplySimulationValueCommand.NotifyCanExecuteChanged(); DeleteSimulationValueCommand.NotifyCanExecuteChanged();
+        SaveSimulationScenarioCommand.NotifyCanExecuteChanged(); LoadSimulationScenarioCommand.NotifyCanExecuteChanged(); DeleteSimulationScenarioCommand.NotifyCanExecuteChanged();
         RunSequenceCommand.NotifyCanExecuteChanged(); PauseResumeCommand.NotifyCanExecuteChanged(); StopSequenceCommand.NotifyCanExecuteChanged();
     }
 
@@ -85,6 +107,9 @@ public partial class MainViewModel
         try { SelectedSequence = sequence; }
         finally { _selectionSync = false; }
         _collapsed.Clear(); _stepStatuses.Clear();
+        if (_runInProgress && sequence is not null)
+            foreach (var pair in _runStepStatuses.Where(pair => pair.Key.SequenceId == sequence.Id))
+                _stepStatuses[pair.Key.StepId] = pair.Value;
         RefreshDocumentEditors();
     }
 
@@ -113,37 +138,22 @@ public partial class MainViewModel
         try { SelectedSequence = _sequence; }
         finally { _selectionSync = false; }
     }
-    public async Task<bool> SelectSequenceAsync(SequenceDefinition? sequence)
+    public Task<bool> SelectSequenceAsync(SequenceDefinition? sequence)
     {
-        if (ReferenceEquals(sequence, _sequence)) return true;
-        if (_documentOperation || IsExecutionBusy) { RevertSequenceSelection(); return false; }
+        if (ReferenceEquals(sequence, _sequence)) return Task.FromResult(true);
+        if (sequence is not null && !Sequences.Contains(sequence)) return Task.FromResult(false);
+        if (_documentOperation || IsExecutionBusy) { RevertSequenceSelection(); return Task.FromResult(false); }
         _documentOperation = true; NotifyDocumentState();
         try
         {
-            if (!await ResolveUnsavedSequenceAsync()) return false;
-            AttachSequence(sequence); return true;
+            if (_sequence is not null && !TryCommitPendingSequenceEdits()) return Task.FromResult(false);
+            AttachSequence(sequence); return Task.FromResult(true);
         }
-        catch (Exception error) { Status = error.Message; return false; }
+        catch (Exception error) { Status = error.Message; return Task.FromResult(false); }
         finally { _documentOperation = false; NotifyDocumentState(); }
     }
 
-    private async Task<bool> ResolveUnsavedSequenceAsync()
-    {
-        if (!IsSequenceDirty) return true;
-        var choice = await _sequenceDialogs.AskUnsavedSequenceAsync(SequenceName);
-        if (choice == SequenceUnsavedChoice.Cancel) return false;
-        if (choice == SequenceUnsavedChoice.Save) return TrySaveSequence();
-        if (_document?.Discard() != true && _sequence is { } unsaved)
-        {
-            _documents.Forget(unsaved);
-            _selectionSync = true;
-            try { Sequences.Remove(unsaved); }
-            finally { _selectionSync = false; }
-            AttachSequence(null);
-        }
-        else RefreshDocumentEditors();
-        return true;
-    }
+    private Task<bool> ResolveUnsavedSequenceAsync() => Task.FromResult(_sequence is null || TryCommitPendingSequenceEdits());
 
     public async Task<bool> PrepareToLeaveAsync()
     {
@@ -156,13 +166,26 @@ public partial class MainViewModel
                 if (!await _sequenceDialogs.ConfirmStopExecutionAsync()) return false;
                 await StopAndWaitAsync();
             }
-            if (!await ResolveUnsavedSequenceAsync()) return false;
             if (HasPendingSimulationEdits)
             {
-                var choice = await _sequenceDialogs.AskUnsavedSequenceAsync(UiText.Simulation);
+                var simulationChoice = await _sequenceDialogs.AskUnsavedSequenceAsync(UiText.Simulation);
+                if (simulationChoice == SequenceUnsavedChoice.Cancel) return false;
+                if (simulationChoice == SequenceUnsavedChoice.Save && !TryApplySimulation()) return false;
+                if (simulationChoice == SequenceUnsavedChoice.Discard) ReloadSimulationValues();
+            }
+            if (IsSequenceDirty || HasWorkspaceChanges)
+            {
+                var choice = await _sequenceDialogs.AskUnsavedSequenceAsync("自动测试工作区（所有标签页和站变量）");
                 if (choice == SequenceUnsavedChoice.Cancel) return false;
-                if (choice == SequenceUnsavedChoice.Save && !TryApplySimulation()) return false;
-                if (choice == SequenceUnsavedChoice.Discard) ReloadSimulationValues();
+                if (choice == SequenceUnsavedChoice.Save &&
+                    (_sequence is not null && !TryCommitPendingSequenceEdits() || !SaveAutomaticWorkspace())) return false;
+                if (choice == SequenceUnsavedChoice.Discard && _workspace is not null)
+                {
+                    var workspace = _workspace;
+                    _stationVariables.Clear();
+                    _stationVariables.AddRange(JsonSerializer.Deserialize<List<SequenceVariable>>(_stationBaseline) ?? []);
+                    LoadWorkspace(workspace);
+                }
             }
             return true;
         }
@@ -177,6 +200,8 @@ public partial class MainViewModel
         {
             var name = SequenceName.Trim();
             if (name.Length == 0) throw new InvalidDataException("序列名称不能为空");
+            if (Sequences.Any(s => s != _sequence && s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidDataException("当前标签页已存在同名序列");
             var step = HasPendingStepEdits ? SelectedRow?.Step : null;
             var update = step is null ? null : BuildStepUpdate(step);
             var previous = SelectedVariable;
@@ -185,12 +210,8 @@ public partial class MainViewModel
             {
                 sequence.Name = name; sequence.Description = SequenceDescription;
                 if (step is not null && update is not null) ApplyStepUpdate(step, update);
-                if (variable is not null)
-                {
-                    if (previous is null) sequence.Variables.Add(variable);
-                    else sequence.Variables[sequence.Variables.IndexOf(previous)] = variable;
-                }
             });
+            if (variable is not null) StoreVariable(previous, variable);
             _loadingEditors = true;
             try { SequenceName = name; if (variable is not null) { ReloadVariables(); SelectedVariable = variable; } CaptureEditorBaselines(); }
             finally { _loadingEditors = false; }
@@ -203,7 +224,7 @@ public partial class MainViewModel
     private bool TrySaveSequence()
     {
         if (_workspace is null || _sequence is null || IsExecutionBusy || !TryCommitPendingSequenceEdits()) return false;
-        try { _workspace.SaveSequence(_sequence); _document!.MarkSaved(); Status = $"已保存: {_sequence.Name}"; return true; }
+        try { if (!SaveAutomaticWorkspace()) return false; Status = "已保存所有序列标签页和变量"; return true; }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
         { Status = error.Message; return false; }
     }
@@ -232,7 +253,7 @@ public partial class MainViewModel
         {
             var name = await _sequenceDialogs.RenameSequenceAsync(SequenceName);
             if (name is null) return;
-            if (string.IsNullOrWhiteSpace(name)) { Status = "序列名称不能为空"; return; }
+            if (string.IsNullOrWhiteSpace(name) || Sequences.Any(s => s != _sequence && s.Name == name.Trim())) { Status = "序列名称不能为空或重复"; return; }
             if (!TryCommitPendingSequenceEdits()) return;
             _document!.Edit(sequence => sequence.Name = name.Trim()); RefreshDocumentEditors(SelectedRow?.Step?.Id);
         }
@@ -248,8 +269,8 @@ public partial class MainViewModel
             var source = _sequence!;
             if (!await ResolveUnsavedSequenceAsync()) return;
             var copy = _documents.Duplicate(source, Sequences.Select(item => item.Id));
-            copy.Name = UiText.Format(nameof(UiText.SequenceCopyName), source.Name);
-            _documents.Track(copy, saved: false); Sequences.Add(copy); AttachSequence(copy);
+            copy.Role = "sub"; copy.Name = UniqueSequenceName(UiText.Format(nameof(UiText.SequenceCopyName), source.Name));
+            _documents.Track(copy, saved: false); _activeSubproject!.Sequences.Add(copy); Sequences.Add(copy); AttachSequence(copy);
             Status = UiText.SequenceCopied;
         }
         finally { _documentOperation = false; NotifyDocumentState(); }
@@ -262,11 +283,12 @@ public partial class MainViewModel
         try
         {
             var sequence = _sequence!;
+            if (sequence.IsMain) { Status = "主序列是标签页的唯一运行入口，不能删除"; return; }
             var caller = Sequences.FirstOrDefault(item => item != sequence && SequenceEditor.Walk(item)
                 .Any(step => step.Kind == "call_sequence" && step.Params.TryGetValue("sequence_id", out var id) && id.ToString() == sequence.Id));
             if (caller is not null) { Status = UiText.Format(nameof(UiText.SequenceInUse), caller.Name); return; }
             if (!await _sequenceDialogs.ConfirmDeleteSequenceAsync(SequenceName)) return;
-            _workspace!.DeleteSequence(sequence.Id);
+            _activeSubproject!.Sequences.Remove(sequence);
             _documents.Forget(sequence);
             _selectionSync = true;
             try { Sequences.Remove(sequence); }
@@ -284,14 +306,13 @@ public partial class MainViewModel
     }
     private async Task StopAndWaitAsync()
     {
-        if (_runInProgress && _runStarted is { } started) await started.Task;
-        await _executionEngine.StopAsync();
+        await _executionHost.StopAsync();
         if (_runTask is { } task) await task;
         if (RunSequenceCommand.ExecutionTask is { } completion) await completion;
     }
     private void EnsureWorkspaceCanChange()
     {
-        if (IsExecutionBusy || IsSequenceDirty || HasPendingSimulationEdits)
+        if (IsExecutionBusy || IsSequenceDirty || HasWorkspaceChanges || HasPendingSimulationEdits)
             throw new InvalidOperationException(UiText.ResolveChangesFirst);
     }
 }

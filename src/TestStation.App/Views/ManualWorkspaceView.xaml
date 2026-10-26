@@ -14,7 +14,6 @@
   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
   <ToolBar Style="{StaticResource AppToolBarStyle}">
    <Button Command="{Binding NewDocumentCommand}" AutomationProperties.AutomationId="NewManualWorkspace" ToolTip="{x:Static text:UiText.ManualWorkspaceNew}"><StackPanel Orientation="Horizontal"><md:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,5,0"/><TextBlock Text="{x:Static text:UiText.ManualWorkspaceNew}"/></StackPanel></Button>
-   <Button Command="{Binding ToggleModeCommand}" Content="{Binding ModeCaption}" AutomationProperties.AutomationId="CanvasToggleMode" ToolTip="切换所有工区的设计/运行模式"/>
    <Button x:Name="ViewToggleButton" Content="{x:Static text:UiText.ManualWindowView}" Click="ToggleView_Click" AutomationProperties.AutomationId="ToggleManualView"/>
    <Button Content="{x:Static text:UiText.ManualTile}" Click="Tile_Click" AutomationProperties.AutomationId="TileManualWorkspaces"/>
    <Button Content="{x:Static text:UiText.ManualCascade}" Click="Cascade_Click" AutomationProperties.AutomationId="CascadeManualWorkspaces"/>

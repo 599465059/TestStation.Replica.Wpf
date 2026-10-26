@@ -12,12 +12,38 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Dirkster.AvalonDock" Version="4.72.0" />
     <PackageReference Include="HandyControl" Version="3.5.1" />
-    <PackageReference Include="Industrial.Controls" Version="[1.0.0]" />
+    <PackageReference Include="Industrial.Controls" Version="[1.1.0]" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.2" />
     <PackageReference Include="Prism.DryIoc" Version="9.0.537" />
     <ProjectReference Include="..\TestStation.Application\TestStation.Application.csproj" />
+    <ProjectReference Include="..\TestStation.Contracts\TestStation.Contracts.csproj" />
     <ProjectReference Include="..\TestStation.Infrastructure\TestStation.Infrastructure.csproj" />
+    <ProjectReference Include="..\TestStation.OpenTapHost\TestStation.OpenTapHost.csproj"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained" />
   </ItemGroup>
+
+  <!-- Build the Host through the project graph; copy its complete runtime/plugin layout. -->
+  <Target Name="CopyOpenTapHost" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <_OpenTapHostFiles Include="$(MSBuildProjectDirectory)\..\TestStation.OpenTapHost\bin\$(Configuration)\net9.0\**\*" />
+    </ItemGroup>
+    <Error Condition="'@(_OpenTapHostFiles)' == ''" Text="OpenTAP Host output is missing." />
+    <Copy SourceFiles="@(_OpenTapHostFiles)"
+          DestinationFiles="@(_OpenTapHostFiles->'$(TargetDir)OpenTapHost\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="PublishOpenTapHost" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <_OpenTapHostPublishFiles Include="$(MSBuildProjectDirectory)\..\TestStation.OpenTapHost\bin\$(Configuration)\net9.0\**\*" />
+      <ResolvedFileToPublish Include="@(_OpenTapHostPublishFiles)">
+        <RelativePath>OpenTapHost\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+    <Error Condition="'@(_OpenTapHostPublishFiles)' == ''" Text="OpenTAP Host output is missing. Build the app before publishing." />
+  </Target>
 
 </Project>
 

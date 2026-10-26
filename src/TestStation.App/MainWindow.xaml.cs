@@ -20,9 +20,10 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private readonly IThemeService _themeService;
     private readonly ControlPreviewView _controlPreview;
-    private readonly ProtocolPages _protocolPages;
-    private readonly IProtocolDialogService _dialogs;
+    private readonly IAppDialogService _dialogs;
     private readonly ManualTestView _manualTest;
+    private readonly CanTestView? _canTest;
+    private readonly RunHistoryView? _runHistory;
     private readonly ManualWorkspaceView? _manualWorkspace;
     private readonly ISequenceInteractionService _sequenceInteractions;
     private SequenceWorkspace? _sequenceView;
@@ -48,14 +49,15 @@ public partial class MainWindow : Window
     private bool _closeAllowed;
     private bool _leaving;
 
-    public MainWindow(MainViewModel viewModel, IThemeService themeService, ISequenceInteractionService interactions, ControlPreviewView controlPreview, ProtocolPages protocolPages, IProtocolDialogService dialogs, ManualTestView manualTest, Views.ResourceManagementView? resourceManagement = null, ManualWorkspaceView? manualWorkspace = null)
+    public MainWindow(MainViewModel viewModel, IThemeService themeService, ISequenceInteractionService interactions, ControlPreviewView controlPreview, IAppDialogService dialogs, ManualTestView manualTest, Views.ResourceManagementView? resourceManagement = null, ManualWorkspaceView? manualWorkspace = null, CanTestView? canTest = null, RunHistoryView? runHistory = null)
     {
         _viewModel = viewModel;
         _themeService = themeService;
         _controlPreview = controlPreview;
-        _protocolPages = protocolPages;
         _dialogs = dialogs;
         _manualTest = manualTest;
+        _canTest = canTest;
+        _runHistory = runHistory;
         _manualWorkspace = manualWorkspace;
         _sequenceInteractions = interactions;
         _resourceManagement = resourceManagement;
@@ -76,7 +78,7 @@ public partial class MainWindow : Window
         Closing += OnWindowClosing;
         ManualTestHost.Content = (object?)_manualWorkspace ?? _manualTest;
         _viewModel.RegisterProjectSaveParticipant(_manualWorkspace is null ? _manualTest.Model : _manualWorkspace.Model);
-        _viewModel.RegisterProjectSaveParticipant(_protocolPages.SaveParticipant);
+        if (_canTest is not null) _viewModel.RegisterProjectSaveParticipant(_canTest.Model);
         if (_resourceManagement?.DataContext is ResourceManagementViewModel resourceModel)
             _viewModel.RegisterProjectSaveParticipant(resourceModel);
         PreviewKeyDown += (_, args) =>
@@ -93,7 +95,6 @@ public partial class MainWindow : Window
 
     private async void CreateProject_Click(object sender, RoutedEventArgs e)
     {
-        if (_protocolPages?.CanChangeProject() == false) return;
         var folder = new OpenFolderDialog { Title = UiText.SelectProjectParent };
         if (folder.ShowDialog(this) != true) return;
         var projectName = await _dialogs.TextAsync(this, UiText.NewProject, UiText.DefaultProjectName);
@@ -135,7 +136,7 @@ public partial class MainWindow : Window
         try
         {
             var manualReady = _manualWorkspace is null ? _manualTest.Model.Flush() : await _manualWorkspace.Model.PrepareToLeaveAsync();
-            return manualReady && _protocolPages.CanChangeProject() && await _viewModel.PrepareToLeaveAsync();
+            return manualReady && await _viewModel.PrepareToLeaveAsync();
         }
         finally { _leaving = false; }
     }
@@ -157,38 +158,24 @@ public partial class MainWindow : Window
 
     private void EnterWorkspace()
     {
-        _protocolPages?.OpenProject(_viewModel.ProjectPath!);
         if (_manualWorkspace is not null) _manualWorkspace.Model.OpenProject(_viewModel.ProjectPath!);
         else _manualTest.Model.OpenProject(_viewModel.ProjectPath!);
         if (_resourceManagement?.DataContext is ViewModels.ResourceManagementViewModel resources)
             resources.OpenProject(_viewModel.ProjectPath!);
+        _runHistory?.OpenProject(_viewModel.ProjectPath!);
         StartupView.Visibility = Visibility.Collapsed;
         WorkspaceView.Visibility = Visibility.Visible;
         SaveRecent(_viewModel.ProjectPath!);
-        ShowPage("工程概览");
+        ShowPage("自动测试");
     }
 
     private void BuildNavigation()
     {
         var testSystem = new NavigationItem { Title = "测试系统", Icon = "TestTube" };
-        testSystem.Children.Add(new NavigationItem { Title = UiText.Workspace, Icon = "ViewDashboardOutline", Tag = "工程概览" });
-        testSystem.Children.Add(new NavigationItem { Title = UiText.DeviceConfiguration, Icon = "Chip", Tag = "设备配置" });
         testSystem.Children.Add(new NavigationItem { Title = UiText.ManualTest, Icon = "TuneVariant", Tag = "手动测试" });
         testSystem.Children.Add(new NavigationItem { Title = UiText.AutomaticTest, Icon = "PlayCircleOutline", Tag = "自动测试" });
-        testSystem.Children.Add(new NavigationItem { Title = UiText.RunHistory, Icon = "History", Tag = "运行记录" });
-
-        var protocols = new NavigationItem { Title = UiText.ProtocolManagement, Icon = "FileCodeOutline" };
-        protocols.Children.Add(new NavigationItem { Title = UiText.ProtocolLibrary, Icon = "DatabaseOutline", Tag = "协议库" });
-        protocols.Children.Add(new NavigationItem { Title = UiText.ProtocolEditor, Icon = "FileCodeOutline", Tag = "自定义协议" });
-        protocols.Children.Add(new NavigationItem { Title = UiText.DbcDatabase, Icon = "CodeBraces", Tag = "DBC 数据库" });
-        protocols.Children.Add(new NavigationItem { Title = UiText.ProtocolTest, Icon = "TestTube", Tag = "协议测试" });
-
-        var settings = new NavigationItem { Title = UiText.Settings, Icon = "CogOutline" };
-        settings.Children.Add(new NavigationItem { Title = UiText.ControlPreview, Icon = "PaletteOutline", Tag = "控件预览" });
 
         NavigationItems.Items.Add(testSystem);
-        NavigationItems.Items.Add(protocols);
-        NavigationItems.Items.Add(settings);
     }
 
     private void Navigation_ItemInvoked(object? sender, NavigationItem item)
@@ -226,13 +213,17 @@ public partial class MainWindow : Window
             if (_manualWorkspace is not null) _manualWorkspace.Model.OpenProject(_viewModel.ProjectPath!);
             else _manualTest.Model.OpenProject(_viewModel.ProjectPath!);
         }
+        if (page == "CAN测试" && _canTest is not null) _canTest.OpenProject(_viewModel.ProjectPath!);
+        if (page == "运行记录" && _runHistory is not null) { _runHistory.OpenProject(_viewModel.ProjectPath!); RunHistoryHost.Content = _runHistory; }
         ManualTestHost.Visibility = page == "手动测试" ? Visibility.Visible : Visibility.Collapsed;
+        CanTestHost.Content = page == "CAN测试" ? _canTest : null;
+        CanTestHost.Visibility = page == "CAN测试" && _canTest is not null ? Visibility.Visible : Visibility.Collapsed;
+        RunHistoryHost.Visibility = page == "运行记录" && _runHistory is not null ? Visibility.Visible : Visibility.Collapsed;
         ResourceHost.Content = page == "设备配置" ? _resourceManagement : null;
         ResourceHost.Visibility = page == "设备配置" && _resourceManagement is not null ? Visibility.Visible : Visibility.Collapsed;
-        var protocolPage = _protocolPages?.Get(page);
-        ProtocolHost.Content = protocolPage;
-        ProtocolHost.Visibility = protocolPage is not null ? Visibility.Visible : Visibility.Collapsed;
-        PlaceholderView.Visibility = protocolPage is null && page is not ("工程概览" or "自动测试" or "控件预览" or "手动测试" or "设备配置") ? Visibility.Visible : Visibility.Collapsed;
+        ProtocolHost.Content = null;
+        ProtocolHost.Visibility = Visibility.Collapsed;
+        PlaceholderView.Visibility = page is not ("工程概览" or "自动测试" or "控件预览" or "手动测试" or "CAN测试" or "设备配置" or "运行记录") ? Visibility.Visible : Visibility.Collapsed;
         // Detach the preview on navigation so library popups and subscriptions
         // receive Unloaded. Its view model retains the sample values.
         ControlPreviewHost.Content = page == "控件预览" ? _controlPreview : null;
@@ -264,6 +255,11 @@ public partial class MainWindow : Window
                 NavigationItems.Width = width;
             if (Math.Abs(NavigationColumn.Width.Value - width) > 0.1)
                 NavigationColumn.Width = new GridLength(width);
+            if (NavigationToggleIcon is not null)
+            {
+                NavigationToggleIcon.Kind = NavigationItems.IsExpanded ? PackIconKind.MenuOpen : PackIconKind.Menu;
+                NavigationToggleButton.ToolTip = NavigationItems.IsExpanded ? UiText.CollapseNavigation : UiText.ToggleNavigation;
+            }
         }
         finally { _updatingNavigationMetrics = false; }
     }

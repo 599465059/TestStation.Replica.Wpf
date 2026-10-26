@@ -30,6 +30,9 @@
   <data name="RunLog" xml:space="preserve">
     <value>运行日志</value>
   </data>
+  <data name="LogLevel" xml:space="preserve">
+    <value>日志级别</value>
+  </data>
   <data name="StepProperties" xml:space="preserve">
     <value>步骤属性</value>
   </data>

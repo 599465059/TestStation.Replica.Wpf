@@ -1,0 +1,44 @@
+{
+  "format": "test-station-simulation",
+  "version": 1,
+  "definitions": [
+    { "id": "Sim.Number", "data_type": "number", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Integer", "data_type": "integer", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Boolean", "data_type": "boolean", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Text", "data_type": "text", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Numbers", "data_type": "number[]", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Integers", "data_type": "integer[]", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Booleans", "data_type": "boolean[]", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Texts", "data_type": "text[]", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Sim.Empty", "data_type": "number[]", "source": "模拟通道", "can_read": true, "can_write": true },
+    { "id": "Legacy_Value", "data_type": "number", "source": "模拟通道", "can_read": true, "can_write": true }
+  ],
+  "values": {
+    "Sim.Number": 1.25,
+    "Sim.Integer": 7,
+    "Sim.Boolean": true,
+    "Sim.Text": "SN001",
+    "Sim.Numbers": [
+      1.25,
+      2.5,
+      3.75
+    ],
+    "Sim.Integers": [
+      1,
+      2,
+      3
+    ],
+    "Sim.Booleans": [
+      true,
+      false,
+      true
+    ],
+    "Sim.Texts": [
+      "A",
+      "B",
+      "C"
+    ],
+    "Sim.Empty": [],
+    "Legacy_Value": 12.5
+  }
+}

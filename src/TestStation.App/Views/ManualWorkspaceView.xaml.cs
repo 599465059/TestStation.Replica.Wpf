@@ -19,13 +19,15 @@ public partial class ManualWorkspaceView : UserControl
     private readonly ManualInstrumentFactory _instruments;
     private readonly ManualWidgetConfigurationAdapter _configuration;
     private readonly IThemeService? _theme;
+    private readonly IManualPluginViewRegistry? _pluginRegistry;
     private readonly Dictionary<ManualWorkspaceTab, Border> _documents = [];
     private readonly Dictionary<ManualWorkspaceTab, ManualTestView> _views = [];
     private bool _syncing;
 
-    public ManualWorkspaceView(ManualWorkspaceViewModel model, ManualInstrumentFactory instruments, ManualWidgetConfigurationAdapter configuration, IThemeService? theme = null)
+    public ManualWorkspaceView(ManualWorkspaceViewModel model, ManualInstrumentFactory instruments, ManualWidgetConfigurationAdapter configuration,
+        IThemeService? theme = null, IManualPluginViewRegistry? pluginRegistry = null)
     {
-        Model = model; _instruments = instruments; _configuration = configuration; _theme = theme;
+        Model = model; _instruments = instruments; _configuration = configuration; _theme = theme; _pluginRegistry = pluginRegistry;
         InitializeComponent(); DataContext = model;
         model.Documents.CollectionChanged += (_, _) => ReconcileDocuments();
         model.PropertyChanged += OnModelChanged;
@@ -61,13 +63,11 @@ public partial class ManualWorkspaceView : UserControl
             }
             foreach (var tab in Model.Documents.Where(tab => !_documents.ContainsKey(tab)))
             {
-                var view = new ManualTestView(tab.Model, _instruments, _configuration, _theme);
+                var view = new ManualTestView(tab.Model, _instruments, _configuration, _theme, _pluginRegistry, tab.Name);
                 _views.Add(tab, view);
                 var document = Workspace.AddDocument(tab.Title, view);
-                // MdiWorkspace adds a 14-DIP body inset for floating windows.
-                // In the tabbed manual workspace that inset only creates empty
-                // bands around the canvas, so remove it at the application
-                // boundary without changing the shared control library.
+                // MdiWorkspace adds a body inset for floating windows. Remove
+                // it in the tabbed workspace so plugin views use the full area.
                 RemoveTabbedDocumentPadding(document);
                 document.Tag = tab;
                 _documents.Add(tab, document);
@@ -92,7 +92,8 @@ public partial class ManualWorkspaceView : UserControl
 
     private void OnTabChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(ManualWorkspaceTab.Title)) AdaptDocumentHeaders();
+        if (sender is ManualWorkspaceTab tab && _views.TryGetValue(tab, out var view)) view.SetWorkspaceName(tab.Name);
+        if (e.PropertyName is nameof(ManualWorkspaceTab.Title) or nameof(ManualWorkspaceTab.Name)) AdaptDocumentHeaders();
     }
 
     // MdiWorkspace 1.0.0 exposes no title setter/header template. Bind its public

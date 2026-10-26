@@ -7,7 +7,12 @@ public interface ISequenceDialogService
     Task<SequenceUnsavedChoice> AskUnsavedSequenceAsync(string name);
     Task<bool> ConfirmDeleteSequenceAsync(string name);
     Task<string?> RenameSequenceAsync(string name);
+    Task<string?> RequestNameAsync(string title, string name) => RenameSequenceAsync(name);
+    Task<bool> ConfirmDeleteItemAsync(string kind, string name) => ConfirmDeleteSequenceAsync(name);
     Task<bool> ConfirmStopExecutionAsync();
+    Task<IReadOnlyDictionary<string, System.Text.Json.JsonElement>?> RequestRunParametersAsync(
+        string sequenceName, IReadOnlyList<TestStation.App.ViewModels.ParameterInputRow> parameters)
+        => Task.FromResult<IReadOnlyDictionary<string, System.Text.Json.JsonElement>?>(null);
 }
 
 // Noninteractive callers must explicitly supply their decision policy.
