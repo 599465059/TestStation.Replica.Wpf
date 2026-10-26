@@ -22,9 +22,14 @@ public partial class MainViewModel
     private void RefreshSignalChannels()
     {
         var simulation = _workspace is null ? [] : _workspaceService.LoadChannelDefinitions(_workspace);
-        _allSignalChannels = simulation.Concat(_channelProviders.SelectMany(provider => provider.GetChannels())).ToArray();
-        if (_allSignalChannels.Select(channel => channel.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != _allSignalChannels.Count)
-            throw new InvalidDataException("通道 ID 重复，请使用包含插件或设备名称的唯一通道 ID");
+        var merged = new Dictionary<string, SequenceChannelDefinition>(StringComparer.OrdinalIgnoreCase);
+        foreach (var channel in simulation) merged[channel.Id] = channel;
+        // A plugin owns the channel contract. A project may still keep an
+        // explicit simulator value with the same ID, but cannot change its
+        // type or read/write capability through the generic editor.
+        foreach (var channel in _channelProviders.SelectMany(provider => provider.GetChannels()))
+            merged[channel.Id] = channel;
+        _allSignalChannels = merged.Values.ToArray();
         if (_allSignalChannels.Any(channel => string.IsNullOrWhiteSpace(channel.Id) || !SequenceValueOperations.DataTypes.Contains(channel.DataType)))
             throw new InvalidDataException("通道定义的名称或数据类型无效");
         FilterSignalChannels();
