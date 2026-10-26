@@ -18,7 +18,12 @@ public sealed class ShellModule : IModule
         containerRegistry.RegisterSingleton<RunHistoryViewModel>();
         containerRegistry.RegisterSingleton<RunHistoryView>();
         containerRegistry.RegisterSingleton<IThemeService, ThemeService>();
-        containerRegistry.RegisterSingleton<IManualPluginViewRegistry, ManualPluginViewRegistry>();
+        containerRegistry.RegisterSingleton<IManualPluginViewRegistry>(provider =>
+        {
+            var registry = new ManualPluginViewRegistry();
+            new SimulatedPluginRegistration(registry).RegisterAll();
+            return registry;
+        });
         containerRegistry.RegisterSingleton<IAutoTestDisplayService, AutoTestDisplayService>();
         containerRegistry.RegisterSingleton<ISequenceEditingService, SequenceEditingService>();
         containerRegistry.RegisterSingleton<ISequenceDocumentService, SequenceDocumentService>();
@@ -39,6 +44,5 @@ public sealed class ShellModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
-        containerProvider.Resolve<SimulatedPluginRegistration>().RegisterAll();
     }
 }

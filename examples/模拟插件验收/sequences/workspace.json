@@ -1,0 +1,173 @@
+{
+  "format": "test-station-sequence-workspace",
+  "version": 1,
+  "subprojects": [
+    {
+      "id": "plugin-demo",
+      "name": "模拟设备插件调用",
+      "global_variables": [],
+      "sequences": [
+        {
+          "id": "plugin-main",
+          "name": "插件通道自动测试主序列",
+          "version": 1,
+          "description": "使用模拟艾德克斯电源、电子负载和数字万用表通道验证设置、读取与判定。",
+          "role": "main",
+          "setup_steps": [],
+          "variables": [],
+          "steps": [
+            {
+              "id": "set-devices",
+              "kind": "set_value",
+              "name": "设置电源和负载",
+              "params": {
+                "signals": [
+                  { "channel_id": "ITECH01.Voltage.Setpoint", "data_type": "number", "mode": "constant", "value": "12.0" },
+                  { "channel_id": "ITECH01.Current.Setpoint", "data_type": "number", "mode": "constant", "value": "1.5" },
+                  { "channel_id": "ITECH01.Output.Enabled", "data_type": "boolean", "mode": "constant", "value": "true" },
+                  { "channel_id": "LOAD01.Current.Setpoint", "data_type": "number", "mode": "constant", "value": "0.5" },
+                  { "channel_id": "LOAD01.Input.Enabled", "data_type": "boolean", "mode": "constant", "value": "true" }
+                ]
+              },
+              "enabled": true,
+              "description": "设置三个模拟设备的控制通道。",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "on_complete": "CONTINUE",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "read-devices",
+              "kind": "read_value",
+              "name": "读取设备测量值",
+              "params": {
+                "signals": [
+                  { "channel_id": "ITECH01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
+                  { "channel_id": "ITECH01.Current.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
+                  { "channel_id": "LOAD01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
+                  { "channel_id": "LOAD01.Current.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
+                  { "channel_id": "DMM01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
+                  { "channel_id": "DMM01.Current.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" }
+                ]
+              },
+              "enabled": true,
+              "description": "读取所有模拟仪表通道；每个通道只在此步骤执行时读取一次。",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "on_complete": "CONTINUE",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "judge-devices",
+              "kind": "read_value",
+              "name": "判断电压和通断",
+              "params": {
+                "signals": [
+                  { "channel_id": "ITECH01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "IN_RANGE", "minimum": "11", "maximum": "13", "array_mode": "ALL", "tolerance": "0" },
+                  { "channel_id": "LOAD01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": ">", "expected": "10", "array_mode": "ALL", "tolerance": "0" },
+                  { "channel_id": "DMM01.Continuity", "data_type": "boolean", "mode": "constant", "value": "", "comparator": "==", "expected": "true", "array_mode": "ALL", "tolerance": "0" }
+                ]
+              },
+              "enabled": true,
+              "description": "模拟判定：电源电压、负载电压和万用表通断均应满足范围。",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "on_complete": "CONTINUE",
+              "failure_message": "模拟设备测量值不符合预期。",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "hold",
+              "kind": "wait",
+              "name": "保持运行状态",
+              "params": { "timeout_ms": "3000" },
+              "enabled": true,
+              "description": "便于观察自动执行中的当前步骤高亮。",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "on_complete": "CONTINUE",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            },
+            {
+              "id": "call-sub",
+              "kind": "call_sequence",
+              "name": "调用插件读取子序列",
+              "params": { "sequence_id": "plugin-sub", "arguments": {} },
+              "enabled": true,
+              "description": "验证主序列调用子序列。",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "on_complete": "CONTINUE",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": []
+        },
+        {
+          "id": "plugin-sub",
+          "name": "插件读取子序列",
+          "version": 1,
+          "description": "独立读取模拟万用表通道。单独运行时不生成报表。",
+          "role": "sub",
+          "setup_steps": [],
+          "variables": [],
+          "steps": [
+            {
+              "id": "sub-read",
+              "kind": "read_value",
+              "name": "子序列读取万用表",
+              "params": {
+                "signals": [
+                  { "channel_id": "DMM01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "IN_RANGE", "minimum": "10", "maximum": "13", "array_mode": "ALL", "tolerance": "0" },
+                  { "channel_id": "DMM01.Continuity", "data_type": "boolean", "mode": "constant", "value": "", "comparator": "==", "expected": "true", "array_mode": "ALL", "tolerance": "0" }
+                ]
+              },
+              "enabled": true,
+              "description": "子序列内调用插件通道。",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "on_complete": "CONTINUE",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [],
+              "else_children": []
+            }
+          ],
+          "cleanup_steps": []
+        }
+      ]
+    }
+  ]
+}
