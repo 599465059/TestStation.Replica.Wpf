@@ -18,6 +18,7 @@
     <ProjectReference Include="..\TestStation.Application\TestStation.Application.csproj" />
     <ProjectReference Include="..\TestStation.Contracts\TestStation.Contracts.csproj" />
     <ProjectReference Include="..\TestStation.Infrastructure\TestStation.Infrastructure.csproj" />
+    <ProjectReference Include="..\TestStation.SimulatedPlugins\TestStation.SimulatedPlugins.csproj" />
     <ProjectReference Include="..\TestStation.OpenTapHost\TestStation.OpenTapHost.csproj"
                       ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true"
                       GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;SelfContained" />

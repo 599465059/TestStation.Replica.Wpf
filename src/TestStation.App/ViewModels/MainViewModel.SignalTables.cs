@@ -72,7 +72,9 @@ public partial class MainViewModel
                 }
                 var value = step.Params.GetValueOrDefault("value");
                 var definition = SimulationValues.FirstOrDefault(v => v.Channel == channel);
+                var declaredChannel = FindSignalChannel(channel);
                 var type = InferLegacySignalType(step, value, definition?.Value);
+                if (declaredChannel is not null) type = declaredChannel.DataType;
                 var reference = value.ValueKind == JsonValueKind.String && SequenceParameterValue.IsReference(value);
                 AddSignalEditorRow(new SignalValueRow { Target = channel, DataType = type,
                     Value = step.Kind == "read_value" ? "" : value.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null ? "0" : SequenceParameterValue.Display(value),
@@ -186,6 +188,11 @@ public partial class MainViewModel
         {
             names.Add(channel.Channel);
             names.Add(string.Concat(channel.Channel.Split('_', StringSplitOptions.RemoveEmptyEntries).Select(part => char.ToUpperInvariant(part[0]) + part[1..])));
+        }
+        foreach (var channel in _allSignalChannels)
+        {
+            names.Add(channel.Id);
+            names.Add(string.Concat(channel.Id.Split('_', StringSplitOptions.RemoveEmptyEntries).Select(part => char.ToUpperInvariant(part[0]) + part[1..])));
         }
         if (_sequence is not null && SelectedRow?.Step is { } selected)
         {

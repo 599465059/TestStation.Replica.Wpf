@@ -5,6 +5,7 @@
     <Project Path="src/TestStation.Domain/TestStation.Domain.csproj" />
     <Project Path="src/TestStation.Infrastructure/TestStation.Infrastructure.csproj" />
     <Project Path="src/TestStation.OpenTapHost/TestStation.OpenTapHost.csproj" />
+    <Project Path="src/TestStation.SimulatedPlugins/TestStation.SimulatedPlugins.csproj" />
     <Project Path="src/TestStation.Contracts/TestStation.Contracts.csproj" />
     <Project Path="src/TestStation.Smoke/TestStation.Smoke.csproj" />
   </Folder>

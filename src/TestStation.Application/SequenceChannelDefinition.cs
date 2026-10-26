@@ -14,4 +14,11 @@ public sealed record SequenceChannelDefinition(
 public interface ISequenceChannelProvider
 {
     IReadOnlyList<SequenceChannelDefinition> GetChannels();
+
+    /// <summary>
+    /// Values used when a project has no explicit simulation value for a
+    /// plugin channel. The project value always wins over this default.
+    /// </summary>
+    IReadOnlyDictionary<string, System.Text.Json.JsonElement> GetDefaultValues() =>
+        new Dictionary<string, System.Text.Json.JsonElement>();
 }

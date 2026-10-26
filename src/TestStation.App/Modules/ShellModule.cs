@@ -24,6 +24,8 @@ public sealed class ShellModule : IModule
         containerRegistry.RegisterSingleton<ISequenceDocumentService, SequenceDocumentService>();
         containerRegistry.RegisterSingleton<IAutomaticWorkspaceService, AutomaticWorkspaceService>();
         containerRegistry.RegisterSingleton<ISequenceStepCatalog, BuiltInSequenceStepCatalog>();
+        containerRegistry.RegisterSingleton<ISequenceChannelProvider, SimulatedPluginChannelProvider>();
+        containerRegistry.RegisterSingleton<SimulatedPluginRegistration>();
         containerRegistry.RegisterSingleton<ProtocolDialogService>();
         containerRegistry.RegisterSingleton<ISequenceExecutionHost, OpenTapHostClient>();
         containerRegistry.RegisterSingleton<ISequenceRunPersistence, SequenceRunPersistence>();
@@ -37,5 +39,6 @@ public sealed class ShellModule : IModule
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
+        containerProvider.Resolve<SimulatedPluginRegistration>().RegisterAll();
     }
 }

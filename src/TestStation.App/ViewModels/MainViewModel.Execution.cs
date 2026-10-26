@@ -66,6 +66,11 @@ public partial class MainViewModel
             Status = "正在启动 OpenTAP 执行器";
             RefreshRows();
             var simulation = SimulationValues.ToDictionary(item => item.Channel, item => JsonElementValue(item.Value), StringComparer.OrdinalIgnoreCase);
+            // Family plugins supply simulator defaults at runtime. Explicit
+            // project values take precedence and are never overwritten.
+            foreach (var provider in _channelProviders)
+                foreach (var pair in provider.GetDefaultValues())
+                    simulation.TryAdd(pair.Key, JsonElementValue(pair.Value));
             _runSequences = Sequences.ToDictionary(item => item.Id,
                 item => JsonSerializer.Deserialize<SequenceDefinition>(JsonSerializer.Serialize(item))!, StringComparer.Ordinal);
             var candidate = _runSequences[_sequence!.Id];
