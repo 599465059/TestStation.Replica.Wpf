@@ -3,16 +3,21 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using TestStation.Application;
 
 namespace TestStation.SimulatedPlugins;
 
 internal abstract class SimulatedDeviceView : Border
 {
+    protected readonly IChannelRuntimeCoordinator Runtime;
+    private readonly List<IDisposable> _subscriptions = [];
+    private readonly List<Control> _operationControls = [];
     protected readonly StackPanel Body = new();
     protected readonly TextBlock Status = new();
 
-    protected SimulatedDeviceView(string title, string subtitle)
+    protected SimulatedDeviceView(string title, string subtitle, IChannelRuntimeCoordinator runtime)
     {
+        Runtime = runtime;
         Padding = new Thickness(16);
         Margin = new Thickness(8);
         BorderThickness = new Thickness(1);
@@ -30,7 +35,19 @@ internal abstract class SimulatedDeviceView : Border
         Status.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush");
         root.Children.Add(Status);
         Child = root;
+        Runtime.AvailabilityChanged += RuntimeAvailabilityChanged;
     }
+
+    protected void TrackSubscription(IDisposable subscription) => _subscriptions.Add(subscription);
+    protected void TrackOperation(Control control) { _operationControls.Add(control); control.IsEnabled = !Runtime.IsAutomationActive; }
+    protected void OnPolled(string channelId, Action<ChannelRuntimeValue> update) =>
+        TrackSubscription(Runtime.Subscribe(channelId, TimeSpan.FromMilliseconds(500), update));
+
+    private void RuntimeAvailabilityChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(() =>
+    {
+        foreach (var control in _operationControls) control.IsEnabled = !Runtime.IsAutomationActive;
+        SetStatus(Runtime.IsAutomationActive ? "自动测试占用设备，手动轮询和操作已暂停。" : "手动轮询已恢复。", Runtime.IsAutomationActive);
+    });
 
     protected TextBlock Label(string text) => new()
     {
@@ -53,6 +70,7 @@ internal abstract class SimulatedDeviceView : Border
         button.Click += click;
         if (accent) button.SetResourceReference(FrameworkElement.StyleProperty, "AccentButton");
         else button.SetResourceReference(FrameworkElement.StyleProperty, "AppButtonStyle");
+        TrackOperation(button);
         return button;
     }
 
@@ -73,6 +91,17 @@ internal abstract class SimulatedDeviceView : Border
     {
         Status.Text = message;
         Status.SetResourceReference(TextBlock.ForegroundProperty, error ? "ErrorBrush" : "MutedBrush");
+    }
+
+    protected override void OnVisualParentChanged(DependencyObject? oldParent)
+    {
+        base.OnVisualParentChanged(oldParent);
+        if (Parent is null)
+        {
+            Runtime.AvailabilityChanged -= RuntimeAvailabilityChanged;
+            foreach (var subscription in _subscriptions) subscription.Dispose();
+            _subscriptions.Clear();
+        }
     }
 
     protected static Grid FormGrid()

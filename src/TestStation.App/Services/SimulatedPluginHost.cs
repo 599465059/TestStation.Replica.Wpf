@@ -44,6 +44,6 @@ public sealed class SimulatedPluginRegistration
         public string Name => _plugin.Name;
         public string Version => _plugin.Version;
         public FrameworkElement CreateView(ManualPluginViewContext context) =>
-            _plugin.CreateManualView(context.WorkspaceId, context.WorkspaceName);
+            _plugin.CreateManualView(context.WorkspaceId, context.WorkspaceName, context.Runtime);
     }
 }

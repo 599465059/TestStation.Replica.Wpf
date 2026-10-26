@@ -25,7 +25,7 @@ public sealed class SimulatedDigitalMultimeterPlugin : ISimulatedDevicePlugin
         ["DMM01.Continuity"] = JsonSerializer.SerializeToElement(true)
     };
 
-    public FrameworkElement CreateManualView(string workspaceId, string workspaceName) => new DigitalMultimeterView();
+    public FrameworkElement CreateManualView(string workspaceId, string workspaceName, IChannelRuntimeCoordinator runtime) => new DigitalMultimeterView(runtime);
     public IReadOnlyDictionary<string, JsonElement> GetDefaultValues() => DefaultValues;
 }
 
@@ -35,7 +35,7 @@ internal sealed class DigitalMultimeterView : SimulatedDeviceView
     private readonly TextBlock _current;
     private readonly TextBlock _continuity;
 
-    public DigitalMultimeterView() : base("数字万用表", "模拟测量仪表 · 电压、电流和通断")
+    public DigitalMultimeterView(IChannelRuntimeCoordinator runtime) : base("数字万用表", "模拟测量仪表 · 电压、电流和通断", runtime)
     {
         Body.Children.Add(Label("当前读数"));
         var voltage = FormGrid(); Put(voltage, new TextBlock { Text = "电压", VerticalAlignment = VerticalAlignment.Center }, 0);
@@ -45,15 +45,20 @@ internal sealed class DigitalMultimeterView : SimulatedDeviceView
         var continuity = FormGrid(); Put(continuity, new TextBlock { Text = "通断", VerticalAlignment = VerticalAlignment.Center }, 0);
         _continuity = Value("导通"); Put(continuity, _continuity, 1); Body.Children.Add(continuity);
         Body.Children.Add(Button("读取一次", Read, true));
-        SetStatus("模拟设备已连接；自动测试运行时此手动界面不会发送指令。");
+        OnPolled("DMM01.Voltage.Measurement", value => Dispatcher.BeginInvoke(() => _voltage.Text = $"{value.Value.GetDouble():0.###} V"));
+        OnPolled("DMM01.Current.Measurement", value => Dispatcher.BeginInvoke(() => _current.Text = $"{value.Value.GetDouble():0.###} A"));
+        OnPolled("DMM01.Continuity", value => Dispatcher.BeginInvoke(() => _continuity.Text = value.Value.GetBoolean() ? "导通" : "断开"));
+        SetStatus("模拟设备已连接；测量值每 500 ms 轮询一次。自动测试运行时自动暂停。");
     }
 
-    private void Read(object? sender, RoutedEventArgs e)
+    private async void Read(object? sender, RoutedEventArgs e)
     {
-        var now = DateTime.Now;
-        _voltage.Text = $"{11.97 + Math.Sin(now.Second / 10d) * 0.02:0.###} V";
-        _current.Text = $"{0.41 + Math.Cos(now.Second / 10d) * 0.01:0.###} A";
-        _continuity.Text = now.Second % 7 == 0 ? "断开" : "导通";
+        var voltage = await Runtime.ReadOnceAsync("DMM01.Voltage.Measurement", "manual");
+        var current = await Runtime.ReadOnceAsync("DMM01.Current.Measurement", "manual");
+        var continuity = await Runtime.ReadOnceAsync("DMM01.Continuity", "manual");
+        _voltage.Text = $"{voltage.Value.GetDouble():0.###} V";
+        _current.Text = $"{current.Value.GetDouble():0.###} A";
+        _continuity.Text = continuity.Value.GetBoolean() ? "导通" : "断开";
         SetStatus("已读取一次模拟测量值。");
     }
 }

@@ -30,6 +30,7 @@ public sealed class ShellModule : IModule
         containerRegistry.RegisterSingleton<IAutomaticWorkspaceService, AutomaticWorkspaceService>();
         containerRegistry.RegisterSingleton<ISequenceStepCatalog, BuiltInSequenceStepCatalog>();
         containerRegistry.RegisterSingleton<ISequenceChannelProvider, SimulatedPluginChannelProvider>();
+        containerRegistry.RegisterSingleton<IChannelRuntimeCoordinator, SimulatedChannelRuntimeCoordinator>();
         containerRegistry.RegisterSingleton<SimulatedPluginRegistration>();
         containerRegistry.RegisterSingleton<ProtocolDialogService>();
         containerRegistry.RegisterSingleton<ISequenceExecutionHost, OpenTapHostClient>();

@@ -14,7 +14,7 @@ public interface ISimulatedDevicePlugin : ISequenceChannelProvider
     string Name { get; }
     string Version { get; }
     IReadOnlyDictionary<string, JsonElement> DefaultValues { get; }
-    FrameworkElement CreateManualView(string workspaceId, string workspaceName);
+    FrameworkElement CreateManualView(string workspaceId, string workspaceName, IChannelRuntimeCoordinator runtime);
 }
 
 public static class SimulatedPluginCatalog

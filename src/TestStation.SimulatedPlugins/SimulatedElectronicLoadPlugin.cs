@@ -27,7 +27,7 @@ public sealed class SimulatedElectronicLoadPlugin : ISimulatedDevicePlugin
         ["LOAD01.Input.Enabled"] = JsonSerializer.SerializeToElement(false)
     };
 
-    public FrameworkElement CreateManualView(string workspaceId, string workspaceName) => new ElectronicLoadView();
+    public FrameworkElement CreateManualView(string workspaceId, string workspaceName, IChannelRuntimeCoordinator runtime) => new ElectronicLoadView(runtime);
     public IReadOnlyDictionary<string, JsonElement> GetDefaultValues() => DefaultValues;
 }
 
@@ -38,7 +38,7 @@ internal sealed class ElectronicLoadView : SimulatedDeviceView
     private readonly TextBlock _currentMeasurement;
     private readonly CheckBox _input;
 
-    public ElectronicLoadView() : base("电子负载", "家族插件 · 恒流负载模拟型号")
+    public ElectronicLoadView(IChannelRuntimeCoordinator runtime) : base("电子负载", "家族插件 · 恒流负载模拟型号", runtime)
     {
         Body.Children.Add(Label("负载设定"));
         var current = FormGrid();
@@ -55,20 +55,26 @@ internal sealed class ElectronicLoadView : SimulatedDeviceView
         var currentReading = FormGrid();
         Put(currentReading, new TextBlock { Text = "电流", VerticalAlignment = VerticalAlignment.Center }, 0);
         _currentMeasurement = Value("0.49 A"); Put(currentReading, _currentMeasurement, 1); Body.Children.Add(currentReading);
-        SetStatus("模拟设备已连接；自动测试运行时此手动界面不会发送指令。");
+        OnPolled("LOAD01.Voltage.Measurement", value => Dispatcher.BeginInvoke(() => _voltageMeasurement.Text = $"{value.Value.GetDouble():0.###} V"));
+        OnPolled("LOAD01.Current.Measurement", value => Dispatcher.BeginInvoke(() => _currentMeasurement.Text = $"{value.Value.GetDouble():0.###} A"));
+        SetStatus("模拟设备已连接；测量值每 500 ms 轮询一次。自动测试运行时自动暂停。");
     }
 
-    private void Apply(object? sender, RoutedEventArgs e)
+    private async void Apply(object? sender, RoutedEventArgs e)
     {
         if (!TryNumber(_current, out var current) || current < 0) { SetStatus("负载电流必须是不小于 0 的数值。", true); return; }
+        await Runtime.WriteAsync("LOAD01.Current.Setpoint", JsonSerializer.SerializeToElement(current), "manual");
+        await Runtime.WriteAsync("LOAD01.Input.Enabled", JsonSerializer.SerializeToElement(_input.IsChecked == true), "manual");
         SetStatus($"模拟设定已写入：{current:0.###} A，输入{(_input.IsChecked == true ? "开启" : "关闭")}。");
     }
 
-    private void Read(object? sender, RoutedEventArgs e)
+    private async void Read(object? sender, RoutedEventArgs e)
     {
         if (!TryNumber(_current, out var current)) { SetStatus("请先输入有效的设定值。", true); return; }
-        _currentMeasurement.Text = $"{Math.Max(0, current * 0.98):0.###} A";
-        _voltageMeasurement.Text = $"{Math.Max(0, 12 - current * 0.08):0.###} V";
+        var measuredVoltage = await Runtime.ReadOnceAsync("LOAD01.Voltage.Measurement", "manual");
+        var measuredCurrent = await Runtime.ReadOnceAsync("LOAD01.Current.Measurement", "manual");
+        _currentMeasurement.Text = $"{measuredCurrent.Value.GetDouble():0.###} A";
+        _voltageMeasurement.Text = $"{measuredVoltage.Value.GetDouble():0.###} V";
         SetStatus("已读取一次模拟测量值。");
     }
 }

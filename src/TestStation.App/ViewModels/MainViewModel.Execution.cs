@@ -71,6 +71,8 @@ public partial class MainViewModel
             foreach (var provider in _channelProviders)
                 foreach (var pair in provider.GetDefaultValues())
                     simulation.TryAdd(pair.Key, JsonElementValue(pair.Value));
+            using var automationLease = _channelRuntime.AcquireAutomation("automatic",
+                _channelProviders.SelectMany(provider => provider.GetChannels()).Select(channel => channel.Id));
             _runSequences = Sequences.ToDictionary(item => item.Id,
                 item => JsonSerializer.Deserialize<SequenceDefinition>(JsonSerializer.Serialize(item))!, StringComparer.Ordinal);
             var candidate = _runSequences[_sequence!.Id];

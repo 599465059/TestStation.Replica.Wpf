@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using TestStation.App.Services;
 using TestStation.App.ViewModels;
+using TestStation.Application;
 
 namespace TestStation.App.Views;
 
@@ -14,15 +15,17 @@ public partial class ManualTestView : UserControl, IDisposable
     public ManualTestViewModel Model { get; }
     public bool IsManipulating => false;
     private readonly IManualPluginViewRegistry? _pluginRegistry;
+    private readonly IChannelRuntimeCoordinator? _runtime;
     private readonly List<FrameworkElement> _pluginViews = [];
     private string _workspaceName;
     private bool _tilePlugins;
 
     public ManualTestView(ManualTestViewModel model, ManualInstrumentFactory? unusedInstrumentFactory = null,
         ManualWidgetConfigurationAdapter? unusedConfiguration = null, IThemeService? theme = null,
-        IManualPluginViewRegistry? pluginRegistry = null, string? workspaceName = null)
+        IManualPluginViewRegistry? pluginRegistry = null, string? workspaceName = null,
+        IChannelRuntimeCoordinator? runtime = null)
     {
-        Model = model; _pluginRegistry = pluginRegistry; _workspaceName = workspaceName ?? "手动测试";
+        Model = model; _pluginRegistry = pluginRegistry; _runtime = runtime; _workspaceName = workspaceName ?? "手动测试";
         InitializeComponent();
         DataContext = model;
         if (_pluginRegistry is not null) _pluginRegistry.Changed += OnPluginRegistryChanged;
@@ -68,7 +71,8 @@ public partial class ManualTestView : UserControl, IDisposable
         {
             try
             {
-                var context = new ManualPluginViewContext(Model.DocumentId, _workspaceName);
+                if (_runtime is null) throw new InvalidOperationException("通道运行协调器未注册");
+                var context = new ManualPluginViewContext(Model.DocumentId, _workspaceName, _runtime);
                 var tabView = provider.CreateView(context);
                 var tileView = provider.CreateView(context);
                 _pluginViews.Add(tabView); _pluginViews.Add(tileView);

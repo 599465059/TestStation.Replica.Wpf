@@ -18,6 +18,7 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
     private readonly ISequenceReportService _reportService;
     private readonly IAutoTestDisplayService _displayService;
     private readonly ISequenceEditingService _editingService;
+    private readonly IChannelRuntimeCoordinator _channelRuntime;
     private readonly ProjectSaveService _projectSaving = new();
     public string SaveSection => "自动测试与模拟数据";
     public bool CanSaveProject => IsProjectOpen && !IsExecutionBusy && !_documentOperation;
@@ -105,13 +106,15 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
         ISequenceExecutionHost? executionHost = null,
         ISequenceRunPersistence? runPersistence = null,
         IAutomaticWorkspaceService? workspaceService = null,
-        ISequenceReportService? reportService = null)
+        ISequenceReportService? reportService = null,
+        IChannelRuntimeCoordinator? channelRuntime = null)
     {
         _channelProviders = channelProviders?.ToArray() ?? [];
         _executionHost = executionHost ?? new OpenTapHostClient();
         _runPersistence = runPersistence ?? new SequenceRunPersistence();
         _workspaceService = workspaceService ?? new AutomaticWorkspaceService();
         _reportService = reportService ?? new SequenceReportService();
+        _channelRuntime = channelRuntime ?? new SimulatedChannelRuntimeCoordinator(new SimulatedPluginChannelProvider());
         _displayService = displayService;
         _projectSaving.Register(this);
         _editingService = editingService;

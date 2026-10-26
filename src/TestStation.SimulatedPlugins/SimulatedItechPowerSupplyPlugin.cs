@@ -29,7 +29,7 @@ public sealed class SimulatedItechPowerSupplyPlugin : ISimulatedDevicePlugin
         ["ITECH01.Output.Enabled"] = JsonSerializer.SerializeToElement(false)
     };
 
-    public FrameworkElement CreateManualView(string workspaceId, string workspaceName) => new ItechPowerSupplyView();
+    public FrameworkElement CreateManualView(string workspaceId, string workspaceName, IChannelRuntimeCoordinator runtime) => new ItechPowerSupplyView(runtime);
 
     public IReadOnlyDictionary<string, JsonElement> GetDefaultValues() => DefaultValues;
 }
@@ -42,7 +42,7 @@ internal sealed class ItechPowerSupplyView : SimulatedDeviceView
     private readonly TextBlock _currentMeasurement;
     private readonly CheckBox _output;
 
-    public ItechPowerSupplyView() : base("艾德克斯直流电源", "家族插件 · IT6720 / IT6800 / IT6900 模拟型号")
+    public ItechPowerSupplyView(IChannelRuntimeCoordinator runtime) : base("艾德克斯直流电源", "家族插件 · IT6720 / IT6800 / IT6900 模拟型号", runtime)
     {
         Body.Children.Add(Label("输出设定"));
         var voltage = FormGrid();
@@ -65,22 +65,29 @@ internal sealed class ItechPowerSupplyView : SimulatedDeviceView
         Put(currentReading, new TextBlock { Text = "电流", VerticalAlignment = VerticalAlignment.Center }, 0);
         _currentMeasurement = Value("0.42 A"); Put(currentReading, _currentMeasurement, 1);
         Body.Children.Add(currentReading);
-        SetStatus("模拟设备已连接；自动测试运行时此手动界面不会发送指令。");
+        OnPolled("ITECH01.Voltage.Measurement", value => Dispatcher.BeginInvoke(() => _voltageMeasurement.Text = $"{value.Value.GetDouble():0.###} V"));
+        OnPolled("ITECH01.Current.Measurement", value => Dispatcher.BeginInvoke(() => _currentMeasurement.Text = $"{value.Value.GetDouble():0.###} A"));
+        SetStatus("模拟设备已连接；测量值每 500 ms 轮询一次。自动测试运行时自动暂停。");
     }
 
-    private void Apply(object? sender, RoutedEventArgs e)
+    private async void Apply(object? sender, RoutedEventArgs e)
     {
         if (!TryNumber(_voltage, out var voltage) || voltage < 0 || !TryNumber(_current, out var current) || current < 0)
         { SetStatus("电压和电流必须是不小于 0 的数值。", true); return; }
+        await Runtime.WriteAsync("ITECH01.Voltage.Setpoint", JsonSerializer.SerializeToElement(voltage), "manual");
+        await Runtime.WriteAsync("ITECH01.Current.Setpoint", JsonSerializer.SerializeToElement(current), "manual");
+        await Runtime.WriteAsync("ITECH01.Output.Enabled", JsonSerializer.SerializeToElement(_output.IsChecked == true), "manual");
         SetStatus($"模拟设定已写入：{voltage:0.###} V，{current:0.###} A，输出{(_output.IsChecked == true ? "开启" : "关闭")}。");
     }
 
-    private void Read(object? sender, RoutedEventArgs e)
+    private async void Read(object? sender, RoutedEventArgs e)
     {
         if (!TryNumber(_voltage, out var voltage) || !TryNumber(_current, out var current))
         { SetStatus("请先输入有效的设定值。", true); return; }
-        _voltageMeasurement.Text = $"{Math.Max(0, voltage - 0.02):0.###} V";
-        _currentMeasurement.Text = $"{Math.Max(0, current * 0.28):0.###} A";
+        var measuredVoltage = await Runtime.ReadOnceAsync("ITECH01.Voltage.Measurement", "manual");
+        var measuredCurrent = await Runtime.ReadOnceAsync("ITECH01.Current.Measurement", "manual");
+        _voltageMeasurement.Text = $"{measuredVoltage.Value.GetDouble():0.###} V";
+        _currentMeasurement.Text = $"{measuredCurrent.Value.GetDouble():0.###} A";
         SetStatus("已读取一次模拟测量值。");
     }
 }
