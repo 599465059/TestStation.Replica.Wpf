@@ -20,8 +20,6 @@ public sealed class ManualTestModule : IModule
         registry.RegisterSingleton<ManualTestView>();
         registry.RegisterSingleton<IManualWorkspaceRepository, ManualWorkspaceRepository>();
         registry.Register<IManualWorkspaceDialogService>(provider => provider.Resolve<ProtocolDialogService>());
-        registry.RegisterSingleton<ManualWorkspaceViewModel>();
-        registry.RegisterSingleton<ManualWorkspaceView>();
     }
     public void OnInitialized(IContainerProvider containerProvider) { }
 }

@@ -9,6 +9,7 @@ using Industrial.Controls;
 using TestStation.App.Localization;
 using TestStation.App.Services;
 using TestStation.App.ViewModels;
+using TestStation.Application;
 
 namespace TestStation.App.Views;
 
@@ -19,15 +20,16 @@ public partial class ManualWorkspaceView : UserControl
     private readonly ManualInstrumentFactory _instruments;
     private readonly ManualWidgetConfigurationAdapter _configuration;
     private readonly IThemeService? _theme;
-    private readonly IManualPluginViewRegistry? _pluginRegistry;
+    private readonly IManualPluginViewRegistry _pluginRegistry;
+    private readonly IChannelRuntimeCoordinator _runtime;
     private readonly Dictionary<ManualWorkspaceTab, Border> _documents = [];
     private readonly Dictionary<ManualWorkspaceTab, ManualTestView> _views = [];
     private bool _syncing;
 
     public ManualWorkspaceView(ManualWorkspaceViewModel model, ManualInstrumentFactory instruments, ManualWidgetConfigurationAdapter configuration,
-        IThemeService? theme = null, IManualPluginViewRegistry? pluginRegistry = null)
+        IManualPluginViewRegistry pluginRegistry, IChannelRuntimeCoordinator runtime, IThemeService? theme = null)
     {
-        Model = model; _instruments = instruments; _configuration = configuration; _theme = theme; _pluginRegistry = pluginRegistry;
+        Model = model; _instruments = instruments; _configuration = configuration; _theme = theme; _pluginRegistry = pluginRegistry; _runtime = runtime;
         InitializeComponent(); DataContext = model;
         model.Documents.CollectionChanged += (_, _) => ReconcileDocuments();
         model.PropertyChanged += OnModelChanged;
@@ -63,7 +65,8 @@ public partial class ManualWorkspaceView : UserControl
             }
             foreach (var tab in Model.Documents.Where(tab => !_documents.ContainsKey(tab)))
             {
-                var view = new ManualTestView(tab.Model, _instruments, _configuration, _theme, _pluginRegistry, tab.Name);
+                var view = new ManualTestView(tab.Model, _pluginRegistry, _runtime);
+                view.SetWorkspaceName(tab.Name);
                 _views.Add(tab, view);
                 var document = Workspace.AddDocument(tab.Title, view);
                 // MdiWorkspace adds a body inset for floating windows. Remove

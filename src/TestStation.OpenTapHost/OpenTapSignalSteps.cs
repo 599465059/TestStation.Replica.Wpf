@@ -23,13 +23,13 @@ public sealed partial class OpenTapBridgeStep
             var channel = ReadString("channel_id");
             if (read)
             {
-                if (!Context.SimulationValues.TryGetValue(channel, out var value)) throw new InvalidDataException($"模拟通道未配置: {channel}");
+                var value = Context.ReadSignal(channel);
                 Context.StoreChannel(channel, value); PublishMeasurement("读取值", channel, value);
             }
             else
             {
                 var value = Resolve("value");
-                Context.SimulationValues[channel] = value; Context.StoreChannel(channel, value); PublishMeasurement("设置值", channel, value);
+                Context.WriteSignal(channel, value); Context.StoreChannel(channel, value); PublishMeasurement("设置值", channel, value);
             }
             return;
         }
@@ -40,15 +40,18 @@ public sealed partial class OpenTapBridgeStep
         foreach (var row in rows)
         {
             Context.CheckCancellation();
-            if (!Context.SimulationValues.ContainsKey(row.ChannelId)) throw new InvalidDataException($"模拟通道未配置: {row.ChannelId}");
+            if (Context.ExternalChannelTypes.TryGetValue(row.ChannelId, out var declaredType) && declaredType != row.DataType)
+                throw new InvalidDataException($"设备通道 {row.ChannelId} 类型为 {declaredType}，序列声明为 {row.DataType}");
+            if (!Context.ExternalChannels.Contains(row.ChannelId) && !Context.SimulationValues.ContainsKey(row.ChannelId))
+                throw new InvalidDataException($"模拟通道未配置: {row.ChannelId}");
             if (!read)
             {
                 var value = SequenceValueOperations.ReadInput(row.Value, row.DataType, row.Mode, Context.Values());
-                Context.SimulationValues[row.ChannelId] = value; Context.StoreChannel(row.ChannelId, value);
+                Context.WriteSignal(row.ChannelId, value); Context.StoreChannel(row.ChannelId, value);
                 PublishMeasurement("设置值", row.ChannelId, value);
                 continue;
             }
-            var actual = SequenceValueOperations.ConvertTo(Context.SimulationValues[row.ChannelId], row.DataType);
+            var actual = SequenceValueOperations.ConvertTo(Context.ReadSignal(row.ChannelId), row.DataType);
             Context.StoreChannel(row.ChannelId, actual);
             if (!string.IsNullOrWhiteSpace(row.Value)) Context.AssignVariable(row.Value.Trim(), actual);
             PublishMeasurement("读取值", row.ChannelId, actual);

@@ -6,6 +6,23 @@ namespace TestStation.App.Localization;
 /// <summary>Central Chinese UI captions; never use these values as persisted identifiers.</summary>
 public static class UiText
 {
+    public static string DeviceTesting => Get(nameof(DeviceTesting));
+    public static string PluginManagement => Get(nameof(PluginManagement));
+    public static string PluginManagementHint => Get(nameof(PluginManagementHint));
+    public static string PluginEnable => Get(nameof(PluginEnable));
+    public static string PluginDisable => Get(nameof(PluginDisable));
+    public static string PluginId => Get(nameof(PluginId));
+    public static string PluginVersion => Get(nameof(PluginVersion));
+    public static string PluginEnabled => Get(nameof(PluginEnabled));
+    public static string PluginDisabled => Get(nameof(PluginDisabled));
+    public static string PluginBusy => Get(nameof(PluginBusy));
+    public static string PluginStateChanged => Get(nameof(PluginStateChanged));
+    public static string ManualPluginHint => Get(nameof(ManualPluginHint));
+    public static string ManualPluginEmpty => Get(nameof(ManualPluginEmpty));
+    public static string ManualPluginEmptyHint => Get(nameof(ManualPluginEmptyHint));
+    public static string ManualPluginTabs => Get(nameof(ManualPluginTabs));
+    public static string ManualPluginTile => Get(nameof(ManualPluginTile));
+
     public static string SaveProject => Get(nameof(SaveProject));
     public static string ManualTile => Get(nameof(ManualTile));
     public static string ManualCascade => Get(nameof(ManualCascade));
@@ -356,6 +373,7 @@ public static class UiText
     public static string CanvasAddNumeric => Get(nameof(CanvasAddNumeric));
     public static string CanvasGridCaption => Get(nameof(CanvasGridCaption));
     public static string CanvasSampleTooltip => Get(nameof(CanvasSampleTooltip));
+    public static string ManualAddDevice => Get(nameof(ManualAddDevice));
     public static string ManualTest => Get(nameof(ManualTest));
     public static string ResourceManagement => Get(nameof(ResourceManagement));
     public static string ResourceSubtitle => Get(nameof(ResourceSubtitle));

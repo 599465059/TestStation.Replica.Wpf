@@ -50,6 +50,7 @@ public sealed class AutomaticWorkspaceService : IAutomaticWorkspaceService
     {
         new SequenceWorkspaceRepository(workspace).Save(subprojects);
         new StationVariableRepository().Save(stationVariables);
+        workspace.TouchUpdatedAt();
     }
 
     public IReadOnlyList<SimulationScenario> LoadScenarios(ProjectWorkspace workspace) =>

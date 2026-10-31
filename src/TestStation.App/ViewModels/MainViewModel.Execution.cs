@@ -31,6 +31,38 @@ public partial class MainViewModel
     {
         if (!CanRunSequence || !TryCommitPendingSequenceEdits()) return;
         if (HasPendingSimulationEdits && !TryApplySimulation()) return;
+        // Saved sequence rows must also respect disabled plugins, including
+        // channels used by nested sequence calls. Never fall back to a saved
+        // simulation value for a disabled plugin.
+        RefreshSignalChannels();
+        var installedIds = _channelProviders.OfType<SimulatedPluginChannelProvider>()
+            .SelectMany(p => p.InstalledChannels).Select(c => c.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var enabledIds = _channelProviders.SelectMany(p => p.GetChannels()).Select(c => c.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var usedChannels = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        string? UnavailableChannel(SequenceDefinition sequence)
+        {
+            if (!visited.Add(sequence.Id)) return null;
+            foreach (var step in SequenceEditor.Walk(sequence).Where(s => s.Enabled))
+            {
+                var channels = step.Params.TryGetValue("signals", out var table)
+                    ? SequenceSignalOperation.Read(table).Select(r => r.ChannelId)
+                    : step.Params.TryGetValue("channel_id", out var id) ? new[] { id.ToString() } : [];
+                foreach (var channel in channels)
+                {
+                    usedChannels.Add(channel);
+                    if ((installedIds.Contains(channel) || _channelRuntime is TestStation.Application.Drivers.IExternalChannelRuntime owned && owned.IsExternalChannel(channel)) && !enabledIds.Contains(channel)) return channel;
+                }
+                if (step.Kind == "call_sequence" && step.Params.TryGetValue("sequence_id", out var target) &&
+                    Sequences.FirstOrDefault(s => s.Id == target.ToString()) is { } child && UnavailableChannel(child) is { } missing) return missing;
+            }
+            return null;
+        }
+        if (_sequence is not null && UnavailableChannel(_sequence) is { } unavailable)
+        {
+            Status = UiText.Format("DeviceChannelUnavailable", unavailable);
+            return;
+        }
         var report = SequenceLibraryPreflight.Validate(_sequence, Sequences);
         if (!report.IsValid)
         {
@@ -71,8 +103,10 @@ public partial class MainViewModel
             foreach (var provider in _channelProviders)
                 foreach (var pair in provider.GetDefaultValues())
                     simulation.TryAdd(pair.Key, JsonElementValue(pair.Value));
-            using var automationLease = _channelRuntime.AcquireAutomation("automatic",
-                _channelProviders.SelectMany(provider => provider.GetChannels()).Select(channel => channel.Id));
+            if (_channelRuntime is TestStation.Application.Drivers.IExternalChannelRuntime externalRuntime)
+                foreach (var channel in externalRuntime.ExternalChannelIds) simulation.Remove(channel);
+            using var automationLease = await _channelRuntime.AcquireAutomationAsync("automatic",
+                usedChannels);
             _runSequences = Sequences.ToDictionary(item => item.Id,
                 item => JsonSerializer.Deserialize<SequenceDefinition>(JsonSerializer.Serialize(item))!, StringComparer.Ordinal);
             var candidate = _runSequences[_sequence!.Id];

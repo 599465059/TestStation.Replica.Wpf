@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "kvaser",
+  "displayName": "Kvaser CANlib",
+  "loadMode": "bundled",
+  "library": "x64/canlib32.dll",
+  "installedNames": [
+    "canlib32.dll",
+    "canlib.dll"
+  ],
+  "searchPaths": []
+}

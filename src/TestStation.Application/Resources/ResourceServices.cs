@@ -4,6 +4,7 @@ using TestStation.Domain.Resources;
 namespace TestStation.Application.Resources;
 
 public sealed record ResourceCatalogSnapshot(ResourceCatalog Catalog, IReadOnlyList<string> Errors);
+public sealed record ResourceCatalogChangingEventArgs(ResourceCatalog Catalog, string? Root);
 
 public interface IResourceCatalogRepository
 {
@@ -14,6 +15,7 @@ public interface IResourceCatalogRepository
 public interface IResourceCatalogService
 {
     event EventHandler? Changed;
+    event EventHandler<ResourceCatalogChangingEventArgs>? Changing;
     string? ProjectRoot { get; }
     ResourceCatalog Catalog { get; }
     IReadOnlyList<string> Errors { get; }
@@ -44,12 +46,29 @@ public sealed class ResourceCatalogEditingService(IResourceCatalogService catalo
 
     public TransportResource AddTransport(string type = "serial")
     {
+        type = type.Trim().ToLowerInvariant();
         var item = new TransportResource
         {
             Id = "transport_" + Guid.NewGuid().ToString("N")[..8],
             Name = "新通信资源",
-            Type = type
+            Type = type,
+            LeaseMode = type.Equals("can", StringComparison.OrdinalIgnoreCase) ? "shared_bus" : "exclusive"
         };
+        switch (type)
+        {
+            case "serial":
+                TransportSettingsAccessor.Write(item, new(Port: "COM1", BaudRate: 115200, DataBits: 8, Parity: "None", StopBits: "1", SerialMode: "RS232", FlowControl: "None", ConnectTimeoutMs: 1500));
+                break;
+            case "tcp":
+                TransportSettingsAccessor.Write(item, new(Host: "127.0.0.1", TcpPort: 5025, ConnectTimeoutMs: 1500));
+                break;
+            case "can":
+                TransportSettingsAccessor.Write(item, new(CanChannel: "CAN0", CanBitrate: 500000, CanDataBitrate: 2000000));
+                break;
+            case "visa":
+                TransportSettingsAccessor.Write(item, new(VisaResource: "TCPIP::127.0.0.1::5025::INSTR", VisaBackend: ""));
+                break;
+        }
         Catalog.Transports.Add(item);
         return item;
     }
@@ -140,6 +159,7 @@ public sealed class ResourceCatalogEditingService(IResourceCatalogService catalo
 public sealed class ResourceCatalogService(IResourceCatalogRepository repository) : IResourceCatalogService
 {
     public event EventHandler? Changed;
+    public event EventHandler<ResourceCatalogChangingEventArgs>? Changing;
     public string? ProjectRoot { get; private set; }
     public ResourceCatalog Catalog { get; private set; } = new();
     public IReadOnlyList<string> Errors { get; private set; } = [];
@@ -147,6 +167,7 @@ public sealed class ResourceCatalogService(IResourceCatalogRepository repository
     public void OpenProject(string root)
     {
         var snapshot = repository.Load(root);
+        Changing?.Invoke(this, new(snapshot.Catalog, root));
         ProjectRoot = root;
         Catalog = snapshot.Catalog;
         Errors = snapshot.Errors;
@@ -155,6 +176,7 @@ public sealed class ResourceCatalogService(IResourceCatalogRepository repository
 
     public void Save(ResourceCatalog catalog)
     {
+        Changing?.Invoke(this, new(catalog, ProjectRoot));
         ResourceCatalogValidator.Validate(catalog);
         repository.Save(ProjectRoot ?? throw new InvalidOperationException("请先打开或创建工程"), catalog);
         Catalog = Clone(catalog);
@@ -173,7 +195,7 @@ public sealed class ResourceCatalogService(IResourceCatalogRepository repository
 
 public static class ResourceCatalogValidator
 {
-    private static readonly HashSet<string> TransportTypes = ["serial", "tcp", "can", "modbus_tcp", "modbus_rtu", "custom"];
+    private static readonly HashSet<string> TransportTypes = new(["serial", "tcp", "visa", "can", "modbus_tcp", "modbus_rtu", "custom"], StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> PollingModes = ["manual", "periodic", "event"];
     private static readonly HashSet<string> MappingProtocols = ["scpi", "dbc", "modbus", "custom"];
     private static readonly HashSet<string> ByteOrders = ["little_endian", "big_endian"];
@@ -187,11 +209,13 @@ public static class ResourceCatalogValidator
         {
             Required(transport.Id, "通信资源 ID"); Required(transport.Name, "通信资源名称");
             if (!TransportTypes.Contains(transport.Type)) throw new InvalidDataException($"不支持的通信资源类型: {transport.Type}");
+            if (transport.LeaseMode is not ("exclusive" or "shared_bus")) throw new InvalidDataException($"通信资源占用模式无效: {transport.LeaseMode}");
+            if (!transport.Type.Equals("custom", StringComparison.OrdinalIgnoreCase)) TransportSettingsAccessor.ValidateEndpoint(transport);
         }
         foreach (var device in catalog.Devices)
         {
-            Required(device.Id, "设备 ID"); Required(device.Name, "设备名称"); Required(device.DriverId, "驱动 ID"); Required(device.TransportId, "设备通信资源");
-            if (!transportIds.Contains(device.TransportId)) throw new InvalidDataException($"设备 {device.Id} 引用了不存在的通信资源");
+            Required(device.Id, "设备 ID"); Required(device.Name, "设备名称"); Required(device.DriverId, "驱动 ID");
+            if (!string.IsNullOrWhiteSpace(device.TransportId) && !transportIds.Contains(device.TransportId)) throw new InvalidDataException($"设备 {device.Id} 引用了不存在的通信资源");
             var channelIds = Unique(device.Channels.Select(item => item.Id), $"设备 {device.Id} 的通道 ID");
             foreach (var channel in device.Channels)
             {

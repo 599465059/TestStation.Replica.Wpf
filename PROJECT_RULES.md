@@ -56,6 +56,8 @@
 - 手动测试自由画布的位置和尺寸必须以整数网格保存，移动及缩放强制吸附；辅助网格仅在移动/拉伸手势进行时显示。当前允许组合现有库样式实现一个临时数值业务视图和专用画布编辑层供测试，不另建基础控件模板，不修改 IndustrialKit；正式仪表控件的缺项记录后交由用户完善库。
 
 - 协议功能使用独立 `ProtocolModule` 注册；Domain 放协议/帧/字段/DBC 模型，Application 放编辑和预览规则及接口，Infrastructure 放文件与 DBC 解析实现，App 放各页面和 ViewModel。新增后端代码不得依赖 WPF、控件库、图标或停靠组件。
+- 通用通信层必须先于设备协议和驱动：`ITransportSession` 只负责生命周期、状态和资源标识；TCP、串口 RS232/RS422/RS485 与 VISA 实现 `IByteTransportSession`；CAN/CAN FD 实现 `ICanBusSession`。RS232/422/485 是串口线路模式，VISA 是传输后端，Modbus/SCPI/CANopen/J1939 是协议，不能把协议字段混入 `TransportResource`。
+- Application 只能依赖厂商无关传输接口，不得引用 NI-VISA、Keysight、ZLG、Kvaser 或其他硬件 SDK。真实 SDK 必须在 Infrastructure 适配器中注入；缺少运行库时必须返回明确错误，不能退回内存模拟值冒充真实连接。CAN 总线允许共享租约，TCP、串口和 VISA 默认独占。
 - 协议使用 `.tsproto` v1 和原工程目录约定；一个协议文件包含多个帧。帧过滤仅改变显示，不能删除隐藏帧。字段编辑在副本校验通过后提交，字节重叠和越界必须拒绝。
 - 控件迁移例外以 `docs/CONTROL_LIBRARY_GAPS.md` 为准；协议已复刻/原占位/未扩展能力以 `docs/PROTOCOL_REPLICA_MATRIX.md` 为准，不能将占位声明为已完成功能。
 
@@ -64,4 +66,25 @@
 - UI 迁移不得破坏现有 Domain/Application API、序列文件格式、拖拽嵌套规则和执行引擎。
 - 每次 UI 迁移必须通过 `dotnet build TestStation.slnx --no-restore` 和 Smoke 检查；涉及交互时还要启动窗口验证导航、停靠、拖拽和主题切换。
 - 自动测试 UI 的可重复验收入口为 `dotnet run --no-build --project src/TestStation.Smoke/TestStation.Smoke.csproj -- --ui`，包含实际鼠标拖拽、键盘快捷键、主题状态及停靠恢复。
+
+## 6. 依赖注入和模块启动规则
+
+- 依赖只能从组合根向下流动：`App/Modules` 可以组装服务，`Application` 不能依赖 `App`，设备页面不能直接创建传输、协议或驱动对象。
+- `IManualPluginViewProvider` 的构造函数只能接收家族服务、资源服务和对话服务。运行时协调器、插件注册表、序列通道提供器等由 `ManualPluginViewContext` 在 `CreateView` 时传入，禁止把它们注入 Provider 构造函数，避免 `Registry → Provider → Runtime → Registry` 循环。
+- 模块注册函数只登记类型和工厂，不在注册阶段打开工程、连接设备、启动轮询或创建页面。页面和运行时对象必须延迟到真正解析或导航时创建。
+- 新增服务必须明确依赖方向；提交前至少执行一次干净的容器启动检查。若 EXE 双击后退出，必须保留并查看 `%LOCALAPPDATA%/TestStation/logs/startup.log`，禁止用吞异常或静默回退掩盖容器错误。
+- 同一服务不能同时由专用接口和通用接口注册两份单例；需要聚合多个设备家族时使用一个明确的组合后端，不能在各页面之间互相解析服务。
+
+## 7. 表格和空状态规则
+
+- 业务 `DataGrid` 必须使用 `AppDataGridStyle`，显式设置 `HeadersVisibility="Column"`、`RowHeaderWidth="0"`、表头高度、行高、可调整列宽和横向滚动。
+- 每一列都必须有明确的宽度策略：内容列设置 `MinWidth`，状态/操作列使用固定宽度，首个主内容列使用 `Width="*"` 并设置合理最小宽度。禁止仅依赖默认 `SizeToHeader` 或无最小宽度的自适应列。
+- 表格为空时必须显示可理解的空状态，例如“尚未创建设备实例”或“暂无数据”，不能只显示一块空白区域。
+- 表头和单元格文字必须经过实际窗口布局检查；中文不能被裁成单笔画、窄条或不可读符号。出现布局不足时优先显示滚动条或扩大面板，不能压缩字体和列宽隐藏内容。
+- 新增表格必须同时检查浅色、深色和至少一种强调色；页面截图或 UI Smoke 中至少包含空数据和有数据两种状态。
+
+## 8. 启动可诊断性
+
+- 主程序必须在启动异常时写入 `%LOCALAPPDATA%/TestStation/logs/startup.log`，包含时间、版本、异常类型和完整堆栈，然后继续让进程按失败状态退出。
+- 启动检查至少确认：进程没有立即退出、主窗口句柄已创建、窗口标题正确。依赖注入、XAML 加载和资源字典异常都必须能在日志中定位到具体类型或文件。
 

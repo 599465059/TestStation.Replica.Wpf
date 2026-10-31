@@ -4,33 +4,56 @@
   "subprojects": [
     {
       "id": "plugin-demo",
-      "name": "模拟设备插件调用",
-      "global_variables": [],
+      "name": "\u6A21\u62DF\u8BBE\u5907\u63D2\u4EF6\u8C03\u7528",
       "sequences": [
         {
           "id": "plugin-main",
-          "name": "插件通道自动测试主序列",
+          "name": "\u63D2\u4EF6\u901A\u9053\u81EA\u52A8\u6D4B\u8BD5\u4E3B\u5E8F\u5217",
           "version": 1,
-          "description": "使用模拟艾德克斯电源、电子负载和数字万用表通道验证设置、读取与判定。",
+          "description": "\u4F7F\u7528\u6A21\u62DF\u827E\u5FB7\u514B\u65AF\u7535\u6E90\u3001\u7535\u5B50\u8D1F\u8F7D\u548C\u6570\u5B57\u4E07\u7528\u8868\u901A\u9053\u9A8C\u8BC1\u8BBE\u7F6E\u3001\u8BFB\u53D6\u4E0E\u5224\u5B9A\u3002",
           "role": "main",
           "setup_steps": [],
-          "variables": [],
           "steps": [
             {
               "id": "set-devices",
               "kind": "set_value",
-              "name": "设置电源和负载",
+              "name": "\u8BBE\u7F6E\u7535\u6E90\u548C\u8D1F\u8F7D",
               "params": {
                 "signals": [
-                  { "channel_id": "ITECH01.Voltage.Setpoint", "data_type": "number", "mode": "constant", "value": "12.0" },
-                  { "channel_id": "ITECH01.Current.Setpoint", "data_type": "number", "mode": "constant", "value": "1.5" },
-                  { "channel_id": "ITECH01.Output.Enabled", "data_type": "boolean", "mode": "constant", "value": "true" },
-                  { "channel_id": "LOAD01.Current.Setpoint", "data_type": "number", "mode": "constant", "value": "0.5" },
-                  { "channel_id": "LOAD01.Input.Enabled", "data_type": "boolean", "mode": "constant", "value": "true" }
+                  {
+                    "channel_id": "ITECH01.Voltage.Setpoint",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "12.0"
+                  },
+                  {
+                    "channel_id": "ITECH01.Current.Setpoint",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "1.5"
+                  },
+                  {
+                    "channel_id": "ITECH01.Output.Enabled",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "true"
+                  },
+                  {
+                    "channel_id": "LOAD01.Current.Setpoint",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "0.5"
+                  },
+                  {
+                    "channel_id": "LOAD01.Input.Enabled",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "true"
+                  }
                 ]
               },
               "enabled": true,
-              "description": "设置三个模拟设备的控制通道。",
+              "description": "\u8BBE\u7F6E\u4E09\u4E2A\u6A21\u62DF\u8BBE\u5907\u7684\u63A7\u5236\u901A\u9053\u3002",
               "timeout_ms": 0,
               "on_failure": "STOP",
               "on_complete": "CONTINUE",
@@ -45,19 +68,55 @@
             {
               "id": "read-devices",
               "kind": "read_value",
-              "name": "读取设备测量值",
+              "name": "\u8BFB\u53D6\u8BBE\u5907\u6D4B\u91CF\u503C",
               "params": {
                 "signals": [
-                  { "channel_id": "ITECH01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
-                  { "channel_id": "ITECH01.Current.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
-                  { "channel_id": "LOAD01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
-                  { "channel_id": "LOAD01.Current.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
-                  { "channel_id": "DMM01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" },
-                  { "channel_id": "DMM01.Current.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "NONE" }
+                  {
+                    "channel_id": "ITECH01.Voltage.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "NONE"
+                  },
+                  {
+                    "channel_id": "ITECH01.Current.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "NONE"
+                  },
+                  {
+                    "channel_id": "LOAD01.Voltage.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "NONE"
+                  },
+                  {
+                    "channel_id": "LOAD01.Current.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "NONE"
+                  },
+                  {
+                    "channel_id": "DMM01.Voltage.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "NONE"
+                  },
+                  {
+                    "channel_id": "DMM01.Current.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "NONE"
+                  }
                 ]
               },
               "enabled": true,
-              "description": "读取所有模拟仪表通道；每个通道只在此步骤执行时读取一次。",
+              "description": "\u8BFB\u53D6\u6240\u6709\u6A21\u62DF\u4EEA\u8868\u901A\u9053\uFF1B\u6BCF\u4E2A\u901A\u9053\u53EA\u5728\u6B64\u6B65\u9AA4\u6267\u884C\u65F6\u8BFB\u53D6\u4E00\u6B21\u3002",
               "timeout_ms": 0,
               "on_failure": "STOP",
               "on_complete": "CONTINUE",
@@ -72,20 +131,48 @@
             {
               "id": "judge-devices",
               "kind": "read_value",
-              "name": "判断电压和通断",
+              "name": "\u5224\u65AD\u7535\u538B\u548C\u901A\u65AD",
               "params": {
                 "signals": [
-                  { "channel_id": "ITECH01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "IN_RANGE", "minimum": "11", "maximum": "13", "array_mode": "ALL", "tolerance": "0" },
-                  { "channel_id": "LOAD01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": ">", "expected": "10", "array_mode": "ALL", "tolerance": "0" },
-                  { "channel_id": "DMM01.Continuity", "data_type": "boolean", "mode": "constant", "value": "", "comparator": "==", "expected": "true", "array_mode": "ALL", "tolerance": "0" }
+                  {
+                    "channel_id": "ITECH01.Voltage.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "minimum": "11",
+                    "maximum": "13",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "LOAD01.Voltage.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "\u003E",
+                    "expected": "10",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "DMM01.Continuity",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "true",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
                 ]
               },
               "enabled": true,
-              "description": "模拟判定：电源电压、负载电压和万用表通断均应满足范围。",
+              "description": "\u6A21\u62DF\u5224\u5B9A\uFF1A\u7535\u6E90\u7535\u538B\u3001\u8D1F\u8F7D\u7535\u538B\u548C\u4E07\u7528\u8868\u901A\u65AD\u5747\u5E94\u6EE1\u8DB3\u8303\u56F4\u3002",
               "timeout_ms": 0,
               "on_failure": "STOP",
               "on_complete": "CONTINUE",
-              "failure_message": "模拟设备测量值不符合预期。",
+              "failure_message": "\u6A21\u62DF\u8BBE\u5907\u6D4B\u91CF\u503C\u4E0D\u7B26\u5408\u9884\u671F\u3002",
               "precondition": "",
               "before_expression": "",
               "after_expression": "",
@@ -96,10 +183,12 @@
             {
               "id": "hold",
               "kind": "wait",
-              "name": "保持运行状态",
-              "params": { "timeout_ms": "3000" },
+              "name": "\u4FDD\u6301\u8FD0\u884C\u72B6\u6001",
+              "params": {
+                "timeout_ms": "3000"
+              },
               "enabled": true,
-              "description": "便于观察自动执行中的当前步骤高亮。",
+              "description": "\u4FBF\u4E8E\u89C2\u5BDF\u81EA\u52A8\u6267\u884C\u4E2D\u7684\u5F53\u524D\u6B65\u9AA4\u9AD8\u4EAE\u3002",
               "timeout_ms": 0,
               "on_failure": "STOP",
               "on_complete": "CONTINUE",
@@ -114,10 +203,13 @@
             {
               "id": "call-sub",
               "kind": "call_sequence",
-              "name": "调用插件读取子序列",
-              "params": { "sequence_id": "plugin-sub", "arguments": {} },
+              "name": "\u8C03\u7528\u63D2\u4EF6\u8BFB\u53D6\u5B50\u5E8F\u5217",
+              "params": {
+                "sequence_id": "plugin-sub",
+                "arguments": {}
+              },
               "enabled": true,
-              "description": "验证主序列调用子序列。",
+              "description": "\u9A8C\u8BC1\u4E3B\u5E8F\u5217\u8C03\u7528\u5B50\u5E8F\u5217\u3002",
               "timeout_ms": 0,
               "on_failure": "STOP",
               "on_complete": "CONTINUE",
@@ -130,29 +222,48 @@
               "else_children": []
             }
           ],
-          "cleanup_steps": []
+          "cleanup_steps": [],
+          "variables": []
         },
         {
           "id": "plugin-sub",
-          "name": "插件读取子序列",
+          "name": "\u63D2\u4EF6\u8BFB\u53D6\u5B50\u5E8F\u5217",
           "version": 1,
-          "description": "独立读取模拟万用表通道。单独运行时不生成报表。",
+          "description": "\u72EC\u7ACB\u8BFB\u53D6\u6A21\u62DF\u4E07\u7528\u8868\u901A\u9053\u3002\u5355\u72EC\u8FD0\u884C\u65F6\u4E0D\u751F\u6210\u62A5\u8868\u3002",
           "role": "sub",
           "setup_steps": [],
-          "variables": [],
           "steps": [
             {
               "id": "sub-read",
               "kind": "read_value",
-              "name": "子序列读取万用表",
+              "name": "\u5B50\u5E8F\u5217\u8BFB\u53D6\u4E07\u7528\u8868",
               "params": {
                 "signals": [
-                  { "channel_id": "DMM01.Voltage.Measurement", "data_type": "number", "mode": "constant", "value": "", "comparator": "IN_RANGE", "minimum": "10", "maximum": "13", "array_mode": "ALL", "tolerance": "0" },
-                  { "channel_id": "DMM01.Continuity", "data_type": "boolean", "mode": "constant", "value": "", "comparator": "==", "expected": "true", "array_mode": "ALL", "tolerance": "0" }
+                  {
+                    "channel_id": "DMM01.Voltage.Measurement",
+                    "data_type": "number",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "IN_RANGE",
+                    "minimum": "10",
+                    "maximum": "13",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  },
+                  {
+                    "channel_id": "DMM01.Continuity",
+                    "data_type": "boolean",
+                    "mode": "constant",
+                    "value": "",
+                    "comparator": "==",
+                    "expected": "true",
+                    "array_mode": "ALL",
+                    "tolerance": "0"
+                  }
                 ]
               },
               "enabled": true,
-              "description": "子序列内调用插件通道。",
+              "description": "\u5B50\u5E8F\u5217\u5185\u8C03\u7528\u63D2\u4EF6\u901A\u9053\u3002",
               "timeout_ms": 0,
               "on_failure": "STOP",
               "on_complete": "CONTINUE",
@@ -165,9 +276,89 @@
               "else_children": []
             }
           ],
-          "cleanup_steps": []
+          "cleanup_steps": [],
+          "variables": []
         }
-      ]
+      ],
+      "global_variables": []
+    },
+    {
+      "id": "bb87134928bc466ea6708d213106506d",
+      "name": "\u5E8F\u5217\u5B50\u5DE5\u7A0B 1",
+      "sequences": [
+        {
+          "id": "c7d42dfbc133419b9ddbc6b4c4ffb11f",
+          "name": "\u4E3B\u5E8F\u5217",
+          "version": 1,
+          "description": "",
+          "role": "main",
+          "setup_steps": [],
+          "steps": [],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "5223719f701a4ea9a3d1683ae626851e",
+          "name": "\u5B50\u5E8F\u5217 1",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [
+            {
+              "id": "while",
+              "kind": "while",
+              "name": "WHILE",
+              "params": {},
+              "enabled": true,
+              "description": "",
+              "timeout_ms": 0,
+              "on_failure": "STOP",
+              "on_complete": "CONTINUE",
+              "failure_message": "",
+              "precondition": "",
+              "before_expression": "",
+              "after_expression": "",
+              "record_result": true,
+              "children": [
+                {
+                  "id": "continue",
+                  "kind": "continue",
+                  "name": "CONTINUE",
+                  "params": {},
+                  "enabled": true,
+                  "description": "",
+                  "timeout_ms": 0,
+                  "on_failure": "STOP",
+                  "on_complete": "CONTINUE",
+                  "failure_message": "",
+                  "precondition": "",
+                  "before_expression": "",
+                  "after_expression": "",
+                  "record_result": true,
+                  "children": [],
+                  "else_children": []
+                }
+              ],
+              "else_children": []
+            }
+          ],
+          "steps": [],
+          "cleanup_steps": [],
+          "variables": []
+        },
+        {
+          "id": "79418797fcf44a648b261bccc5a224e2",
+          "name": "\u5B50\u5E8F\u5217 2",
+          "version": 1,
+          "description": "",
+          "role": "sub",
+          "setup_steps": [],
+          "steps": [],
+          "cleanup_steps": [],
+          "variables": []
+        }
+      ],
+      "global_variables": []
     }
   ]
 }

@@ -79,6 +79,7 @@ public sealed class BuiltInDriverCatalog : IDriverCatalog
     private static readonly IReadOnlyList<DriverDescriptor> Drivers =
     [
         new("simulated", "模拟设备驱动", "1.0", ["serial", "tcp", "can", "modbus_tcp", "modbus_rtu", "custom"], ["scpi", "dbc", "modbus", "custom"], "用于离线验证资源、通道读写和轮询逻辑的模拟驱动")
+        ,new("itech.scpi", "艾德克斯公共 SCPI 驱动", "0.2", ["serial", "tcp", "visa"], ["scpi"], "公共 SCPI 电源驱动；型号命令通过 Profile 配置")
     ];
     public IReadOnlyList<DriverDescriptor> GetAll() => Drivers;
     public DriverDescriptor? Find(string id) => Drivers.FirstOrDefault(item => item.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
@@ -122,22 +123,22 @@ public sealed class SimulatedDeviceDriver : IDeviceDriver
 
 public sealed class SimulatedChannelService : IChannelService, IDisposable
 {
-    private readonly IResourceCatalogService _catalog; private readonly IDeviceDriverFactory _drivers;
-    private readonly Dictionary<string, IDeviceDriver> _deviceDrivers = new(StringComparer.OrdinalIgnoreCase);
+    private readonly IResourceCatalogService _catalog; private readonly Hardware.IDeviceDriverFactory _drivers;
+    private readonly Dictionary<string, Hardware.IDeviceDriver> _deviceDrivers = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, ChannelReading> _readings = new(StringComparer.OrdinalIgnoreCase);
-    public SimulatedChannelService(IResourceCatalogService catalog, IDeviceDriverFactory drivers) { _catalog = catalog; _drivers = drivers; _catalog.Changed += CatalogChanged; Reload(); }
+    public SimulatedChannelService(IResourceCatalogService catalog, Hardware.IDeviceDriverFactory drivers) { _catalog = catalog; _drivers = drivers; _catalog.Changed += CatalogChanged; Reload(); }
     public event EventHandler<ChannelValueUpdatedEventArgs>? ValueUpdated;
     public async Task<ChannelReading> ReadAsync(string deviceId, string channelId, CancellationToken cancellationToken = default)
     {
         var (_, channel, driver) = Resolve(deviceId, channelId); var key = $"{deviceId}/{channelId}";
-        try { var reading = WithHistory(key, await driver.ReadAsync(channel, cancellationToken)); Publish(reading); return reading; }
+        try { var value = await driver.ReadAsync(channel.Id, cancellationToken); var reading = WithHistory(key, new ChannelReading(deviceId, channelId, DriverValueConversion.FromJson(value), ChannelQuality.Good, DateTimeOffset.UtcNow)); Publish(reading); return reading; }
         catch (Exception error) when (error is TimeoutException or OperationCanceledException or InvalidOperationException)
         { PublishFailure(deviceId, channelId, key, error); throw; }
     }
     public async Task<ChannelReading> WriteAsync(string deviceId, string channelId, object? value, CancellationToken cancellationToken = default)
     {
         var (_, channel, driver) = Resolve(deviceId, channelId); var key = $"{deviceId}/{channelId}";
-        try { var reading = WithHistory(key, await driver.WriteAsync(channel, value, cancellationToken)); Publish(reading); return reading; }
+        try { await driver.WriteAsync(channel.Id, DriverValueConversion.ToJson(value), cancellationToken); var reading = WithHistory(key, new ChannelReading(deviceId, channelId, value, ChannelQuality.Good, DateTimeOffset.UtcNow)); Publish(reading); return reading; }
         catch (Exception error) when (error is TimeoutException or OperationCanceledException or InvalidOperationException)
         { PublishFailure(deviceId, channelId, key, error); throw; }
     }
@@ -145,7 +146,7 @@ public sealed class SimulatedChannelService : IChannelService, IDisposable
     public void Dispose() { _catalog.Changed -= CatalogChanged; foreach (var driver in _deviceDrivers.Values) driver.DisposeAsync().AsTask().GetAwaiter().GetResult(); _deviceDrivers.Clear(); }
     private void CatalogChanged(object? sender, EventArgs e) => Reload();
     private void Reload() { foreach (var driver in _deviceDrivers.Values) driver.DisposeAsync().AsTask().GetAwaiter().GetResult(); _deviceDrivers.Clear(); _readings.Clear(); var transports = _catalog.Catalog.Transports.ToDictionary(item => item.Id, StringComparer.OrdinalIgnoreCase); foreach (var device in _catalog.Catalog.Devices) if (transports.TryGetValue(device.TransportId, out var transport) && transport.Enabled) _deviceDrivers[device.Id] = _drivers.Create(device, transport); }
-    private (DeviceDefinition Device, ChannelDefinition Channel, IDeviceDriver Driver) Resolve(string deviceId, string channelId) { var device = _catalog.Catalog.Devices.FirstOrDefault(item => item.Id.Equals(deviceId, StringComparison.OrdinalIgnoreCase)) ?? throw new KeyNotFoundException($"设备不存在: {deviceId}"); var channel = device.Channels.FirstOrDefault(item => item.Id.Equals(channelId, StringComparison.OrdinalIgnoreCase)) ?? throw new KeyNotFoundException($"通道不存在: {deviceId}/{channelId}"); if (!_deviceDrivers.TryGetValue(device.Id, out var driver)) throw new InvalidOperationException($"设备通信资源不可用: {deviceId}"); return (device, channel, driver); }
+    private (DeviceDefinition Device, ChannelDefinition Channel, Hardware.IDeviceDriver Driver) Resolve(string deviceId, string channelId) { var device = _catalog.Catalog.Devices.FirstOrDefault(item => item.Id.Equals(deviceId, StringComparison.OrdinalIgnoreCase)) ?? throw new KeyNotFoundException($"设备不存在: {deviceId}"); var channel = device.Channels.FirstOrDefault(item => item.Id.Equals(channelId, StringComparison.OrdinalIgnoreCase)) ?? throw new KeyNotFoundException($"通道不存在: {deviceId}/{channelId}"); if (!_deviceDrivers.TryGetValue(device.Id, out var driver)) throw new InvalidOperationException($"设备通信资源不可用: {deviceId}"); return (device, channel, driver); }
     private ChannelReading WithHistory(string key, ChannelReading reading)
     {
         _readings.TryGetValue(key, out var previous);

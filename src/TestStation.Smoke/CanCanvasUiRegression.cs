@@ -44,7 +44,7 @@ internal static class CanCanvasUiRegression
         var canView = new CanTestView(new CanTestViewModel(simulation, new DbcService()));
         var protocols = ProtocolUiRegression.Create();
         var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), protocols.Pages, new DiscardProtocolDialog(),
+            new ControlPreviewView(new ControlPreviewViewModel(), theme), new ProtocolDialogService(),
             ManualCanvasRegression.CreateView(), canTest: canView);
         try
         {

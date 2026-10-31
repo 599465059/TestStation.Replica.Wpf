@@ -16,6 +16,11 @@ if (args.Contains("--can-model"))
     CanCanvasRegression.VerifyModel();
     return;
 }
+if (args.Contains("--drivers"))
+{
+    await DriverRegression.RunAsync();
+    return;
+}
 if (args.Contains("--ui-can"))
 {
     CanCanvasUiRegression.Run();

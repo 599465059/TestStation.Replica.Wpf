@@ -52,7 +52,7 @@ internal static class UiRegression
         var protocols = ProtocolUiRegression.Create();
         protocols.Pages.OpenProject(model.ProjectPath!);
         var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), protocols.Pages, new DiscardProtocolDialog(), ManualCanvasRegression.CreateView());
+            new ControlPreviewView(new ControlPreviewViewModel(), theme), new ProtocolDialogService(), ManualCanvasRegression.CreateView());
         try
         {
             ((FrameworkElement)window.FindName("StartupView")).Visibility = Visibility.Collapsed;

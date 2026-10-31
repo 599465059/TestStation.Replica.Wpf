@@ -22,6 +22,9 @@
 | `IResourceCatalogEditingService` | 资源、设备、通道的结构编辑、引用检查和属性更新 | `ResourceCatalogEditingService` |
 | `IResourceCatalogService` | 资源目录打开、保存、验证和变更通知 | `ResourceCatalogService` |
 | `TransportSettingsAccessor` | 按串口、TCP、CAN、Modbus 类型读取、校验和写入通信参数 | `TransportSettingsAccessor` |
+| `IDeviceFamilyCatalog` | 已安装家族元数据和启用状态边界 | `ManualPluginViewRegistry` 组合根适配；外部扫描器暂未接入 |
+| `IDeviceFamilyModule` | 家族型号目录和驱动工厂的 WPF 无关契约 | `ItechPowerSupplyFamilyModule`；首期应用内注册，外部插件包暂未接入 |
+| `IDeviceInstanceService` | 工程设备实例、资源绑定和会话生命周期边界 | ITECH 具体实现由 `PowerSupplyDeviceService` 提供；PW6001 由 `HiokiPowerAnalyzerDeviceService` 提供 |
 
 ### App 层
 
@@ -39,15 +42,23 @@
 
 ## 通信和设备接口
 
-这些接口已经在 Application 层定义，并提供内存传输、模拟设备和模拟轮询实现。真实硬件仍由后续 `TestStation.Drivers` 或插件实现。
+这些接口已经在 Application 层定义。ITECH 设备已由 `PowerSupplyDeviceService` 贯通 TCP/串口传输、SCPI 会话、驱动和设备会话；HIOKI PW6001 已由 `HiokiPowerAnalyzerDeviceService` 贯通 TCP、SCPI 和只读测量通道。PCAN-Basic 已通过 Infrastructure 适配器接入，真实 PCAN 收发仍需使用现场设备短验收；其他 VISA、ZLG、NI、Kvaser 等厂商后端和外部插件包仍未接入；通用 VISA/CAN 模拟会话继续保留。
 
 | 接口 | 建议职责 | 关键要求 |
 |---|---|---|
-| `ITransport` | 打开/关闭通信资源、发送原始字节、接收数据和连接状态 | 已有 `MemoryTransport`；不包含 SCPI、DBC 或设备业务语义 |
-| `ITransportFactory` | 根据资源配置创建 CAN、串口、TCP、Modbus 传输 | 已有 `SimulatedTransportFactory`；真实适配器待接入 |
-| `IDeviceDriver` | 将设备命令映射为读写通道和设备状态 | 已有 `SimulatedDeviceDriver`，不直接依赖页面 |
-| `IDeviceDriverFactory` | 根据设备类型、厂商和版本创建驱动 | 已有 `SimulatedDeviceDriverFactory` |
-| `IProtocolCodec` | SCPI、自定义协议、DBC、Modbus 帧编码/解码 | 已有 `PassthroughProtocolCodec` 契约实现；具体协议编解码待接入 |
+| `ITransportSession` | 打开/关闭通信资源、报告状态和资源标识 | 只负责生命周期；不包含字节交换、SCPI、DBC 或设备业务语义 |
+| `IByteTransportSession` | TCP、串口和 VISA 的字节写入及请求/响应 | `TcpTransportSession`、`SerialTransportSession`、`VisaTransportSession` |
+| `ICanBusSession` | CAN/CAN FD 帧发送、持续接收、过滤和取消 | `SimulatedCanBusSession`、`PcanCanBusSession`；厂商适配器不进入 Application |
+| `ICanVendorAdapter` | 厂商无关的通道枚举、句柄规范化和控制器创建端口 | Application 契约；当前由 `PcanVendorAdapter` 实现 |
+| `ICanHardwareDiscovery` | 只读枚举厂商通道和能力，不打开或占用设备 | 当前由 `PcanVendorAdapter` 实现 |
+| `ITransportSessionFactory` | 根据工程资源创建传输会话 | `TransportSessionFactory`；`modbus_tcp`/`modbus_rtu` 仅映射到底层 TCP/串口 |
+| `IByteProtocolSession` | 二进制协议请求/响应边界 | 为 Modbus 等协议预留，当前未实现协议编解码 |
+| `ICanProtocolSession` | 面向 CAN 帧的协议会话边界 | 为 CANopen/J1939 预留，当前未实现协议编解码 |
+| `IDeviceDriver` | 将设备命令映射为读写通道和设备状态 | `ItechPowerSupplyDriver`、`HiokiPowerAnalyzerDriver`，不直接依赖页面 |
+| `IDeviceDriverFactory` | 根据设备类型、厂商和版本创建驱动 | `ItechPowerSupplyDriverFactory`；旧模拟工厂仍供历史模拟通道使用 |
+| `IProtocolSession` | SCPI 字符串发送、查询、终止符和通信记录 | `ScpiProtocolSession`；只负责协议，不管理设备生命周期 |
+| `IDeviceSession` | 单设备会话的连接、断开和通道读写 | `ItechPowerSupplyDeviceSession`、`HiokiPowerAnalyzerDeviceSession` |
+| `IChannelRuntimeCoordinator` | 手动订阅轮询、单次读写和自动运行租约 | `SimulatedChannelRuntimeCoordinator` + `CompositeDeviceIoBackend`，自动期间暂停手动访问 |
 | `IChannelService` | 通道读写、缓存、质量状态和更新时间 | 已有 `SimulatedChannelService`，手动测试与自动测试共用 |
 | `IPollingService` | 周期询问、事件触发、超时、重试和取消 | 已有周期轮询及 Start/Stop/Restart 生命周期；事件订阅待补充 |
 | `IEventSubscriptionService` | DBC 事件报文、接收过滤和订阅 | 支持多个订阅者和生命周期取消 |
@@ -69,7 +80,15 @@
 
 1. ~~定义 `ITransport`、`ITransportFactory`、`IProtocolCodec` 和 `IChannelService` 的领域无关契约。~~ 已完成第一版契约，并提供模拟工厂、透传编解码和驱动目录。
 2. ~~用内存实现和模拟设备实现自动测试，保证执行引擎不依赖真实硬件。~~ 已完成内存传输、模拟设备、读写、事件和周期轮询 Smoke 验收。
-3. 再实现串口、TCP、CAN、Modbus 适配器及厂商 DLL 包装。
+3. 再实现串口、TCP、CAN、Modbus 适配器及厂商 DLL 包装；PCAN-Basic 已完成第一套厂商适配器。
 4. 实现插件注册和打包接口，把设备配置、驱动、自动测试步骤和手动界面纳入插件系统。手动界面宿主已具备标签查看/平铺查看能力，但当前仍需插件目录扫描和程序集加载器。
 
 接口完成后，必须为每个实现增加 Smoke 或单元测试；硬件测试使用可替换的 `ITransport`，不把设备依赖写入 UI 回归。
+
+通用传输层短验收入口：
+
+```powershell
+dotnet run --project tools/TestStation.TransportAcceptance/TestStation.TransportAcceptance.csproj
+```
+
+该入口只验证 TCP 回环、串口参数校验、CAN 模拟共享总线/过滤、VISA 模拟后端和缺失后端错误，不连接真实硬件，也不运行长序列。

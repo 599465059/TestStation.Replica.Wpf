@@ -31,7 +31,7 @@ internal static class DocumentUiRegression
         model.OpenProject(workspace.Root);
         var protocols = ProtocolUiRegression.Create(); protocols.Pages.OpenProject(workspace.Root);
         var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), protocols.Pages, dialogs, ManualCanvasRegression.CreateView()) { WindowState = WindowState.Maximized };
+            new ControlPreviewView(new ControlPreviewViewModel(), theme), dialogs, ManualCanvasRegression.CreateView()) { WindowState = WindowState.Maximized };
         var host = (DialogHost)window.FindName("AppDialogHost");
         try
         {
@@ -137,7 +137,7 @@ internal static class DocumentUiRegression
         model.OpenProject(workspace.Root);
         var protocols = ProtocolUiRegression.Create(); protocols.Pages.OpenProject(workspace.Root);
         var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), protocols.Pages, dialogs, ManualCanvasRegression.CreateView()) { WindowState = WindowState.Maximized };
+            new ControlPreviewView(new ControlPreviewViewModel(), theme), dialogs, ManualCanvasRegression.CreateView()) { WindowState = WindowState.Maximized };
         var host = (DialogHost)window.FindName("AppDialogHost");
         try
         {

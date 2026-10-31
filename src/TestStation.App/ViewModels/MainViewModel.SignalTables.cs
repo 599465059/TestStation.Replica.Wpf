@@ -23,7 +23,9 @@ public partial class MainViewModel
     {
         var simulation = _workspace is null ? [] : _workspaceService.LoadChannelDefinitions(_workspace);
         var merged = new Dictionary<string, SequenceChannelDefinition>(StringComparer.OrdinalIgnoreCase);
-        foreach (var channel in simulation) merged[channel.Id] = channel;
+        var pluginIds = _channelProviders.OfType<Services.SimulatedPluginChannelProvider>()
+            .SelectMany(provider => provider.InstalledChannels).Select(c => c.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var channel in simulation.Where(c => !pluginIds.Contains(c.Id))) merged[channel.Id] = channel;
         // A plugin owns the channel contract. A project may still keep an
         // explicit simulator value with the same ID, but cannot change its
         // type or read/write capability through the generic editor.

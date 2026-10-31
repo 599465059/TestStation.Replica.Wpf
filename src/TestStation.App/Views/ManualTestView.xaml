@@ -1,43 +1,24 @@
 <UserControl x:Class="TestStation.App.Views.ManualTestView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-             Background="{DynamicResource ContentBrush}"
-             Foreground="{DynamicResource TextBrush}">
-    <Grid Margin="18">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Border Padding="16,12" Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-            <StackPanel Orientation="Horizontal">
-                <md:PackIcon Kind="TuneVariant" Width="20" Height="20" Margin="0,0,10,0"
-                             Foreground="{DynamicResource AccentBrush}"/>
-                <StackPanel>
-                    <TextBlock Text="手动测试" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="插件界面将在当前手动测试标签页中显示。" Margin="0,4,0,0"
-                               Foreground="{DynamicResource MutedBrush}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="24,0,0,0" VerticalAlignment="Center">
-                    <Button x:Name="PluginTabsButton" Content="标签查看" Click="PluginTabs_Click" Style="{StaticResource AppButtonStyle}" Margin="0,0,6,0" Visibility="Collapsed"/>
-                    <Button x:Name="PluginTileButton" Content="平铺查看" Click="PluginTile_Click" Style="{StaticResource AppButtonStyle}" Visibility="Collapsed"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-        <Grid x:Name="PluginHost" Grid.Row="1" Margin="0,14,0,0" Background="{DynamicResource SurfaceBrush}"
-              ClipToBounds="True">
-            <Border x:Name="EmptyPluginState" Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
-                <md:PackIcon Kind="PuzzleOutline" Width="42" Height="42" HorizontalAlignment="Center"
-                             Foreground="{DynamicResource AccentBrush}"/>
-                <TextBlock Text="插件界面承载区" FontSize="18" FontWeight="SemiBold"
-                           HorizontalAlignment="Center" Margin="0,14,0,6"/>
-                <TextBlock Text="当前版本保留手动测试标签页、平铺和排列功能。自由画布、控件工具箱以及控件拖拽编辑已移除；安装插件后，插件会在这里提供手动操作界面。"
-                           TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
-            </StackPanel>
-            </Border>
-        </Grid>
-    </Grid>
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:kit="clr-namespace:Industrial.Controls;assembly=Industrial.Controls"
+ xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+ xmlns:text="clr-namespace:TestStation.App.Localization"
+ Background="{DynamicResource ContentBrush}" Foreground="{DynamicResource TextBrush}">
+ <Grid>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+  <ToolBar Style="{StaticResource AppToolBarStyle}">
+   <Button x:Name="AddPluginButton" Click="AddPlugin_Click">
+    <StackPanel Orientation="Horizontal"><md:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,5,0"/><TextBlock Text="{x:Static text:UiText.ManualAddDevice}"/></StackPanel>
+   </Button>
+   <Button x:Name="ViewToggleButton" Content="{x:Static text:UiText.ManualWindowView}" Click="ToggleView_Click"/>
+   <Button Content="{x:Static text:UiText.ManualTile}" Click="Tile_Click"/>
+   <Button Content="{x:Static text:UiText.ManualCascade}" Click="Cascade_Click"/>
+  </ToolBar>
+  <kit:MdiWorkspace x:Name="Workspace" Grid.Row="1" View="Tabbed"
+   Background="{DynamicResource ContentBrush}" Foreground="{DynamicResource TextBrush}"/>
+  <TextBlock x:Name="EmptyPluginState" Grid.Row="1" Text="{x:Static text:UiText.ManualPluginEmptyHint}"
+   TextWrapping="Wrap" MaxWidth="520" HorizontalAlignment="Center" VerticalAlignment="Center"
+   Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False" Visibility="Collapsed"/>
+ </Grid>
 </UserControl>

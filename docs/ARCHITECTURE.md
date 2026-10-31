@@ -79,9 +79,9 @@ Infrastructure implementation
 - Infrastructure 只实现 Application 定义的仓储/协议端口。
 - App 是当前唯一的 UI/基础设施组合根。
 - Smoke 只引用 App/Application，不进入生产模块依赖。
-- 当前真实硬件驱动尚未加入工程，执行引擎仍使用 `IChannelGateway` 的模拟实现。
+- 首期 ITECH IT6000 家族已经接入 TCP 和串口传输、SCPI 会话、独占资源租约和设备会话；真实硬件实机仍未验证。通用层还提供 VISA 后端边界、CAN/CAN FD 模拟总线，以及不携带厂商 DLL 的 PCAN-Basic 适配器；PCAN 实机收发需要安装 PEAK 驱动，其他 ZLG/NI/Kvaser 等厂商驱动仍未接入。
 - 资源目录已形成独立的编辑边界：`ResourceCatalogEditingService` 负责新增、删除、引用检查和属性更新；页面不再直接操作资源集合。
-- 当前仍使用模拟传输和模拟设备，真实串口、TCP、CAN、Modbus 适配器不在本阶段接入。
+- 当前仍保留模拟插件用于历史示例，但 ITECH 页面和 OpenTAP 通道通过 `PowerSupplyDeviceService` 统一访问 TCP/串口会话；真实串口、TCP 硬件尚未做实机验证，CAN、Modbus 和外部插件包不在本阶段接入。
 
 后续每增加一个项目或 PackageReference，必须同时更新本文件和 `docs/INTERFACE_CATALOG.md`。
 
@@ -96,3 +96,6 @@ Infrastructure implementation
 跨进程命令和事件的版本号现在由 `TestStation.Contracts` 中的 `ExecutionProtocol` 统一维护，Host 会拒绝不兼容的协议版本。步骤定义和插件执行适配仍需要继续接入同一契约。
 
 仍需后续处理的架构债务：`MainViewModel` 仍包含工程、编辑、变量和执行状态；旧的 `SequenceExecutionEngine` 仍保留供 Smoke 使用；手动测试旧画布模型和仓储仍在工程中。它们本轮没有删除，以免破坏已有工程格式和历史回归入口，正式硬件插件接入前应继续隔离或迁移。
+
+本轮电源家族已接入组合根：`PowerSupplyDeviceService` 是 TCP/串口电源实例的唯一运行时入口，页面不再直接创建 TCP 会话。家族 Profile、型号覆盖、通道映射和资源绑定分别位于 Domain/Application/Infrastructure 边界；OpenTAP 仍通过 `channel_request` 调用该服务。VISA/CAN 适配器仍是明确的未接入边界。
+- HIOKI PW6001 已按同一边界接入：`HiokiPowerAnalyzerDeviceService` 负责实例、TCP 资源、SCPI 会话和六通道测量驱动，`CompositeDeviceIoBackend` 将 ITECH 与 HIOKI 路由到同一个手动/自动协调器。页面只通过 `IManualPluginViewProvider` 注册，不创建传输会话。PW6001 目前只支持 TCP，真实硬件尚未验证。

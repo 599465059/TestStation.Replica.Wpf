@@ -1,0 +1,36 @@
+{
+  "format": "test-station-resources",
+  "version": 1,
+  "resources": {
+    "version": 1,
+    "transports": [
+      {
+        "id": "itech_tcp_e2993264",
+        "name": "\u865A\u62DF\u7535\u6E90 TCP",
+        "type": "tcp",
+        "enabled": true,
+        "settings": {
+          "host": "127.0.0.1",
+          "tcp_port": 5025,
+          "connect_timeout_ms": 1500,
+          "fd_enabled": false
+        },
+        "lease_mode": "exclusive"
+      }
+    ],
+    "devices": [
+      {
+        "id": "ITECH01",
+        "name": "\u7535\u6E90 01",
+        "driver_id": "itech.public-scpi",
+        "transport_id": "itech_tcp_e2993264",
+        "protocol_id": "scpi",
+        "channels": [],
+        "metadata": {},
+        "family_id": "itech.power-supply",
+        "model_id": "public-scpi",
+        "resource_address": ""
+      }
+    ]
+  }
+}

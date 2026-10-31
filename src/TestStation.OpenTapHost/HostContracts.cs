@@ -13,6 +13,8 @@ public sealed record HostRunRequest
     [JsonPropertyName("sequences")] public IReadOnlyList<JsonElement> Sequences { get; init; } = [];
     [JsonPropertyName("parameters")] public IReadOnlyDictionary<string, JsonElement> Parameters { get; init; } = new Dictionary<string, JsonElement>();
     [JsonPropertyName("simulation_values")] public IReadOnlyDictionary<string, JsonElement> SimulationValues { get; init; } = new Dictionary<string, JsonElement>();
+    [JsonPropertyName("external_channel_types")] public IReadOnlyDictionary<string, string>? ExternalChannelTypes { get; init; }
+    [JsonPropertyName("external_channels")] public IReadOnlyList<string> ExternalChannels { get; init; } = [];
     [JsonPropertyName("global_definitions")] public IReadOnlyList<JsonElement> GlobalDefinitions { get; init; } = [];
     [JsonPropertyName("station_definitions")] public IReadOnlyList<JsonElement> StationDefinitions { get; init; } = [];
     [JsonPropertyName("global_values")] public IReadOnlyDictionary<string, JsonElement> GlobalValues { get; init; } = new Dictionary<string, JsonElement>();
@@ -44,6 +46,8 @@ public interface IOpenTapRunner
 
 public sealed class OpenTapRunner : IOpenTapRunner
 {
+    private readonly HostChannelAccess? _channelAccess;
+    public OpenTapRunner(HostChannelAccess? channelAccess = null) => _channelAccess = channelAccess;
     private readonly SequenceCompiler _compiler = new();
     private readonly object _sync = new();
     private CancellationTokenSource? _runCancellation;
@@ -66,9 +70,11 @@ public sealed class OpenTapRunner : IOpenTapRunner
             {
                 var plan = _compiler.Compile(request.Sequence, request.Sequences);
                 linked.Token.ThrowIfCancellationRequested();
-                var context = new HostExecutionContext(publish, linked.Token, control) { RunId = request.RunId };
+                var context = new HostExecutionContext(publish, linked.Token, control)
+                { RunId = request.RunId, ExternalChannelTypes = request.ExternalChannelTypes ?? new Dictionary<string, string>(), ChannelAccess = _channelAccess, ExternalChannels = request.ExternalChannels.ToHashSet(StringComparer.OrdinalIgnoreCase) };
                 context.InitializeShared(request.GlobalDefinitions, request.StationDefinitions, request.GlobalValues, request.StationValues);
-                foreach (var pair in request.SimulationValues) context.SimulationValues[pair.Key] = HostExecutionContext.JsonValue(pair.Value);
+                foreach (var pair in request.SimulationValues.Where(p => !context.ExternalChannels.Contains(p.Key)))
+                    context.SimulationValues[pair.Key] = HostExecutionContext.JsonValue(pair.Value);
                 var arguments = request.Parameters.ToDictionary(pair => pair.Key, pair => HostExecutionContext.JsonValue(pair.Value), StringComparer.OrdinalIgnoreCase);
                 await publish(new HostEvent
                 {

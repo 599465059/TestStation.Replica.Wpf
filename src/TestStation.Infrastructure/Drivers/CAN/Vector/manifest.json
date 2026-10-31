@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "vector",
+  "displayName": "Vector XL-API",
+  "loadMode": "bundled",
+  "library": "x64/vxlapi64.dll",
+  "installedNames": [
+    "vxlapi64.dll",
+    "vxlapi.dll"
+  ],
+  "searchPaths": []
+}

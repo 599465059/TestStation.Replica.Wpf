@@ -181,7 +181,13 @@ public sealed class SequenceExecutionEngine
     private readonly IChannelGateway _gateway;
     private readonly Func<string, SequenceDefinition?>? _sequenceResolver;
     private readonly List<StepRunResult> _stepResults = [];
-    private readonly Dictionary<string, object?> _variables = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Stack<ExecutionFrame> _frames = new();
+    private Dictionary<string, object?> _variables => _frames.Peek().Variables.Values;
+    private SequenceVariableScope _globals = new([], shared: true);
+    private SequenceVariableScope _station = new([], shared: true);
+    private readonly Stopwatch _executionClock = new();
+    private readonly List<TimeSpan> _deadlines = [];
+    private bool _stopBody;
     private readonly Dictionary<string, object?> _channels = new(StringComparer.OrdinalIgnoreCase);
     private readonly AsyncManualResetEvent _pauseGate = new(true);
     private CancellationTokenSource? _runCts;
@@ -205,13 +211,13 @@ public sealed class SequenceExecutionEngine
 
     public Task PauseAsync()
     {
-        lock (_sync) if (_state == SequenceRunState.Running) { _state = SequenceRunState.Paused; StateChanged?.Invoke(_state); _pauseGate.Reset(); Log("INFO", "序列已暂停"); }
+        lock (_sync) if (_state == SequenceRunState.Running) { _state = SequenceRunState.Paused; _executionClock.Stop(); StateChanged?.Invoke(_state); _pauseGate.Reset(); Log("INFO", "序列已暂停"); }
         return Task.CompletedTask;
     }
 
     public Task ResumeAsync()
     {
-        lock (_sync) if (_state == SequenceRunState.Paused) { _state = SequenceRunState.Running; StateChanged?.Invoke(_state); _pauseGate.Set(); Log("INFO", "序列继续执行"); }
+        lock (_sync) if (_state == SequenceRunState.Paused) { _state = SequenceRunState.Running; _executionClock.Start(); StateChanged?.Invoke(_state); _pauseGate.Set(); Log("INFO", "序列继续执行"); }
         return Task.CompletedTask;
     }
 
@@ -225,14 +231,16 @@ public sealed class SequenceExecutionEngine
         SequenceDefinition sequence,
         IReadOnlyDictionary<string, object?>? parameterOverrides = null,
         IReadOnlyDictionary<string, object?>? simulationValues = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        SequenceExecutionEnvironment? environment = null)
     {
         lock (_sync)
         {
             if (_state is SequenceRunState.Running or SequenceRunState.Paused) throw new InvalidOperationException("测试序列正在运行");
             _state = SequenceRunState.Running;
             _runCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _stepResults.Clear(); _variables.Clear(); _channels.Clear(); _pauseGate.Set();
+            _stepResults.Clear(); _frames.Clear(); _channels.Clear(); _deadlines.Clear(); _stopBody = false;
+            _pauseGate.Set(); _executionClock.Restart();
             _currentRunId = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}";
         }
         var started = DateTimeOffset.UtcNow;
@@ -244,16 +252,22 @@ public sealed class SequenceExecutionEngine
         StateChanged?.Invoke(SequenceRunState.Running);
         try
         {
-            var preflight = SequencePreflightService.Validate(sequence);
+            var library = ResolveLibrary(sequence);
+            var preflight = SequenceLibraryPreflight.Validate(sequence, library);
             if (!preflight.IsValid) throw new InvalidDataException(preflight.Errors[0].Message);
-            parameters = CreateVariables(sequence, parameterOverrides);
-            foreach (var pair in parameters) _variables[pair.Key] = pair.Value;
+            _globals = new(environment?.GlobalVariables ?? [], environment?.Globals, shared: true);
+            _station = new(environment?.StationVariables ?? [], environment?.Station, shared: true);
+            var variables = new SequenceVariableScope(sequence.Variables, parameterOverrides);
+            _frames.Push(new(variables));
+            parameters = new(variables.Values, StringComparer.OrdinalIgnoreCase);
             _gateway.Configure(normalizedSimulation);
             initialized = true;
             Log("INFO", $"开始执行序列: {sequence.Name}");
-            var setup = await ExecuteListAsync(sequence.SetupSteps, "Setup", _runCts.Token, sequence.Id, []);
+            var stack = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { sequence.Id };
+            var setup = await ExecuteListAsync(sequence.SetupSteps, "Setup", _runCts.Token, sequence.Id, stack);
             if (!setup) passed = false;
-            if (passed) passed = await ExecuteListAsync(sequence.Steps, "Main", _runCts.Token, sequence.Id, []);
+            if (passed && _frames.Peek().Flow == Flow.None && !_stopBody)
+                passed = await ExecuteListAsync(sequence.Steps, "Main", _runCts.Token, sequence.Id, stack);
         }
         catch (OperationCanceledException) when (_runCts?.IsCancellationRequested == true)
         {
@@ -268,7 +282,7 @@ public sealed class SequenceExecutionEngine
         }
         try
         {
-            if (initialized && !await ExecuteListAsync(sequence.CleanupSteps, "Cleanup", CancellationToken.None, sequence.Id, []))
+            if (initialized && !await ExecuteCleanupAsync(sequence, new(StringComparer.OrdinalIgnoreCase) { sequence.Id }))
             {
                 passed = false;
                 if (error.Length == 0) error = "Cleanup 步骤失败";
@@ -276,10 +290,17 @@ public sealed class SequenceExecutionEngine
         }
         catch (Exception exception) { Log("ERROR", $"Cleanup 执行失败: {exception.Message}"); if (passed) { passed = false; error = exception.Message; } }
         var state = State == SequenceRunState.Stopped ? SequenceRunState.Stopped : passed ? SequenceRunState.Passed : SequenceRunState.Failed;
+        _executionClock.Stop();
+        if (environment is not null && initialized)
+        {
+            environment.Globals.Clear(); environment.Station.Clear();
+            foreach (var pair in _globals.Values) environment.Globals[pair.Key] = pair.Value;
+            foreach (var pair in _station.Values) environment.Station[pair.Key] = pair.Value;
+        }
         lock (_sync) _state = state;
         StateChanged?.Invoke(state);
         var result = new SequenceRunResult(_currentRunId, sequence.Id, sequence.Name, state == SequenceRunState.Passed ? "completed" : state.ToString().ToLowerInvariant(), started.ToString("O"),
-            DateTimeOffset.UtcNow.ToString("O"), _stepResults.ToArray(), MergeValues(), error, parameters, normalizedSimulation);
+            DateTimeOffset.UtcNow.ToString("O"), _stepResults.ToArray(), MergeValues(), error, parameters, normalizedSimulation, _gateway.Snapshot());
         Log(state == SequenceRunState.Passed ? "INFO" : "ERROR", $"序列结束: {result.Status}");
         Completed?.Invoke(result);
         _runCts?.Dispose();
@@ -292,13 +313,19 @@ public sealed class SequenceExecutionEngine
         var success = true;
         foreach (var step in steps)
         {
+            if (_frames.Peek().Flow != Flow.None || section != "Cleanup" && _stopBody) break;
+            await CheckpointAsync(token);
             if (!step.Enabled) { PublishStep(step, "skipped", "步骤已禁用", section, sequenceId, DateTimeOffset.UtcNow, 0); continue; }
             var stepSuccess = await ExecuteStepAsync(step, section, token, sequenceId, callStack);
             if (!stepSuccess)
             {
                 success = false;
-                if (step.OnFailure == "CONTINUE") continue;
-                break;
+                if (step.OnFailure == "CONTINUE" || IsContinueFailure(step))
+                {
+                    success = true;
+                    continue;
+                }
+                if (_frames.Peek().Flow != Flow.None) break;
             }
         }
         return success;
@@ -306,25 +333,38 @@ public sealed class SequenceExecutionEngine
 
     private async Task<bool> ExecuteStepAsync(SequenceStep step, string section, CancellationToken token, string sequenceId, HashSet<string> callStack)
     {
-        await _pauseGate.WaitAsync(token);
+        await CheckpointAsync(token);
         var startedAt = DateTimeOffset.UtcNow;
         var started = Stopwatch.GetTimestamp();
         CurrentStepChanged?.Invoke(step.Id);
         Log("INFO", $"开始: {section} / {step.Name}");
-        var status = "passed"; var message = "完成"; var success = true;
+        var status = "completed"; var message = "完成"; var success = true;
+        var bodyStarted = false;
+        var deadlineIndex = _deadlines.Count;
+        if (step.TimeoutMs > 0) _deadlines.Add(_executionClock.Elapsed + TimeSpan.FromMilliseconds(step.TimeoutMs));
         try
         {
+            if (!string.IsNullOrWhiteSpace(step.Precondition) && !SequenceExpression.Evaluate(step.Precondition, MergeValues()))
+            {
+                PublishStep(step, "skipped", "前置条件不满足", section, sequenceId, startedAt, ElapsedMs(started));
+                return true;
+            }
+            ExecuteExpressions(step.BeforeExpression);
+            bodyStarted = true;
             switch (step.Kind)
             {
                 case "initialize": _channels.Clear(); message = "初始化完成"; break;
                 case "set_value":
+                    if (step.Params.ContainsKey("signals")) { RunSignals(step, false); break; }
                     var setChannel = Required(step, "channel_id"); var setValue = Resolve(Value(step, "value")); _gateway.Write(setChannel, setValue); StoreChannel(setChannel, setValue); message = $"{setChannel} = {setValue}"; break;
                 case "read_value":
+                    if (step.Params.ContainsKey("signals")) { success = RunSignals(step, true); status = success ? "completed" : "failed"; message = success ? "读取完成" : "读取判定失败"; break; }
                     var readChannel = Required(step, "channel_id"); var readValue = _gateway.Read(readChannel); StoreChannel(readChannel, readValue); message = $"{readChannel} -> {readValue}"; break;
                 case "wait": await DelayAsync(NonNegativeInt(step, "timeout_ms"), token); message = $"等待 {NonNegativeInt(step, "timeout_ms")} ms"; break;
                 case "assert":
                     var actual = ResolveAssertValue(step); var expected = step.Params.TryGetValue("expected", out var expectedValue) ? Resolve(JsonValue(expectedValue)) : null;
-                    success = Compare(actual, expected, StringValue(step, "comparator", "=="), step); message = success ? $"ASSERT PASS: {actual}" : $"ASSERT FAIL: {actual}"; if (!success) { status = "failed"; if (IsContinueFailure(step)) success = true; } break;
+                    success = Compare(actual, expected, StringValue(step, "comparator", "=="), step); status = success ? "passed" : "failed";
+                    message = success ? $"ASSERT PASS: {actual}" : $"ASSERT FAIL: {actual}"; break;
                 case "if":
                     var condition = SequenceExpression.Evaluate(StringValue(step, "expression", ""), MergeValues());
                     success = await ExecuteListAsync(condition ? step.Children : step.ElseChildren, section, token, sequenceId, callStack); message = $"条件结果: {(condition ? "TRUE" : "FALSE")}"; break;
@@ -332,47 +372,48 @@ public sealed class SequenceExecutionEngine
                     var variable = Required(step, "variable"); var from = Integer(step, "from", 0); var to = Integer(step, "to", -1); var increment = Integer(step, "step", 1);
                     if (increment == 0) throw new InvalidDataException("FOR 步长不能为 0");
                     var oldValue = _variables.TryGetValue(variable, out var previous) ? previous : null; var hadValue = _variables.ContainsKey(variable); var count = 0;
+                    _frames.Peek().LoopDepth++;
                     try
                     {
-                        for (var index = from; increment > 0 ? index <= to : index >= to; index = checked(index + increment))
+                        for (long index = from; increment > 0 ? index <= to : index >= to; index += increment)
                         {
-                            if (++count > 1000) throw new InvalidDataException("FOR 循环次数超过 1000");
+                            await CheckpointAsync(token);
+                            if (++count > Integer(step, "max_iterations", 1000)) throw new InvalidDataException("FOR 循环次数超过最大次数");
                             _variables[variable] = index;
-                            try
-                            {
-                                if (!await ExecuteListAsync(step.Children, section, token, sequenceId, callStack)) { success = false; break; }
-                            }
-                            catch (ContinueSignal) { continue; }
-                            catch (BreakSignal) { break; }
+                            if (!await ExecuteListAsync(step.Children, section, token, sequenceId, callStack)) success = false;
+                            if (EndIteration()) break;
                         }
                     }
-                    finally { if (hadValue) _variables[variable] = oldValue; else _variables.Remove(variable); }
+                    finally { _frames.Peek().LoopDepth--; if (hadValue) _variables[variable] = oldValue; else _variables.Remove(variable); }
                     message = $"FOR {variable}: {count} 次"; break;
                 case "while":
                     var maxIterations = Integer(step, "max_iterations", 1000);
                     if (maxIterations <= 0) throw new InvalidDataException("WHILE 最大循环次数必须大于 0");
                     var whileCount = 0;
-                    while (SequenceExpression.Evaluate(StringValue(step, "expression", ""), MergeValues()))
+                    _frames.Peek().LoopDepth++;
+                    try
                     {
-                        if (++whileCount > maxIterations) throw new InvalidDataException($"WHILE 循环次数超过 {maxIterations}");
-                        try
+                        while (SequenceExpression.Evaluate(StringValue(step, "expression", ""), MergeValues()))
                         {
-                            if (!await ExecuteListAsync(step.Children, section, token, sequenceId, callStack)) { success = false; break; }
+                            await CheckpointAsync(token);
+                            if (++whileCount > maxIterations) throw new InvalidDataException($"WHILE 循环次数超过 {maxIterations}");
+                            if (!await ExecuteListAsync(step.Children, section, token, sequenceId, callStack)) success = false;
+                            if (EndIteration()) break;
                         }
-                        catch (ContinueSignal) { }
-                        catch (BreakSignal) { break; }
                     }
+                    finally { _frames.Peek().LoopDepth--; }
                     message = $"WHILE: {whileCount} 次"; break;
-                case "break": throw new BreakSignal();
-                case "continue": throw new ContinueSignal();
+                case "break": SetLoopFlow(Flow.Break); break;
+                case "continue": SetLoopFlow(Flow.Continue); break;
                 case "log":
                     var level = StringValue(step, "level", "INFO").ToUpperInvariant();
-                    Log(level, Resolve(StringValue(step, "message", ""))?.ToString() ?? "");
+                    Log(level, System.Text.RegularExpressions.Regex.Replace(StringValue(step, "message", ""), @"\$\{([^}]+)\}",
+                        match => SequenceValueOperations.Display(SequenceExpression.EvaluateValue(match.Value, MergeValues()))));
                     message = StringValue(step, "message", ""); break;
                 case "statement":
                     var targetVariable = Required(step, "target_variable");
-                    _variables[targetVariable] = Resolve(Value(step, "expression"));
-                    message = $"{targetVariable} = {_variables[targetVariable]}"; break;
+                    AssignVariable(targetVariable, SequenceExpression.EvaluateValue(StringValue(step, "expression", ""), MergeValues()));
+                    message = $"已更新变量: {targetVariable}"; break;
                 case "call_sequence":
                     var targetId = Required(step, "sequence_id");
                     if (_sequenceResolver is null) throw new InvalidDataException("未配置序列调用解析器");
@@ -380,10 +421,22 @@ public sealed class SequenceExecutionEngine
                     try
                     {
                         var target = _sequenceResolver(targetId) ?? throw new InvalidDataException($"目标序列不存在: {targetId}");
-                        var setupPassed = await ExecuteListAsync(target.SetupSteps, "Setup", token, target.Id, callStack);
-                        var mainPassed = setupPassed && await ExecuteListAsync(target.Steps, "Main", token, target.Id, callStack);
-                        var cleanupPassed = await ExecuteListAsync(target.CleanupSteps, "Cleanup", CancellationToken.None, target.Id, callStack);
-                        success = setupPassed && mainPassed && cleanupPassed;
+                        if (target.IsMain) throw new InvalidDataException($"不能调用主序列: {targetId}");
+                        var arguments = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+                        if (step.Params.TryGetValue("arguments", out var supplied))
+                            foreach (var pair in supplied.EnumerateObject()) arguments.Add(pair.Name, Resolve(JsonValue(pair.Value)));
+                        _frames.Push(new(new(target.Variables, arguments)));
+                        try
+                        {
+                            try
+                            {
+                                success = await ExecuteListAsync(target.SetupSteps, "Setup", token, target.Id, callStack);
+                                if (_frames.Peek().Flow == Flow.None && !_stopBody)
+                                    success = await ExecuteListAsync(target.Steps, "Main", token, target.Id, callStack) && success;
+                            }
+                            finally { success = await ExecuteCleanupAsync(target, callStack) && success; }
+                        }
+                        finally { _frames.Pop(); }
                         message = $"SEQUENCE CALL {target.Name}";
                     }
                     finally { callStack.Remove(targetId); }
@@ -391,24 +444,40 @@ public sealed class SequenceExecutionEngine
                 case "comment": message = step.Description.Length == 0 ? "备注" : step.Description; break;
                 default: throw new InvalidDataException($"不支持的步骤类型: {step.Kind}");
             }
+            await CheckpointAsync(token);
             if (!success && !string.IsNullOrWhiteSpace(step.FailureMessage)) message = step.FailureMessage;
             if (!success) Log("WARN", message);
         }
-        catch (Exception exception) when (exception is BreakSignal or ContinueSignal)
+        catch (OperationCanceledException)
         {
+            status = "stopped"; message = "运行已取消";
+            PublishStep(step, status, message, section, sequenceId, startedAt, ElapsedMs(started));
             throw;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             success = false; status = "failed"; message = string.IsNullOrWhiteSpace(step.FailureMessage) ? exception.Message : step.FailureMessage; Log("ERROR", message);
         }
+        finally
+        {
+            try
+            {
+                if (bodyStarted && !token.IsCancellationRequested)
+                {
+                    try { ExecuteExpressions(step.AfterExpression); }
+                    catch (Exception error) when (error is not OperationCanceledException)
+                    { success = false; status = "failed"; message = $"执行后表达式失败: {error.Message}"; }
+                }
+            }
+            finally { if (step.TimeoutMs > 0) _deadlines.RemoveAt(deadlineIndex); }
+        }
+        if (success && status != "failed") ApplyAction(step.OnComplete);
+        else ApplyAction(IsContinueFailure(step) ? "CONTINUE" : step.OnFailure);
         PublishStep(step, success ? status : "failed", message, section, sequenceId, startedAt, ElapsedMs(started));
         return success;
     }
 
     private bool IsContinueFailure(SequenceStep step) => step.Kind == "assert" && StringValue(step, "failure_action", "STOP") is "CONTINUE" or "LOG";
-    private sealed class BreakSignal : Exception;
-    private sealed class ContinueSignal : Exception;
     private void PublishStep(SequenceStep step, string status, string message, string section, string sequenceId, DateTimeOffset startedAt, long duration)
     {
         var result = new StepRunResult(step.Id, step.Name, step.Kind, status, message,
@@ -418,13 +487,24 @@ public sealed class SequenceExecutionEngine
     }
     private void Log(string level, string message) => LogRaised?.Invoke(new(DateTimeOffset.UtcNow, level, message));
     private long ElapsedMs(long started) => (long)(Stopwatch.GetElapsedTime(started).TotalMilliseconds);
-    private async Task DelayAsync(int milliseconds, CancellationToken token) { var remaining = milliseconds; while (remaining > 0) { await _pauseGate.WaitAsync(token); var delay = Math.Min(remaining, 25); await Task.Delay(delay, token); remaining -= delay; } }
+    private async Task DelayAsync(int milliseconds, CancellationToken token)
+    {
+        var until = _executionClock.Elapsed + TimeSpan.FromMilliseconds(milliseconds);
+        while (true)
+        {
+            await CheckpointAsync(token);
+            var remaining = (int)Math.Ceiling((until - _executionClock.Elapsed).TotalMilliseconds);
+            if (remaining <= 0) return;
+            await Task.Delay(Math.Min(remaining, 25), token);
+        }
+    }
     private string Required(SequenceStep step, string key) { var value = StringValue(step, key, "").Trim(); if (value.Length == 0) throw new InvalidDataException($"{step.Name} 缺少 {key}"); return value; }
     private static object? Value(SequenceStep step, string key) => step.Params.TryGetValue(key, out var value) ? JsonValue(value) : null;
     private static string StringValue(SequenceStep step, string key, string fallback) => step.Params.TryGetValue(key, out var value) ? JsonValue(value)?.ToString() ?? fallback : fallback;
     private static int NonNegativeInt(SequenceStep step, string key) { var number = Integer(step, key, 0); if (number < 0) throw new InvalidDataException($"{key} 不能小于 0"); return number; }
     private static int Integer(SequenceStep step, string key, int fallback) { var value = StringValue(step, key, fallback.ToString(CultureInfo.InvariantCulture)); return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : throw new InvalidDataException($"{key} 必须是整数"); }
-    private object? Resolve(object? value) { if (value is string text && text.StartsWith("${", StringComparison.Ordinal) && text.EndsWith("}", StringComparison.Ordinal)) { var name = text[2..^1]; if (_variables.TryGetValue(name, out var variable)) return variable; if (_channels.TryGetValue(name, out var channel)) return channel; throw new InvalidDataException($"变量未定义: {name}"); } return value; }
+    private object? Resolve(object? value) => value is string text && text.StartsWith("${", StringComparison.Ordinal) && text.EndsWith('}')
+        ? SequenceExpression.EvaluateValue(text, MergeValues()) : value;
     private void StoreChannel(string channel, object? value) { _channels[channel] = value; _channels[Alias(channel)] = value; }
     private static string Alias(string channel) => string.Concat(channel.Split('_', StringSplitOptions.RemoveEmptyEntries).Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
     private object? ResolveAssertValue(SequenceStep step)
@@ -434,26 +514,126 @@ public sealed class SequenceExecutionEngine
             return _channels.TryGetValue(channel, out var value) ? value : throw new InvalidDataException($"ASSERT 通道尚未读取: {channel}");
         return _channels.Count > 0 ? _channels.Values.Last() : throw new InvalidDataException("ASSERT 没有可比较的实际值");
     }
-    private bool Compare(object? actual, object? expected, string comparator, SequenceStep step) { if (comparator == "IN_RANGE") { var low = Resolve(Value(step, "minimum")); var high = Resolve(Value(step, "maximum")); return Number(actual) >= Number(low) && Number(actual) <= Number(high); } var left = NumberOrText(actual); var right = NumberOrText(expected); return comparator switch { "==" => Equals(left, right), "!=" => !Equals(left, right), ">" => CompareValues(left, right) > 0, ">=" => CompareValues(left, right) >= 0, "<" => CompareValues(left, right) < 0, "<=" => CompareValues(left, right) <= 0, _ => throw new InvalidDataException($"ASSERT 比较方式无效: {comparator}") }; }
-    private static object? JsonValue(JsonElement value) => value.ValueKind switch { JsonValueKind.String => value.GetString(), JsonValueKind.Number when value.TryGetInt64(out var integer) => integer, JsonValueKind.Number => value.GetDouble(), JsonValueKind.True => true, JsonValueKind.False => false, JsonValueKind.Null => null, _ => value.GetRawText() };
-    private static object? NumberOrText(object? value) => double.TryParse(value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) ? number : value?.ToString() ?? "";
-    private static double Number(object? value) => double.TryParse(value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) ? number : throw new InvalidDataException($"值不是数字: {value}");
-    private static int CompareValues(object? left, object? right) => left is double l && right is double r ? l.CompareTo(r) : string.CompareOrdinal(left?.ToString(), right?.ToString());
-    private Dictionary<string, object?> MergeValues() { var values = new Dictionary<string, object?>(_variables, StringComparer.OrdinalIgnoreCase); foreach (var pair in _channels) values[pair.Key] = pair.Value; return values; }
-    private static Dictionary<string, object?> CreateVariables(SequenceDefinition sequence, IReadOnlyDictionary<string, object?>? overrides)
+    private bool Compare(object? actual, object? expected, string comparator, SequenceStep step) => SequenceValueOperations.Compare(
+        actual, expected, comparator, StringValue(step, "array_mode", "ALL"), Resolve(Value(step, "minimum")), Resolve(Value(step, "maximum")),
+        comparator is "ABS_TOL" or "REL_TOL" ? SequenceValueOperations.Number(Resolve(Value(step, "tolerance"))) : 0);
+    private static object? JsonValue(JsonElement value) => SequenceValueOperations.Unwrap(value);
+
+    private Dictionary<string, object?> MergeValues()
     {
-        var values = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-        if (overrides is not null)
-            foreach (var key in overrides.Keys)
-                if (!sequence.Variables.Any(variable => variable.Name.Equals(key, StringComparison.OrdinalIgnoreCase) && variable.Scope == "parameter"))
-                    throw new InvalidDataException($"未声明的运行参数: {key}");
-        foreach (var variable in sequence.Variables)
-        {
-            var raw = overrides is not null && overrides.TryGetValue(variable.Name, out var overrideValue) ? overrideValue : variable.Default is { } value ? JsonValue(value) : null;
-            if (raw is null) throw new InvalidDataException($"运行参数缺少值: {variable.Name}");
-            values[variable.Name] = raw;
-        }
+        var values = new Dictionary<string, object?>(_gateway.Snapshot(), StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in _channels) values[pair.Key] = pair.Value;
+        foreach (var pair in _station.Values) { values["Station." + pair.Key] = pair.Value; values[pair.Key] = pair.Value; }
+        foreach (var pair in _globals.Values) { values["Globals." + pair.Key] = pair.Value; values[pair.Key] = pair.Value; }
+        if (_frames.Count > 0)
+            foreach (var pair in _variables) { values[pair.Key] = pair.Value; values["Locals." + pair.Key] = pair.Value; }
         return values;
+    }
+
+    private IReadOnlyList<SequenceDefinition> ResolveLibrary(SequenceDefinition root)
+    {
+        var library = new Dictionary<string, SequenceDefinition>(StringComparer.OrdinalIgnoreCase);
+        void Visit(SequenceDefinition sequence)
+        {
+            if (library.ContainsKey(sequence.Id)) return;
+            if (library.Count >= 1024) throw new InvalidDataException("序列调用库超过 1024 个序列");
+            library.Add(sequence.Id, sequence);
+            foreach (var step in SequenceEditor.Walk(sequence).Where(s => s.Kind == "call_sequence"))
+                if (_sequenceResolver?.Invoke(StringValue(step, "sequence_id", "")) is { } target) Visit(target);
+        }
+        Visit(root);
+        return library.Values.ToArray();
+    }
+
+    private async Task<bool> ExecuteCleanupAsync(SequenceDefinition sequence, HashSet<string> stack)
+    {
+        var saved = _deadlines.ToArray(); _deadlines.Clear();
+        _frames.Peek().Flow = Flow.None;
+        try { return await ExecuteListAsync(sequence.CleanupSteps, "Cleanup", CancellationToken.None, sequence.Id, stack); }
+        finally { _deadlines.Clear(); _deadlines.AddRange(saved); }
+    }
+
+    private async Task CheckpointAsync(CancellationToken token)
+    {
+        await _pauseGate.WaitAsync(token);
+        token.ThrowIfCancellationRequested();
+        CheckDeadline();
+    }
+
+    private void CheckDeadline()
+    {
+        if (_deadlines.Any(deadline => _executionClock.Elapsed >= deadline)) throw new TimeoutException("步骤执行超时");
+    }
+
+    private void ExecuteExpressions(string source)
+    {
+        foreach (var assignment in SequenceExpressionProgram.Parse(source))
+        {
+            CheckDeadline();
+            AssignVariable(assignment.Target, SequenceExpression.EvaluateValue(assignment.Expression, MergeValues()));
+        }
+    }
+
+    private void AssignVariable(string name, object? value)
+    {
+        if (name.StartsWith("Globals.", StringComparison.OrdinalIgnoreCase)) _globals.Assign(name[8..], value);
+        else if (name.StartsWith("Station.", StringComparison.OrdinalIgnoreCase)) _station.Assign(name[8..], value);
+        else _frames.Peek().Variables.Assign(name.StartsWith("Locals.", StringComparison.OrdinalIgnoreCase) ? name[7..] : name, value);
+    }
+
+    private bool RunSignals(SequenceStep step, bool read)
+    {
+        var rows = SequenceSignalOperation.Read(step.Params["signals"]);
+        foreach (var row in rows) row.Validate(read);
+        var passed = true;
+        foreach (var row in rows)
+        {
+            CheckDeadline();
+            if (!read)
+            {
+                var value = SequenceValueOperations.ReadInput(row.Value, row.DataType, row.Mode, MergeValues());
+                _gateway.Write(row.ChannelId, value); StoreChannel(row.ChannelId, value); continue;
+            }
+            var actual = SequenceValueOperations.ConvertTo(_gateway.Read(row.ChannelId), row.DataType);
+            StoreChannel(row.ChannelId, actual);
+            if (!string.IsNullOrWhiteSpace(row.Value)) AssignVariable(row.Value.Trim(), actual);
+            if (row.Comparator == "NONE") continue;
+            var values = MergeValues();
+            var range = row.Comparator is "IN_RANGE" or "OUTSIDE_RANGE";
+            var result = SequenceValueOperations.Compare(actual, range ? null : row.RuleInput(row.Expected, values), row.Comparator, row.ArrayMode,
+                range ? row.RuleInput(row.Minimum, values) : null, range ? row.RuleInput(row.Maximum, values) : null,
+                row.Comparator is "ABS_TOL" or "REL_TOL" ? SequenceValueOperations.Number(row.Mode == "expression"
+                    ? SequenceExpression.EvaluateValue(row.Tolerance, values) : row.Tolerance) : 0);
+            if (!result) { passed = false; Log("ERROR", $"读取判定失败: {row.ChannelId}"); }
+        }
+        return passed;
+    }
+
+    private void ApplyAction(string action)
+    {
+        if (action == "GOTO_CLEANUP") _frames.Peek().Flow = Flow.Cleanup;
+        else if (action == "STOP") { _frames.Peek().Flow = Flow.Stop; _stopBody = true; }
+    }
+
+    private void SetLoopFlow(Flow flow)
+    {
+        if (_frames.Peek().LoopDepth == 0) throw new InvalidDataException("BREAK/CONTINUE 只能用于当前序列的循环");
+        _frames.Peek().Flow = flow;
+    }
+
+    private bool EndIteration()
+    {
+        var flow = _frames.Peek().Flow;
+        if (flow is Flow.Break or Flow.Continue) _frames.Peek().Flow = Flow.None;
+        return _stopBody || flow is Flow.Break or Flow.Stop or Flow.Cleanup;
+    }
+
+    private enum Flow { None, Break, Continue, Stop, Cleanup }
+    private sealed class ExecutionFrame(SequenceVariableScope variables)
+    {
+        public SequenceVariableScope Variables { get; } = variables;
+        public Flow Flow { get; set; }
+        public int LoopDepth { get; set; }
     }
 }
 

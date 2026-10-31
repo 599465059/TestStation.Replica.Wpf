@@ -11,4 +11,6 @@ public static class ExecutionProtocol
     public const string Completed = "run_completed";
     public const string Finished = "run_finished";
     public const string Error = "error";
+    public const string ChannelRequest = "channel_request";
+    public const string ChannelResponse = "channel_response";
 }

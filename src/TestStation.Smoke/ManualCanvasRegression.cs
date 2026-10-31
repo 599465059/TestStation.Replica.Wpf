@@ -50,7 +50,7 @@ internal static class ManualCanvasRegression
     {
         var editing = new ManualCanvasEditingService();
         var documentService = new ManualCanvasDocumentService();
-        return new(new(editing, new ManualCanvasRepository(editing), documentService), theme: theme);
+        return new(new(editing, new ManualCanvasRepository(editing), documentService), new ManualPluginViewRegistry(), new SimulatedChannelRuntimeCoordinator(new SimulatedPluginChannelProvider()));
     }
     public static void VerifyModel()
     {
@@ -112,9 +112,9 @@ internal static class ManualCanvasRegression
         var editing = new ManualCanvasEditingService();
         var workspaceModel = new ManualWorkspaceViewModel(editing, new ManualCanvasRepository(editing), new ManualCanvasDocumentService(), new ManualWorkspaceRepository(), new WorkspaceDialogs());
         var configuration = new ManualWidgetConfigurationAdapter();
-        var workspaceView = new ManualWorkspaceView(workspaceModel, new ManualInstrumentFactory(configuration), configuration);
+        var workspaceView = new ManualWorkspaceView(workspaceModel, new ManualInstrumentFactory(configuration), configuration, new ManualPluginViewRegistry(), new SimulatedChannelRuntimeCoordinator(new SimulatedPluginChannelProvider()));
         var window = new MainWindow(main, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), ProtocolUiRegression.Create().Pages, new DiscardProtocolDialog(), CreateView(), null, workspaceView);
+            new ControlPreviewView(new ControlPreviewViewModel(), theme), new ProtocolDialogService(), CreateView());
         try
         {
             window.Show(); window.Activate(); Pump();
@@ -148,7 +148,7 @@ internal static class ManualCanvasRegression
         main.CreateProject(Path.Combine(Path.GetTempPath(), "canvas-ui", Guid.NewGuid().ToString("N")), "canvas");
         var view = CreateView(theme);
         var window = new MainWindow(main, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), ProtocolUiRegression.Create().Pages, new DiscardProtocolDialog(), view) { WindowState = WindowState.Maximized };
+            new ControlPreviewView(new ControlPreviewViewModel(), theme), new ProtocolDialogService(), view) { WindowState = WindowState.Maximized };
         try
         {
             window.Show(); window.Activate(); Pump();

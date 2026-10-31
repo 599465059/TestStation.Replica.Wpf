@@ -21,10 +21,11 @@ public partial class MainWindow : Window
     private readonly IThemeService _themeService;
     private readonly ControlPreviewView _controlPreview;
     private readonly IAppDialogService _dialogs;
+    private readonly TestStation.Application.Devices.ItechPowerSupply.IPowerSupplyDeviceService? _powerSupplies;
     private readonly ManualTestView _manualTest;
+    private readonly DeviceTestingView? _deviceTesting;
     private readonly CanTestView? _canTest;
     private readonly RunHistoryView? _runHistory;
-    private readonly ManualWorkspaceView? _manualWorkspace;
     private readonly ISequenceInteractionService _sequenceInteractions;
     private SequenceWorkspace? _sequenceView;
     private SequenceWorkspace SequenceView
@@ -49,16 +50,16 @@ public partial class MainWindow : Window
     private bool _closeAllowed;
     private bool _leaving;
 
-    public MainWindow(MainViewModel viewModel, IThemeService themeService, ISequenceInteractionService interactions, ControlPreviewView controlPreview, IAppDialogService dialogs, ManualTestView manualTest, Views.ResourceManagementView? resourceManagement = null, ManualWorkspaceView? manualWorkspace = null, CanTestView? canTest = null, RunHistoryView? runHistory = null)
+    public MainWindow(MainViewModel viewModel, IThemeService themeService, ISequenceInteractionService interactions, ControlPreviewView controlPreview, IAppDialogService dialogs, ManualTestView manualTest, Views.ResourceManagementView? resourceManagement = null, CanTestView? canTest = null, RunHistoryView? runHistory = null, PluginManagementView? pluginManagement = null, DeviceTestingView? deviceTesting = null, TestStation.Application.Devices.ItechPowerSupply.IPowerSupplyDeviceService? powerSupplies = null)
     {
-        _viewModel = viewModel;
+        _viewModel = viewModel; _powerSupplies = powerSupplies;
         _themeService = themeService;
         _controlPreview = controlPreview;
         _dialogs = dialogs;
         _manualTest = manualTest;
+        _deviceTesting = deviceTesting;
         _canTest = canTest;
         _runHistory = runHistory;
-        _manualWorkspace = manualWorkspace;
         _sequenceInteractions = interactions;
         _resourceManagement = resourceManagement;
         _themeService.Apply(_themeService.CurrentMode, _themeService.CurrentAccent);
@@ -74,10 +75,12 @@ public partial class MainWindow : Window
         DataContext = _viewModel;
         _viewModel.IsDarkTheme = _themeService.CurrentMode == AppThemeMode.Dark;
         _themeService.Changed += OnThemeChanged;
-        Closed += (_, _) => _themeService.Changed -= OnThemeChanged;
+        Closed += (_, _) => { _themeService.Changed -= OnThemeChanged; _deviceTesting?.Dispose(); _manualTest.Dispose(); };
         Closing += OnWindowClosing;
-        ManualTestHost.Content = (object?)_manualWorkspace ?? _manualTest;
-        _viewModel.RegisterProjectSaveParticipant(_manualWorkspace is null ? _manualTest.Model : _manualWorkspace.Model);
+        ManualTestHost.Content = _manualTest;
+        PluginManagementHost.Content = pluginManagement;
+        DeviceTestingHost.Content = deviceTesting;
+        _viewModel.RegisterProjectSaveParticipant(_manualTest.Model);
         if (_canTest is not null) _viewModel.RegisterProjectSaveParticipant(_canTest.Model);
         if (_resourceManagement?.DataContext is ResourceManagementViewModel resourceModel)
             _viewModel.RegisterProjectSaveParticipant(resourceModel);
@@ -135,8 +138,11 @@ public partial class MainWindow : Window
         _leaving = true;
         try
         {
-            var manualReady = _manualWorkspace is null ? _manualTest.Model.Flush() : await _manualWorkspace.Model.PrepareToLeaveAsync();
-            return manualReady && await _viewModel.PrepareToLeaveAsync();
+            if (_deviceTesting is not null && !await _deviceTesting.PrepareToLeaveAsync()) return false;
+            var manualReady = _manualTest.Model.Flush();
+            if (!manualReady || !await _viewModel.PrepareToLeaveAsync()) return false;
+            if (_powerSupplies is not null) await _powerSupplies.DisconnectAsync();
+            return true;
         }
         finally { _leaving = false; }
     }
@@ -158,8 +164,7 @@ public partial class MainWindow : Window
 
     private void EnterWorkspace()
     {
-        if (_manualWorkspace is not null) _manualWorkspace.Model.OpenProject(_viewModel.ProjectPath!);
-        else _manualTest.Model.OpenProject(_viewModel.ProjectPath!);
+        _manualTest.Model.OpenProject(_viewModel.ProjectPath!);
         if (_resourceManagement?.DataContext is ViewModels.ResourceManagementViewModel resources)
             resources.OpenProject(_viewModel.ProjectPath!);
         _runHistory?.OpenProject(_viewModel.ProjectPath!);
@@ -171,11 +176,14 @@ public partial class MainWindow : Window
 
     private void BuildNavigation()
     {
-        var testSystem = new NavigationItem { Title = "测试系统", Icon = "TestTube" };
-        testSystem.Children.Add(new NavigationItem { Title = UiText.ManualTest, Icon = "TuneVariant", Tag = "手动测试" });
-        testSystem.Children.Add(new NavigationItem { Title = UiText.AutomaticTest, Icon = "PlayCircleOutline", Tag = "自动测试" });
-
-        NavigationItems.Items.Add(testSystem);
+        NavigationItems.Items.Add(new NavigationItem { Title = UiText.ManualTest, Icon = "TuneVariant", Tag = "手动测试" });
+        NavigationItems.Items.Add(new NavigationItem { Title = UiText.AutomaticTest, Icon = "PlayCircleOutline", Tag = "自动测试" });
+        var devices = new NavigationItem { Title = UiText.DeviceTesting, Icon = "TestTube" };
+        devices.Children.Add(new NavigationItem { Title = UiText.PluginManagement, Icon = "CogOutline", Tag = "设备管理" });
+        if (_deviceTesting is not null)
+            foreach (var family in _deviceTesting.Families)
+                devices.Children.Add(new NavigationItem { Title = family.Name, Icon = "Devices", Tag = "device:" + family.Id });
+        NavigationItems.Items.Add(devices);
     }
 
     private void Navigation_ItemInvoked(object? sender, NavigationItem item)
@@ -188,8 +196,9 @@ public partial class MainWindow : Window
         if (sender is MenuItem { Tag: string page }) ShowPage(page);
     }
 
-    private void ShowPage(string page)
+    private async void ShowPage(string page)
     {
+        if (_deviceTesting is not null && DeviceTestingHost.Visibility == Visibility.Visible && !await _deviceTesting.PrepareToLeaveAsync()) return;
         if (!_viewModel.IsProjectOpen && page != "控件预览")
         {
             _viewModel.Status = "请先打开或创建工程";
@@ -204,18 +213,21 @@ public partial class MainWindow : Window
 
         StartupView.Visibility = Visibility.Collapsed;
         WorkspaceView.Visibility = Visibility.Visible;
+        var deviceFamily = page.StartsWith("device:", StringComparison.Ordinal) ? page[7..] : null;
         _viewModel.CurrentPage = page;
         OverviewView.Visibility = page == "工程概览" ? Visibility.Visible : Visibility.Collapsed;
         if (page == "自动测试") _ = SequenceView;
         SequenceHost.Visibility = page == "自动测试" ? Visibility.Visible : Visibility.Collapsed;
         if (page == "手动测试")
         {
-            if (_manualWorkspace is not null) _manualWorkspace.Model.OpenProject(_viewModel.ProjectPath!);
-            else _manualTest.Model.OpenProject(_viewModel.ProjectPath!);
+            _manualTest.Model.OpenProject(_viewModel.ProjectPath!);
         }
         if (page == "CAN测试" && _canTest is not null) _canTest.OpenProject(_viewModel.ProjectPath!);
         if (page == "运行记录" && _runHistory is not null) { _runHistory.OpenProject(_viewModel.ProjectPath!); RunHistoryHost.Content = _runHistory; }
         ManualTestHost.Visibility = page == "手动测试" ? Visibility.Visible : Visibility.Collapsed;
+        PluginManagementHost.Visibility = page is "设备管理" or "插件管理" ? Visibility.Visible : Visibility.Collapsed;
+        DeviceTestingHost.Visibility = deviceFamily is not null ? Visibility.Visible : Visibility.Collapsed;
+        if (deviceFamily is not null) _deviceTesting?.ShowFamily(deviceFamily);
         CanTestHost.Content = page == "CAN测试" ? _canTest : null;
         CanTestHost.Visibility = page == "CAN测试" && _canTest is not null ? Visibility.Visible : Visibility.Collapsed;
         RunHistoryHost.Visibility = page == "运行记录" && _runHistory is not null ? Visibility.Visible : Visibility.Collapsed;
@@ -223,7 +235,7 @@ public partial class MainWindow : Window
         ResourceHost.Visibility = page == "设备配置" && _resourceManagement is not null ? Visibility.Visible : Visibility.Collapsed;
         ProtocolHost.Content = null;
         ProtocolHost.Visibility = Visibility.Collapsed;
-        PlaceholderView.Visibility = page is not ("工程概览" or "自动测试" or "控件预览" or "手动测试" or "CAN测试" or "设备配置" or "运行记录") ? Visibility.Visible : Visibility.Collapsed;
+        PlaceholderView.Visibility = deviceFamily is null && page is not ("工程概览" or "自动测试" or "控件预览" or "手动测试" or "设备管理" or "插件管理" or "CAN测试" or "设备配置" or "运行记录") ? Visibility.Visible : Visibility.Collapsed;
         // Detach the preview on navigation so library popups and subscriptions
         // receive Unloaded. Its view model retains the sample values.
         ControlPreviewHost.Content = page == "控件预览" ? _controlPreview : null;

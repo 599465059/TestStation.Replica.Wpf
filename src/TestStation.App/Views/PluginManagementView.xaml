@@ -1,0 +1,33 @@
+<UserControl x:Class="TestStation.App.Views.PluginManagementView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:text="clr-namespace:TestStation.App.Localization"
+ xmlns:converters="clr-namespace:TestStation.App.Converters"
+ Background="{DynamicResource ContentBrush}" Foreground="{DynamicResource TextBrush}">
+ <UserControl.Resources><converters:ResourceBrushConverter x:Key="StateBrush"/></UserControl.Resources>
+ <Grid Margin="18">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <StackPanel Margin="0,0,0,16">
+   <TextBlock Text="{x:Static text:UiText.PluginManagement}" FontSize="18" FontWeight="SemiBold"/>
+   <TextBlock Text="{x:Static text:UiText.PluginManagementHint}" TextWrapping="Wrap" Margin="0,6,0,12" Foreground="{DynamicResource MutedBrush}"/>
+   <StackPanel Orientation="Horizontal">
+    <Button Content="{x:Static text:UiText.PluginEnable}" Command="{Binding EnablePluginCommand}" Margin="0,0,8,0"/>
+    <Button Content="{x:Static text:UiText.PluginDisable}" Command="{Binding DisablePluginCommand}"/>
+   </StackPanel>
+  </StackPanel>
+  <DataGrid Grid.Row="1" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" AutoGenerateColumns="False"
+   CanUserAddRows="False" IsReadOnly="True" CanUserResizeColumns="True" SelectionMode="Single" SelectionUnit="FullRow">
+   <DataGrid.Columns>
+    <DataGridTextColumn Header="{x:Static text:UiText.Name}" Binding="{Binding Name}" Width="2*" MinWidth="200"/>
+    <DataGridTextColumn Header="{x:Static text:UiText.PluginId}" Binding="{Binding Id}" Width="2*" MinWidth="220"/>
+    <DataGridTextColumn Header="{x:Static text:UiText.PluginVersion}" Binding="{Binding Version}" Width="100"/>
+    <DataGridTemplateColumn Header="{x:Static text:UiText.Status}" Width="110">
+     <DataGridTemplateColumn.CellTemplate><DataTemplate>
+      <TextBlock Text="{Binding State}" Foreground="{Binding StateBrush, Converter={StaticResource StateBrush}}" VerticalAlignment="Center" Margin="6,0"/>
+     </DataTemplate></DataGridTemplateColumn.CellTemplate>
+    </DataGridTemplateColumn>
+   </DataGrid.Columns>
+  </DataGrid>
+  <TextBlock Grid.Row="2" Text="{Binding Status}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+ </Grid>
+</UserControl>

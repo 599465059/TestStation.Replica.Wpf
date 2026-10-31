@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "pcan",
+  "displayName": "PEAK PCAN-Basic",
+  "loadMode": "bundled",
+  "library": "x64/PCANBasic.dll",
+  "installedNames": [ "PCANBasic.dll" ],
+  "searchPaths": []
+}

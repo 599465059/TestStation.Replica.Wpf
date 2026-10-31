@@ -36,6 +36,31 @@ public sealed class HostExecutionContext
     internal IReadOnlyDictionary<string, object?> FinalValues { get; private set; } = new Dictionary<string, object?>();
     internal Dictionary<string, object?> Channels { get; } = new(StringComparer.OrdinalIgnoreCase);
     internal Dictionary<string, object?> SimulationValues { get; } = new(StringComparer.OrdinalIgnoreCase);
+    internal HashSet<string> ExternalChannels { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    internal IReadOnlyDictionary<string, string> ExternalChannelTypes { get; init; } = new Dictionary<string, string>();
+    internal HostChannelAccess? ChannelAccess { get; init; }
+
+    internal object? ReadSignal(string channel)
+    {
+        if (ExternalChannels.Contains(channel))
+        {
+            var access = ChannelAccess ?? throw new IOException("设备访问服务未连接");
+            return JsonValue(access.RequestAsync(RunId, channel, false, null,
+                _cleanupDepth > 0 ? CancellationToken.None : _cancellation).GetAwaiter().GetResult());
+        }
+        return SimulationValues.TryGetValue(channel, out var value) ? value : throw new InvalidDataException($"模拟通道未配置: {channel}");
+    }
+
+    internal void WriteSignal(string channel, object? value)
+    {
+        if (ExternalChannels.Contains(channel))
+        {
+            var access = ChannelAccess ?? throw new IOException("设备访问服务未连接");
+            access.RequestAsync(RunId, channel, true, value,
+                _cleanupDepth > 0 ? CancellationToken.None : _cancellation).GetAwaiter().GetResult();
+        }
+        else SimulationValues[channel] = value;
+    }
     internal Dictionary<string, object?> Globals { get; } = new(StringComparer.OrdinalIgnoreCase);
     internal Dictionary<string, object?> Station { get; } = new(StringComparer.OrdinalIgnoreCase);
     internal Dictionary<string, string> GlobalTypes { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -99,8 +124,8 @@ public sealed class HostExecutionContext
     {
         var values = new Dictionary<string, object?>(SimulationValues, StringComparer.OrdinalIgnoreCase);
         foreach (var pair in Channels) values[pair.Key] = pair.Value;
-        foreach (var pair in Globals) values["Globals." + pair.Key] = pair.Value;
-        foreach (var pair in Station) values["Station." + pair.Key] = pair.Value;
+        foreach (var pair in Station) { values["Station." + pair.Key] = pair.Value; values[pair.Key] = pair.Value; }
+        foreach (var pair in Globals) { values["Globals." + pair.Key] = pair.Value; values[pair.Key] = pair.Value; }
         foreach (var pair in Frame.Variables) values["Locals." + pair.Key] = pair.Value;
         foreach (var pair in Frame.Variables) values[pair.Key] = pair.Value;
         return values;

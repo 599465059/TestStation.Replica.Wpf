@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "ni-xnet",
+  "displayName": "NI-XNET",
+  "loadMode": "installed",
+  "library": "nixnet.dll",
+  "installedNames": [
+    "nixnet.dll"
+  ],
+  "searchPaths": [
+    "%ProgramFiles%/National Instruments/NI-XNET/bin/{arch}",
+    "%ProgramFiles(x86)%/National Instruments/NI-XNET/bin/{arch}"
+  ]
+}

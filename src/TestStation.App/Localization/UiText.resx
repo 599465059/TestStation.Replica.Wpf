@@ -1015,4 +1015,24 @@
   <data name="ManualCascade" xml:space="preserve"><value>层叠</value></data>
   <data name="ManualTabbedView" xml:space="preserve"><value>切换为标签视图</value></data>
   <data name="ManualWindowView" xml:space="preserve"><value>切换为窗口视图</value></data>
+  <data name="PluginManagement" xml:space="preserve"><value>设备管理</value></data>
+  <data name="PluginManagementHint" xml:space="preserve"><value>管理内置设备家族的启用状态。</value></data>
+  <data name="PluginEnable" xml:space="preserve"><value>启用设备</value></data>
+  <data name="PluginDisable" xml:space="preserve"><value>禁用设备</value></data>
+  <data name="PluginId" xml:space="preserve"><value>设备家族标识</value></data>
+  <data name="PluginVersion" xml:space="preserve"><value>版本</value></data>
+  <data name="PluginEnabled" xml:space="preserve"><value>已启用</value></data>
+  <data name="PluginDisabled" xml:space="preserve"><value>已禁用</value></data>
+  <data name="PluginBusy" xml:space="preserve"><value>自动测试运行中，暂不可变更设备状态。</value></data>
+  <data name="PluginStateChanged" xml:space="preserve"><value>{0}：{1}。手动界面和通道列表已同步。</value></data>
+  <data name="ManualPluginHint" xml:space="preserve"><value>选择设备标签，或平铺查看多个设备。</value></data>
+  <data name="ManualPluginEmpty" xml:space="preserve"><value>没有已启用的手动设备界面</value></data>
+  <data name="ManualPluginEmptyHint" xml:space="preserve"><value>可从顶部添加设备界面；设备已禁用时，请进入“设备测试 → 设备管理”启用。</value></data>
+  <data name="ManualPluginTabs" xml:space="preserve"><value>标签查看</value></data>
+  <data name="ManualPluginTile" xml:space="preserve"><value>平铺查看</value></data>
+  <data name="ManualAddDevice" xml:space="preserve"><value>添加设备界面</value></data>
+  <data name="ManualPluginLoadFailed" xml:space="preserve"><value>设备界面加载失败：{0}</value></data>
+  <data name="DeviceTesting" xml:space="preserve"><value>设备测试</value></data>
+  <data name="DeviceFamilyUnavailable" xml:space="preserve"><value>设备家族未启用。请在“设备测试 → 设备管理”中启用。</value></data>
+  <data name="DeviceChannelUnavailable" xml:space="preserve"><value>设备通道不可用：{0}。请检查设备是否启用，以及当前型号是否支持该通道。</value></data>
 </root>

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "tosun",
+  "displayName": "同星 TOSUN",
+  "loadMode": "bundled",
+  "library": "x64/libTSCAN.dll",
+  "installedNames": [
+    "libTSCAN.dll"
+  ],
+  "searchPaths": []
+}

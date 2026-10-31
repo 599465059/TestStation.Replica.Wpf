@@ -40,7 +40,8 @@ internal static class DriverRegression
         };
         var repository = new ResourceCatalogRepository(); repository.Save(workspace.Root, catalog);
         var catalogService = new ResourceCatalogService(repository); catalogService.OpenProject(workspace.Root);
-        var channels = new SimulatedChannelService(catalogService, new SimulatedDeviceDriverFactory());
+        var channels = new SimulatedChannelService(catalogService,
+            new LegacyDeviceDriverFactoryAdapter(new SimulatedDeviceDriverFactory()));
         var updates = 0; channels.ValueUpdated += (_, _) => updates++;
         await channels.WriteAsync("supply", "voltage", 12.5);
         var reading = await channels.ReadAsync("supply", "voltage");

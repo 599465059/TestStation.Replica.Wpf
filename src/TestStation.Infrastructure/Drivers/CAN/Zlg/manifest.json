@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "zlg",
+  "displayName": "ZLG CAN",
+  "loadMode": "bundled",
+  "library": "x64/zlgcan.dll",
+  "installedNames": [
+    "zlgcan.dll"
+  ],
+  "searchPaths": [
+    "x64"
+  ]
+}

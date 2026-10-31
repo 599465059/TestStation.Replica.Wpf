@@ -63,7 +63,16 @@
                     <DataGrid.Columns><DataGridTextColumn Header="{x:Static text:UiText.Name}" Binding="{Binding Name,UpdateSourceTrigger=PropertyChanged}" Width="*" MinWidth="110" ElementStyle="{StaticResource AppDataGridTextStyle}"/><DataGridTextColumn Header="{x:Static text:UiText.Unit}" Binding="{Binding Unit,UpdateSourceTrigger=PropertyChanged}" Width="75" MinWidth="55" ElementStyle="{StaticResource AppDataGridTextStyle}"/><DataGridTextColumn Header="{x:Static text:UiText.Access}" Binding="{Binding Access,UpdateSourceTrigger=PropertyChanged}" Width="95" MinWidth="80" ElementStyle="{StaticResource AppDataGridTextStyle}"/><DataGridTextColumn Header="{x:Static text:UiText.Polling}" Binding="{Binding Polling.Mode,UpdateSourceTrigger=PropertyChanged}" Width="85" MinWidth="70" ElementStyle="{StaticResource AppDataGridTextStyle}"/><DataGridTextColumn Header="{x:Static text:UiText.PollingPeriod}" Binding="{Binding Polling.IntervalMs,UpdateSourceTrigger=PropertyChanged}" Width="90" MinWidth="80" ElementStyle="{StaticResource AppDataGridTextStyle}"/></DataGrid.Columns>
                 </DataGrid>
                 <Border Grid.Row="2" Background="{DynamicResource SubtleBrush}" Padding="12" Margin="0,10,0,0">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="{x:Static text:UiText.Device}"/><TextBox Grid.Column="1" Text="{Binding SelectedDevice.Name,UpdateSourceTrigger=PropertyChanged}"/><TextBlock Grid.Column="2" Text="{x:Static text:UiText.CommunicationResource}" Margin="14,0,0,0"/><TextBox Grid.Column="3" Text="{Binding SelectedDevice.TransportId,UpdateSourceTrigger=PropertyChanged}"/></Grid>
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static text:UiText.Device}"/><TextBox Grid.Column="1" Text="{Binding SelectedDevice.Name,UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Column="2" Text="{x:Static text:UiText.CommunicationResource}" Margin="14,0,0,0"/><TextBox Grid.Column="3" Text="{Binding SelectedDevice.TransportId,UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Row="1" Text="设备家族"/><TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDevice.FamilyId,UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="型号 ID" Margin="14,0,0,0"/><TextBox Grid.Row="1" Grid.Column="3" Text="{Binding SelectedDevice.ModelId,UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Row="2" Text="设备地址"/><TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SelectedDevice.ResourceAddress,UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="协议" Margin="14,0,0,0"/><TextBox Grid.Row="2" Grid.Column="3" Text="{Binding SelectedDevice.ProtocolId,UpdateSourceTrigger=PropertyChanged}"/>
+                    </Grid>
                 </Border>
             </Grid>
         </Grid>

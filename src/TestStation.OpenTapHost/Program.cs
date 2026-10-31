@@ -6,7 +6,6 @@ using TestStation.Contracts;
 Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = new UTF8Encoding(false);
 var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-var runner = new OpenTapRunner();
 // Keep stdout reserved for the JSON-lines protocol, even if a plugin writes to Console.
 var output = Console.Out;
 Console.SetOut(Console.Error);
@@ -20,6 +19,9 @@ async Task Publish(HostEvent value)
     try { await output.WriteLineAsync(json); await output.FlushAsync(); }
     finally { outputLock.Release(); }
 }
+
+var channelAccess = new HostChannelAccess(Publish);
+var runner = new OpenTapRunner(channelAccess);
 
 async Task Execute(HostRunRequest request)
 {
@@ -36,6 +38,7 @@ while (await Console.In.ReadLineAsync() is { } line)
     {
         using var document = JsonDocument.Parse(line);
         var command = document.RootElement.TryGetProperty("command", out var value) ? value.GetString() : "run";
+        if (command == ExecutionProtocol.ChannelResponse) { channelAccess.Complete(document.RootElement); continue; }
         if (command == ExecutionProtocol.Stop) { await runner.StopAsync(); continue; }
         if (command == ExecutionProtocol.Pause) { await runner.PauseAsync(); continue; }
         if (command == ExecutionProtocol.Resume) { await runner.ResumeAsync(); continue; }

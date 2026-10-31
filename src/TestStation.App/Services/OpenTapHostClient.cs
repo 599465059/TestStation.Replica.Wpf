@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using TestStation.Application;
 using TestStation.Domain;
 using TestStation.Contracts;
+using TestStation.Application.Drivers;
 
 namespace TestStation.App.Services;
 
@@ -30,6 +31,8 @@ public sealed record OpenTapHostRun(SequenceRunResult Result, IReadOnlyList<Open
 /// <summary>One isolated Host process per run. WPF never loads OpenTAP assemblies.</summary>
 public sealed class OpenTapHostClient : ISequenceExecutionHost
 {
+    private readonly IChannelRuntimeCoordinator? _channelRuntime;
+    public OpenTapHostClient(IChannelRuntimeCoordinator? channelRuntime = null) => _channelRuntime = channelRuntime;
     private Session? _session;
     public event Action<OpenTapHostEvent>? EventReceived;
 
@@ -47,13 +50,20 @@ public sealed class OpenTapHostClient : ISequenceExecutionHost
         var started = DateTimeOffset.UtcNow;
         OpenTapHostEvent? finished = null;
         Exception? failure = null;
+        var externalRuntime = _channelRuntime as IExternalChannelRuntime;
+        var referenced = sequences.Append(sequence).SelectMany(SequenceEditor.Walk).SelectMany(step =>
+            step.Params.TryGetValue("signals", out var rows) ? SequenceSignalOperation.Read(rows).Select(row => row.ChannelId) :
+            step.Params.TryGetValue("channel_id", out var id) ? new[] { id.ToString() } : []);
+        var externalChannels = (externalRuntime?.ExternalChannelIds ?? []).Concat(referenced.Where(id => externalRuntime?.IsExternalChannel(id) == true)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var externalIds = externalChannels.ToHashSet(StringComparer.OrdinalIgnoreCase);
         try
         {
             session.Process = StartHost();
             var diagnostics = ReadDiagnosticsAsync(session);
             try
             {
-                await session.SendAsync(new { command = ExecutionProtocol.Run, protocol_version = ExecutionProtocol.Version, run_id = runId, sequence, sequences, parameters, simulation_values = simulation,
+                await session.SendAsync(new { command = ExecutionProtocol.Run, protocol_version = ExecutionProtocol.Version, run_id = runId, sequence, sequences, parameters,
+                    simulation_values = simulation.Where(p => !externalIds.Contains(p.Key)).ToDictionary(p => p.Key, p => p.Value), external_channels = externalChannels, external_channel_types = externalRuntime?.ExternalChannelTypes,
                     global_definitions = globalDefinitions ?? [], station_definitions = stationDefinitions ?? [],
                     global_values = globalValues ?? new Dictionary<string, JsonElement>(), station_values = stationValues ?? new Dictionary<string, JsonElement>() }).ConfigureAwait(false);
                 var completed = false;
@@ -65,6 +75,11 @@ public sealed class OpenTapHostClient : ISequenceExecutionHost
                     if (value.Type.Length == 0) throw new InvalidDataException("OpenTAP Host 返回无效事件");
                     if (value.RunId.Length > 0 && value.RunId != runId)
                         throw new InvalidDataException("OpenTAP Host 返回了其他运行的事件");
+                    if (value.Type == ExecutionProtocol.ChannelRequest)
+                    {
+                        await HandleChannelRequestAsync(session, value, externalIds).ConfigureAwait(false);
+                        continue;
+                    }
                     events.Add(value);
                     EventReceived?.Invoke(value);
                     if (value.Type == ExecutionProtocol.Finished) finished = value;
@@ -103,6 +118,26 @@ public sealed class OpenTapHostClient : ISequenceExecutionHost
 
     public Task PauseAsync() => SendControlAsync(ExecutionProtocol.Pause);
     public Task ResumeAsync() => SendControlAsync(ExecutionProtocol.Resume);
+
+    private async Task HandleChannelRequestAsync(Session session, OpenTapHostEvent request, HashSet<string> allowed)
+    {
+        var payload = request.Payload ?? throw new InvalidDataException("设备访问请求为空");
+        var id = payload.GetProperty("request_id").GetString() ?? throw new InvalidDataException("设备访问请求 ID 为空");
+        object? value = null; string? failure = null;
+        try
+        {
+            var channel = payload.GetProperty("channel_id").GetString() ?? "";
+            if (_channelRuntime is null || !allowed.Contains(channel)) throw new InvalidOperationException($"设备访问请求未授权：{channel}");
+            switch (payload.GetProperty("operation").GetString())
+            {
+                case "read": value = (await _channelRuntime.ReadOnceAsync(channel, "automatic").ConfigureAwait(false)).Value; break;
+                case "write": await _channelRuntime.WriteAsync(channel, payload.GetProperty("value"), "automatic").ConfigureAwait(false); break;
+                default: throw new InvalidDataException("未知的设备访问操作");
+            }
+        }
+        catch (Exception error) { failure = error.Message; }
+        await session.SendAsync(new { command = ExecutionProtocol.ChannelResponse, request_id = id, value, error = failure }).ConfigureAwait(false);
+    }
 
     private async Task SendControlAsync(string command)
     {

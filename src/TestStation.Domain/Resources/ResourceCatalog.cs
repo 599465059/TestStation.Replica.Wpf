@@ -17,6 +17,7 @@ public sealed class TransportResource
     [JsonPropertyName("type")] public string Type { get; set; } = "serial";
     [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
     [JsonPropertyName("settings")] public Dictionary<string, JsonElement> Settings { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    [JsonPropertyName("lease_mode")] public string LeaseMode { get; set; } = "exclusive";
 }
 
 public sealed class DeviceDefinition
@@ -28,6 +29,9 @@ public sealed class DeviceDefinition
     [JsonPropertyName("protocol_id")] public string ProtocolId { get; set; } = "";
     [JsonPropertyName("channels")] public List<ChannelDefinition> Channels { get; set; } = [];
     [JsonPropertyName("metadata")] public Dictionary<string, JsonElement> Metadata { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    [JsonPropertyName("family_id")] public string FamilyId { get; set; } = "";
+    [JsonPropertyName("model_id")] public string ModelId { get; set; } = "";
+    [JsonPropertyName("resource_address")] public string ResourceAddress { get; set; } = "";
 }
 
 public sealed class ChannelDefinition

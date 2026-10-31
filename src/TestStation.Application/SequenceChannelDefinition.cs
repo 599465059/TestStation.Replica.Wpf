@@ -22,3 +22,8 @@ public interface ISequenceChannelProvider
     IReadOnlyDictionary<string, System.Text.Json.JsonElement> GetDefaultValues() =>
         new Dictionary<string, System.Text.Json.JsonElement>();
 }
+
+public interface ISequenceChannelChangeSource
+{
+    event EventHandler? Changed;
+}

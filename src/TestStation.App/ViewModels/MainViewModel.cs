@@ -75,6 +75,7 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
     public IReadOnlyList<string> VariableScopes { get; } = ["local", "global", "station", "parameter"];
     public IReadOnlyList<string> FailureActions { get; } = ["STOP", "CONTINUE", "GOTO_CLEANUP"];
     public string StepOutcomeLabel => SelectedRow?.HasJudgment == true ? "失败后的动作" : "完成后的动作";
+    public bool SelectedStepHasJudgment => SelectedRow?.HasJudgment == true;
     public string StepOutcomeAction
     {
         get => SelectedRow?.HasJudgment == true ? StepOnFailure : StepOnComplete;
@@ -110,6 +111,8 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
         IChannelRuntimeCoordinator? channelRuntime = null)
     {
         _channelProviders = channelProviders?.ToArray() ?? [];
+        foreach (var provider in _channelProviders.OfType<SimulatedPluginChannelProvider>())
+            provider.Changed += (_, _) => OnUi(RefreshSignalChannels);
         _executionHost = executionHost ?? new OpenTapHostClient();
         _runPersistence = runPersistence ?? new SequenceRunPersistence();
         _workspaceService = workspaceService ?? new AutomaticWorkspaceService();

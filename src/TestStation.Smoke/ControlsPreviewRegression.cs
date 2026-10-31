@@ -126,7 +126,7 @@ internal static class ControlsPreviewRegression
     {
         var model = new MainViewModel(new AutoTestDisplayService(), new TestStation.Application.SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs());
         var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), ProtocolUiRegression.Create().Pages, new DiscardProtocolDialog(), ManualCanvasRegression.CreateView());
+            new ControlPreviewView(new ControlPreviewViewModel(), theme), new ProtocolDialogService(), ManualCanvasRegression.CreateView());
         try
         {
             window.Show(); Pump();

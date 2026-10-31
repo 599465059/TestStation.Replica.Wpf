@@ -83,6 +83,7 @@ public partial class MainViewModel
     partial void OnSelectedRowChanged(SequenceRow? oldValue, SequenceRow? newValue)
     {
         OnPropertyChanged(nameof(StepOutcomeLabel));
+        OnPropertyChanged(nameof(SelectedStepHasJudgment));
         OnPropertyChanged(nameof(StepOutcomeAction));
         var value = newValue;
         if (!_loadingEditors && oldValue?.Step is { } previous && CaptureStepEditor() != _stepBaseline)
@@ -280,6 +281,12 @@ public partial class MainViewModel
         _documentOperation = true; NotifyDocumentState();
         try
         {
+            var references = VariableReferences(variable);
+            if (references.Count > 0)
+            {
+                Status = $"无法删除变量“{variable.Name}”，仍被引用：{string.Join("、", references.Take(3))}";
+                return;
+            }
             if (!await _sequenceDialogs.ConfirmDeleteItemAsync("变量（引用该变量的步骤需相应调整）", variable.Name)) return;
             if (variable.Scope is "local" or "parameter") _document!.Edit(sequence => sequence.Variables.Remove(variable));
             else VariableOwner(variable.Scope).Remove(variable);
@@ -299,6 +306,12 @@ public partial class MainViewModel
         {
             var name = await _sequenceDialogs.RequestNameAsync("重命名变量", variable.Name);
             if (name is null) return;
+            name = name.Trim();
+            if (!name.Equals(variable.Name, StringComparison.OrdinalIgnoreCase) && VariableReferences(variable).Count > 0)
+            {
+                Status = "该变量仍被步骤引用，请先修改引用后再重命名，避免表达式失效";
+                return;
+            }
             VariableName = name;
             var update = BuildVariable(variable);
             StoreVariable(variable, update);
@@ -315,6 +328,18 @@ public partial class MainViewModel
         "station" => _stationVariables,
         _ => _sequence?.Variables ?? throw new InvalidOperationException("没有活动序列")
     };
+
+    private IReadOnlyList<string> VariableReferences(SequenceVariable variable)
+    {
+        IEnumerable<SequenceDefinition> sequences = variable.Scope switch
+        {
+            "local" or "parameter" => _sequence is null ? [] : [_sequence],
+            "global" => _activeSubproject?.Sequences ?? [],
+            "station" => SequenceSubprojects.SelectMany(project => project.Sequences).ToArray(),
+            _ => []
+        };
+        return SequenceReferenceInspector.FindVariableUses(sequences, variable.Name, variable.Scope);
+    }
 
     private void StoreVariable(SequenceVariable? previous, SequenceVariable variable)
     {

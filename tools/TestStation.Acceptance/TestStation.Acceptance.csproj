@@ -8,5 +8,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/TestStation.App/TestStation.App.csproj" />
+    <!-- The acceptance harness constructs MainViewModel directly. Keep the
+         simulated family assembly in its runtime dependency graph instead of
+         relying on App's transitive reference when launched standalone. -->
+    <ProjectReference Include="../../src/TestStation.SimulatedPlugins/TestStation.SimulatedPlugins.csproj" />
   </ItemGroup>
 </Project>

@@ -53,6 +53,7 @@
                 <MenuItem Header="{x:Static text:UiText.ToggleNavigation}" Click="ToggleNavigation_Click"/>
                 <MenuItem Header="{x:Static text:UiText.ManualTest}" Tag="手动测试" Click="NavigateMenu_Click"/>
                 <MenuItem Header="{x:Static text:UiText.AutomaticTest}" Tag="自动测试" Click="NavigateMenu_Click"/>
+                <MenuItem Header="{x:Static text:UiText.PluginManagement}" Tag="设备管理" Click="NavigateMenu_Click"/>
                 <MenuItem Header="{x:Static text:UiText.RestoreLayout}" Click="RestoreLayout_Click"/>
             </MenuItem>
             <MenuItem Header="{x:Static text:UiText.Help}" Style="{StaticResource ShellMenuItem}">
@@ -114,6 +115,8 @@
                         </StackPanel>
                     </Grid>
                     <ContentControl x:Name="ManualTestHost" Visibility="Collapsed"/>
+                    <ContentControl x:Name="PluginManagementHost" Visibility="Collapsed"/>
+                    <ContentControl x:Name="DeviceTestingHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="CanTestHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="RunHistoryHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="ResourceHost" Visibility="Collapsed"/>

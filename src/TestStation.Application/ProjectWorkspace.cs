@@ -78,6 +78,19 @@ public sealed record ProjectWorkspace(string Root, string Name)
         File.Delete(Path.Combine(Root, "sequences", id + ".tsseq"));
     }
 
+    public void TouchUpdatedAt()
+    {
+        var path = Path.Combine(Root, "project.json");
+        if (!File.Exists(path)) return;
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var values = document.RootElement.EnumerateObject()
+            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.OrdinalIgnoreCase);
+        values["updated_at"] = JsonSerializer.SerializeToElement(DateTimeOffset.UtcNow.ToString("O"));
+        var temporary = path + ".tmp";
+        File.WriteAllText(temporary, JsonSerializer.Serialize(values, JsonOptions));
+        File.Move(temporary, path, true);
+    }
+
     private static SequenceDefinition? ReadSequence(string path)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(path));

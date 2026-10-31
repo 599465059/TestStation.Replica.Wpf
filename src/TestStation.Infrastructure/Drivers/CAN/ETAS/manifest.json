@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "etas",
+  "displayName": "ETAS BOA",
+  "loadMode": "installed",
+  "library": "dll-ocdProxy.dll",
+  "installedNames": [
+    "dll-ocdProxy.dll",
+    "dll-csiBind.dll"
+  ],
+  "searchPaths": [
+    "%ProgramFiles%/ETAS/BOA_V2/Bin/{arch}/Dll/Framework"
+  ]
+}

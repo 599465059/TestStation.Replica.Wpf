@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+ <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+ <resheader name="version"><value>2.0</value></resheader>
+ <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+ <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+ <data name="Model" xml:space="preserve"><value>型号</value></data>
+ <data name="DeviceModel" xml:space="preserve"><value>设备型号</value></data>
+ <data name="ModelChangeBusy" xml:space="preserve"><value>自动测试期间不能切换设备型号</value></data>
+ <data name="FamilyMissing" xml:space="preserve"><value>设备家族不存在：{0}</value></data>
+ <data name="ModelMissing" xml:space="preserve"><value>设备型号不存在：{0}</value></data>
+ <data name="PsuStandard" xml:space="preserve"><value>公共 SCPI 电源（TCP）</value></data>
+ <data name="ScpiPowerSupply" xml:space="preserve"><value>SCPI 直流电源</value></data>
+ <data name="ScpiHost" xml:space="preserve"><value>SCPI 主机地址</value></data>
+ <data name="ScpiPort" xml:space="preserve"><value>SCPI 端口</value></data>
+ <data name="Connect" xml:space="preserve"><value>连接</value></data>
+ <data name="Disconnect" xml:space="preserve"><value>断开</value></data>
+ <data name="Disconnected" xml:space="preserve"><value>未连接</value></data>
+ <data name="ScpiUnavailable" xml:space="preserve"><value>SCPI 通信服务不可用</value></data>
+ <data name="ScpiPortInvalid" xml:space="preserve"><value>端口必须在 1～65535 之间</value></data>
+ <data name="PsuVoltage" xml:space="preserve"><value>PSU-V（模拟）</value></data>
+ <data name="LoadStandard" xml:space="preserve"><value>LOAD-S（模拟）</value></data>
+ <data name="LoadCurrent" xml:space="preserve"><value>LOAD-I（模拟）</value></data>
+ <data name="DmmStandard" xml:space="preserve"><value>DMM-S（模拟）</value></data>
+ <data name="DmmVoltage" xml:space="preserve"><value>DMM-V（模拟）</value></data>
+</root>
