@@ -3,11 +3,17 @@ using System.Text;
 
 namespace TestStation.Infrastructure.Transports.Can.Pcan;
 
-// Minimal declarations for the public PCAN-Basic C ABI; no third-party wrapper or binary is bundled.
+// Minimal declarations for the public PCAN-Basic C ABI; library deployment is managed by the CAN manifest.
 internal static class PcanNative
 {
     static PcanNative() => CanNativeLibraryLoader.InstallPcanResolver();
     private const string Library = "PCANBasic.dll";
+    // PCAN-Basic GetValue/SetValue parameter identifiers. Keep these named;
+    // CHANNEL_CONDITION is 0x0D; HARDWARE_NAME is 0x0E.
+    internal const byte ListenOnly = 8;
+    internal const byte ChannelCondition = 0x0D;
+    internal const byte AttachedChannelsCount = 42;
+    internal const byte AttachedChannels = 43;
     internal const uint QueueEmpty = 0x20;
     [StructLayout(LayoutKind.Sequential)]
     internal struct Message

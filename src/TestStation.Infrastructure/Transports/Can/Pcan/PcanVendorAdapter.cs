@@ -47,12 +47,12 @@ public sealed class PcanVendorAdapter : ICanVendorAdapter, ICanHardwareDiscovery
 
     public IReadOnlyList<CanHardwareChannel> Enumerate() => WithRuntime(() =>
     {
-        PcanNative.Check(PcanNative.GetUInt(0, 42, out var count, 4), "枚举通道数量");
+        PcanNative.Check(PcanNative.GetUInt(0, PcanNative.AttachedChannelsCount, out var count, 4), "枚举通道数量");
         if (count == 0) return (IReadOnlyList<CanHardwareChannel>)Array.Empty<CanHardwareChannel>();
         if (count > 1024) throw new InvalidDataException("PCAN 返回的通道数量异常");
         var channels = new PcanNative.ChannelInfo[count];
-        PcanNative.Check(PcanNative.GetChannels(0, 43, channels, checked(count * (uint)Marshal.SizeOf<PcanNative.ChannelInfo>())), "枚举通道");
-        return channels.Select(c => new CanHardwareChannel(BackendId, $"0x{c.Handle:X4}", string.IsNullOrWhiteSpace(c.Name) ? $"PCAN 0x{c.Handle:X4}" : c.Name, c.DeviceId.ToString(CultureInfo.InvariantCulture), c.Controller, (c.Features & 1) != 0, c.Condition == 1)).ToArray();
+        PcanNative.Check(PcanNative.GetChannels(0, PcanNative.AttachedChannels, channels, checked(count * (uint)Marshal.SizeOf<PcanNative.ChannelInfo>())), "枚举通道");
+        return channels.Select(c => new CanHardwareChannel(BackendId, $"0x{c.Handle:X4}", string.IsNullOrWhiteSpace(c.Name) ? $"PCAN 0x{c.Handle:X4}" : c.Name, c.DeviceId.ToString(CultureInfo.InvariantCulture), c.Controller, (c.Features & 1) != 0, c.Condition is 1 or 3)).ToArray();
     });
 
     Task<IReadOnlyList<CanHardwareChannel>> ICanHardwareDiscovery.EnumerateAsync(string backendId, CancellationToken cancellationToken) => Task.FromResult((IReadOnlyList<CanHardwareChannel>)Enumerate());
@@ -86,15 +86,16 @@ internal sealed class PcanController : ICanController
         _handle = PcanVendorAdapter.ParseHandle(options.Channel);
         var fdTiming = options.FdEnabled ? BuildFdTiming(options.BitRate, options.DataBitRate) : null;
         var bitrate = options.FdEnabled ? (ushort)0 : ClassicBitrate(options.BitRate);
-        PcanNative.Check(PcanNative.GetUInt(_handle, 13, out var condition, 4), "查询通道状态");
-        if (condition != 1) throw new IOException($"PCAN 通道 {options.Channel} 不可用或已被占用，请关闭 PCAN-View 等占用程序");
+        PcanNative.Check(PcanNative.GetUInt(_handle, PcanNative.ChannelCondition, out var condition, 4), "查询通道状态");
+        if (condition is not (1 or 3))
+            throw new IOException($"PCAN 通道 {options.Channel} 无法连接，驱动原始状态=0x{condition:X8}（0=不可用，2=已占用；此状态不包含占用进程信息）");
         try
         {
             var result = options.FdEnabled ? PcanNative.InitializeFd(_handle, fdTiming!) : PcanNative.Initialize(_handle, bitrate, 0, 0, 0);
             PcanNative.Check(result, "初始化通道");
             _opened = true;
             uint listen = options.ListenOnly ? 1u : 0u;
-            PcanNative.Check(PcanNative.SetUInt(_handle, 8, ref listen, 4), "设置只听模式");
+            PcanNative.Check(PcanNative.SetUInt(_handle, PcanNative.ListenOnly, ref listen, 4), "设置只听模式");
         }
         catch { if (_opened) Dispose(); throw; }
     }
