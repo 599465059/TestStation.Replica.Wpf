@@ -179,8 +179,7 @@ public sealed class PcanCanBusSession : TransportSessionBase, ICanBusSession
 {
     private readonly PcanVendorAdapter _adapter;
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly object _subscriptionsSync = new();
-    private readonly List<Channel<CanFrame>> _subscriptions = [];
+    private CanFrameInbox? _inbox;
     private ICanController? _controller;
     private CancellationTokenSource? _receiveCancellation;
     private Task? _receiveTask;
@@ -196,7 +195,7 @@ public sealed class PcanCanBusSession : TransportSessionBase, ICanBusSession
             var options = new CanBusOptions("pcan", _adapter.NormalizeChannel(channel), Number(settings, "bitrate", 500000), Bool(settings, "fd_enabled"), Number(settings, "data_bitrate", 2000000), Bool(settings, "listen_only"));
             try
             {
-                _controller = _adapter.Open(options); _receiveCancellation = new CancellationTokenSource(); _receiveTask = Task.Run(() => ReceiveLoopAsync(_receiveCancellation.Token)); SetState(TransportState.Open);
+                _controller = _adapter.Open(options); _inbox = new CanFrameInbox(); _receiveCancellation = new CancellationTokenSource(); _receiveTask = Task.Run(() => ReceiveLoopAsync(_receiveCancellation.Token)); SetState(TransportState.Open);
             }
             catch { _controller?.Dispose(); _controller = null; SetState(TransportState.Faulted); throw; }
         }
@@ -204,12 +203,22 @@ public sealed class PcanCanBusSession : TransportSessionBase, ICanBusSession
     }
     public override async Task CloseAsync(CancellationToken cancellationToken = default) { await _gate.WaitAsync(cancellationToken).ConfigureAwait(false); try { await CloseCoreAsync().ConfigureAwait(false); } finally { _gate.Release(); } }
     public async Task SendAsync(CanFrame frame, CancellationToken cancellationToken = default) { await _gate.WaitAsync(cancellationToken).ConfigureAwait(false); try { (_controller ?? throw new IOException("PCAN 总线尚未打开")).Send(frame); } finally { _gate.Release(); } }
+    public async Task<CanFrame> SendAndReceiveAsync(CanFrame frame, CanFrameFilter expectedFilter, TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+        var inbox = _inbox ?? throw new IOException("PCAN 总线尚未打开");
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(timeout);
+        using var subscription = inbox.Subscribe(expectedFilter, replayExisting: false);
+        await SendAsync(frame, timeoutCancellation.Token).ConfigureAwait(false);
+        return await subscription.ReadNextAsync(timeoutCancellation.Token).ConfigureAwait(false);
+    }
+    public long DroppedFrameCount => _inbox?.DroppedFrameCount ?? 0;
     public async IAsyncEnumerable<CanFrame> ReceiveAsync(CanFrameFilter? filter = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (_controller is null) throw new IOException("PCAN 总线尚未打开");
-        var channel = Channel.CreateUnbounded<CanFrame>(); lock (_subscriptionsSync) _subscriptions.Add(channel);
-        try { await foreach (var frame in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) if (filter is null || filter.Matches(frame)) yield return frame; }
-        finally { lock (_subscriptionsSync) _subscriptions.Remove(channel); channel.Writer.TryComplete(); }
+        if (_controller is null || _inbox is null) throw new IOException("PCAN 总线尚未打开");
+        using var subscription = _inbox.Subscribe(filter, replayExisting: true);
+        await foreach (var frame in subscription.ReadAllAsync(cancellationToken).ConfigureAwait(false)) yield return frame;
     }
     private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
     {
@@ -217,18 +226,18 @@ public sealed class PcanCanBusSession : TransportSessionBase, ICanBusSession
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (_controller!.TryReceive(out var frame) && frame is not null) { Channel<CanFrame>[] subscribers; lock (_subscriptionsSync) subscribers = _subscriptions.ToArray(); foreach (var subscriber in subscribers) subscriber.Writer.TryWrite(frame); }
+                if (_controller!.TryReceive(out var frame) && frame is not null) _inbox?.Publish(frame);
                 else await Task.Delay(1, cancellationToken).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
-        catch (Exception error) { SetState(TransportState.Faulted); lock (_subscriptionsSync) foreach (var subscriber in _subscriptions) subscriber.Writer.TryComplete(error); }
+        catch (Exception error) { SetState(TransportState.Faulted); _inbox?.Complete(error); }
     }
     private async Task CloseCoreAsync()
     {
         _receiveCancellation?.Cancel(); if (_receiveTask is not null) { try { await _receiveTask.ConfigureAwait(false); } catch { } }
         _receiveCancellation?.Dispose(); _receiveCancellation = null; _receiveTask = null; _controller?.Dispose(); _controller = null;
-        lock (_subscriptionsSync) { foreach (var subscriber in _subscriptions) subscriber.Writer.TryComplete(); _subscriptions.Clear(); }
+        _inbox?.Complete(); _inbox = null;
         if (State != TransportState.Closed) SetState(TransportState.Closed);
     }
     public override async ValueTask DisposeAsync() { try { await CloseAsync().ConfigureAwait(false); } finally { _gate.Dispose(); } }

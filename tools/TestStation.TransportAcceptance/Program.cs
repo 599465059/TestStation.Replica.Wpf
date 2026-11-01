@@ -83,6 +83,39 @@ static class Program
             await first.SendAsync(new CanFrame(0x123, new byte[] { 0xAA, 0x55 }, Timestamp: DateTimeOffset.UtcNow));
             var frame = await receive;
             Check(frame.Id == 0x123 && frame.Data.Span.SequenceEqual(new byte[] { 0xAA, 0x55 }), "CAN 模拟总线共享、过滤和持续接收");
+
+            // 发送和订阅可以分开发生：会话级历史缓存应让后订阅者读到已经到达的帧。
+            await first.SendAsync(new CanFrame(0x124, new byte[] { 0x10, 0x20 }));
+            using var lateCancellation = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var lateFrame = await second.ReceiveAsync(new CanFrameFilter(Id: 0x124), lateCancellation.Token)
+                .FirstAsync(lateCancellation.Token);
+            Check(lateFrame.Data.Span.SequenceEqual(new byte[] { 0x10, 0x20 }), "CAN 先发送后订阅仍可读取历史帧");
+
+            // 请求响应在发送前登记匹配器；响应方返回得再快也不会丢失。
+            using var responderCancellation = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var responder = Task.Run(async () =>
+            {
+                await foreach (var request in second.ReceiveAsync(new CanFrameFilter(Id: 0x200), responderCancellation.Token))
+                {
+                    await second.SendAsync(new CanFrame(0x201, new byte[] { 0x42 }));
+                    break;
+                }
+            });
+            var response = await first.SendAndReceiveAsync(
+                new CanFrame(0x200, new byte[] { 0x01 }), new CanFrameFilter(Id: 0x201),
+                TimeSpan.FromSeconds(1), responderCancellation.Token);
+            Check(response.Id == 0x201 && response.Data.Span.SequenceEqual(new byte[] { 0x42 }), "CAN 请求响应先登记匹配再发送");
+            responderCancellation.Cancel();
+            try { await responder; } catch (OperationCanceledException) { }
+
+            // 同一帧广播给独立订阅者，读取一个订阅者不会消费另一个订阅者的帧。
+            using var fanoutCancellation = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var firstSubscriber = first.ReceiveAsync(new CanFrameFilter(Id: 0x300), fanoutCancellation.Token).FirstAsync(fanoutCancellation.Token).AsTask();
+            var secondSubscriber = second.ReceiveAsync(new CanFrameFilter(Id: 0x300), fanoutCancellation.Token).FirstAsync(fanoutCancellation.Token).AsTask();
+            await Task.Delay(20, fanoutCancellation.Token);
+            await first.SendAsync(new CanFrame(0x300, new byte[] { 0x33 }));
+            var fanout = await Task.WhenAll(firstSubscriber, secondSubscriber);
+            Check(fanout.All(item => item.Id == 0x300 && item.Data.Span.SequenceEqual(new byte[] { 0x33 })), "CAN 多订阅者各自收到同一帧");
             await first.CloseAsync();
             Check(first.State == TestStation.Application.Drivers.TransportState.Closed, "CAN 关闭释放会话");
         }

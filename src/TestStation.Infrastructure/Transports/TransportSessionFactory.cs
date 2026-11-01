@@ -9,6 +9,7 @@ using TestStation.Application.Hardware;
 using TestStation.Application.Resources;
 using TestStation.Domain.Resources;
 using TestStation.Infrastructure.Transports.Can.Pcan;
+using TestStation.Infrastructure.Transports.Can;
 
 namespace TestStation.Infrastructure.Transports;
 
@@ -272,6 +273,9 @@ public sealed class CanTransportSession : TransportSessionBase, ICanBusSession
     public override Task OpenAsync(TransportEndpoint endpoint, CancellationToken cancellationToken = default) { ResourceId = endpoint.ResourceId; SetState(TransportState.Faulted); return Task.FromException(new NotSupportedException(_message)); }
     public override Task CloseAsync(CancellationToken cancellationToken = default) { SetState(TransportState.Closed); return Task.CompletedTask; }
     public Task SendAsync(CanFrame frame, CancellationToken cancellationToken = default) => Task.FromException(new NotSupportedException(_message));
+    public Task<CanFrame> SendAndReceiveAsync(CanFrame frame, CanFrameFilter expectedFilter, TimeSpan timeout, CancellationToken cancellationToken = default)
+        => Task.FromException<CanFrame>(new NotSupportedException(_message));
+    public long DroppedFrameCount => 0;
     public IAsyncEnumerable<CanFrame> ReceiveAsync(CanFrameFilter? filter = null, CancellationToken cancellationToken = default)
         => ThrowUnavailable(cancellationToken);
     private async IAsyncEnumerable<CanFrame> ThrowUnavailable([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
@@ -292,7 +296,7 @@ public sealed class SimulatedCanBusSession : TransportSessionBase, ICanBusSessio
         public readonly HashSet<SimulatedCanBusSession> Sessions = [];
     }
     private static readonly ConcurrentDictionary<string, Bus> Buses = new(StringComparer.OrdinalIgnoreCase);
-    private Channel<CanFrame>? _frames;
+    private CanFrameInbox? _inbox;
     private Bus? _bus;
     private string _channel = "simulated";
     private bool _listenOnly;
@@ -300,7 +304,7 @@ public sealed class SimulatedCanBusSession : TransportSessionBase, ICanBusSessio
     public override Task OpenAsync(TransportEndpoint endpoint, CancellationToken cancellationToken = default)
     {
         if (_bus is not null) CloseAsync(cancellationToken).GetAwaiter().GetResult();
-        _frames = Channel.CreateUnbounded<CanFrame>();
+        _inbox = new CanFrameInbox();
         ResourceId = endpoint.ResourceId; _channel = endpoint.Settings.TryGetValue("channel", out var value) ? value.ToString() : endpoint.ResourceId;
         _listenOnly = endpoint.Settings.TryGetValue("listen_only", out var listen) && (listen.ValueKind == JsonValueKind.True || bool.TryParse(listen.ToString(), out var parsed) && parsed);
         _bus = Buses.GetOrAdd(_channel, _ => new()); lock (_bus.Sync) _bus.Sessions.Add(this); SetState(TransportState.Open); return Task.CompletedTask;
@@ -308,7 +312,7 @@ public sealed class SimulatedCanBusSession : TransportSessionBase, ICanBusSessio
     public override Task CloseAsync(CancellationToken cancellationToken = default)
     {
         if (_bus is not null) { lock (_bus.Sync) _bus.Sessions.Remove(this); _bus = null; }
-        _frames?.Writer.TryComplete(); SetState(TransportState.Closed); return Task.CompletedTask;
+        _inbox?.Complete(); _inbox = null; SetState(TransportState.Closed); return Task.CompletedTask;
     }
     public Task SendAsync(CanFrame frame, CancellationToken cancellationToken = default)
     {
@@ -316,12 +320,24 @@ public sealed class SimulatedCanBusSession : TransportSessionBase, ICanBusSessio
         if (_listenOnly) return Task.FromException(new InvalidOperationException("CAN 资源处于只听模式，不能发送帧"));
         if (_bus is null) return Task.FromException(new IOException("CAN 总线尚未打开"));
         var message = frame with { Timestamp = frame.Timestamp ?? DateTimeOffset.UtcNow };
-        SimulatedCanBusSession[] recipients; lock (_bus.Sync) recipients = _bus.Sessions.ToArray(); foreach (var session in recipients) session._frames?.Writer.TryWrite(message); return Task.CompletedTask;
+        SimulatedCanBusSession[] recipients; lock (_bus.Sync) recipients = _bus.Sessions.ToArray(); foreach (var session in recipients) session._inbox?.Publish(message); return Task.CompletedTask;
     }
+    public async Task<CanFrame> SendAndReceiveAsync(CanFrame frame, CanFrameFilter expectedFilter, TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+        var inbox = _inbox ?? throw new IOException("CAN 总线尚未打开");
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(timeout);
+        using var subscription = inbox.Subscribe(expectedFilter, replayExisting: false);
+        await SendAsync(frame, timeoutCancellation.Token).ConfigureAwait(false);
+        return await subscription.ReadNextAsync(timeoutCancellation.Token).ConfigureAwait(false);
+    }
+    public long DroppedFrameCount => _inbox?.DroppedFrameCount ?? 0;
     public async IAsyncEnumerable<CanFrame> ReceiveAsync(CanFrameFilter? filter = null, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (_bus is null || _frames is null) throw new IOException("CAN 总线尚未打开");
-        await foreach (var frame in _frames.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) if (filter is null || filter.Matches(frame)) yield return frame;
+        if (_bus is null || _inbox is null) throw new IOException("CAN 总线尚未打开");
+        using var subscription = _inbox.Subscribe(filter, replayExisting: true);
+        await foreach (var frame in subscription.ReadAllAsync(cancellationToken).ConfigureAwait(false)) yield return frame;
     }
     public override async ValueTask DisposeAsync() { await CloseAsync().ConfigureAwait(false); }
 }

@@ -79,9 +79,9 @@ Infrastructure implementation
 - Infrastructure 只实现 Application 定义的仓储/协议端口。
 - App 是当前唯一的 UI/基础设施组合根。
 - Smoke 只引用 App/Application，不进入生产模块依赖。
-- 首期 ITECH IT6000 家族已经接入 TCP 和串口传输、SCPI 会话、独占资源租约和设备会话；真实硬件实机仍未验证。通用层还提供 VISA 后端边界、CAN/CAN FD 模拟总线，以及不携带厂商 DLL 的 PCAN-Basic 适配器；PCAN 实机收发需要安装 PEAK 驱动，其他 ZLG/NI/Kvaser 等厂商驱动仍未接入。
+- 首期 ITECH IT6000 家族已经接入 TCP 和串口传输、SCPI 会话、独占资源租约和设备会话；通用层还提供 VISA 后端边界、CAN/CAN FD 模拟总线，以及 PCAN-Basic 适配器。PCAN 四通道设备已完成通道 1→2 的真实收发和 OpenTAP 自动调用验收；其他 ZLG/NI/Kvaser 等厂商驱动仍未接入。
 - 资源目录已形成独立的编辑边界：`ResourceCatalogEditingService` 负责新增、删除、引用检查和属性更新；页面不再直接操作资源集合。
-- 当前仍保留模拟插件用于历史示例，但 ITECH 页面和 OpenTAP 通道通过 `PowerSupplyDeviceService` 统一访问 TCP/串口会话；真实串口、TCP 硬件尚未做实机验证，CAN、Modbus 和外部插件包不在本阶段接入。
+- 当前仍保留模拟插件用于历史示例，但 ITECH 页面和 OpenTAP 通道通过 `PowerSupplyDeviceService` 统一访问 TCP/串口会话；真实 RS485（COM3↔COM6）和 PCAN（通道 1→2）已完成短验收，CAN、Modbus 和外部插件包不在本阶段接入。
 
 后续每增加一个项目或 PackageReference，必须同时更新本文件和 `docs/INTERFACE_CATALOG.md`。
 

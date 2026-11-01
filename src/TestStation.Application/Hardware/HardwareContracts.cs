@@ -71,6 +71,9 @@ public interface ICanBusSession : ITransportSession
 {
     Task SendAsync(CanFrame frame, CancellationToken cancellationToken = default);
     IAsyncEnumerable<CanFrame> ReceiveAsync(CanFrameFilter? filter = null, CancellationToken cancellationToken = default);
+    Task<CanFrame> SendAndReceiveAsync(CanFrame frame, CanFrameFilter expectedFilter, TimeSpan timeout,
+        CancellationToken cancellationToken = default);
+    long DroppedFrameCount { get; }
 }
 
 public interface ITransportSessionFactory

@@ -278,8 +278,6 @@ internal static class Program
         private readonly string _rxChannel;
         private ICanBusSession? _tx;
         private ICanBusSession? _rx;
-        private Task<CanFrame>? _pendingFrame;
-        private CancellationTokenSource? _receiveStop;
         public byte[] LastData { get; private set; } = [];
         public RealCanAutomationBackend(ITransportSessionFactory factory, string txChannel, string rxChannel)
         { _factory = factory; _txChannel = txChannel; _rxChannel = rxChannel; }
@@ -293,9 +291,13 @@ internal static class Program
         public async Task<JsonElement> ReadAsync(string channelId, CancellationToken cancellationToken = default)
         {
             if (!channelId.Equals("CAN.Rx", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("CAN 通道只读支持 CAN.Rx");
-            var receive = _pendingFrame ?? throw new IOException("尚未发送 CAN 测试请求");
-            var frame = await receive.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
-            _pendingFrame = null;
+            var rx = _rx ?? throw new IOException("PCAN 接收通道尚未打开");
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(3));
+            // 读取步骤可以在发送步骤之后才订阅。PCAN 会话保留有限历史并为每个
+            // 订阅者建立独立队列，因此快速到达的帧不会因为时序而丢失。
+            var frame = await rx.ReceiveAsync(new CanFrameFilter(Id: 0x5A5), timeout.Token)
+                .FirstAsync(timeout.Token);
             LastData = frame.Data.ToArray();
             return JsonSerializer.SerializeToElement(LastData.Select(value => (int)value).ToArray());
         }
@@ -305,13 +307,6 @@ internal static class Program
             var tx = _tx ?? throw new IOException("PCAN 发送通道尚未打开");
             if (value.ValueKind != JsonValueKind.Array) throw new InvalidDataException("CAN 数据必须是数组");
             var data = value.EnumerateArray().Select(item => checked((byte)item.GetDouble())).ToArray();
-            var rx = _rx ?? throw new IOException("PCAN 接收通道尚未打开");
-            _receiveStop?.Dispose();
-            _receiveStop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _receiveStop.CancelAfter(TimeSpan.FromSeconds(3));
-            // The session broadcasts only to active subscribers. Subscribe before
-            // sending, otherwise a fast physical frame can arrive between steps.
-            _pendingFrame = rx.ReceiveAsync(new CanFrameFilter(Id: 0x5A5), _receiveStop.Token).FirstAsync(_receiveStop.Token).AsTask();
             await tx.SendAsync(new CanFrame(0x5A5, data, Timestamp: DateTimeOffset.UtcNow), cancellationToken);
         }
         public Task DisconnectAsync(CancellationToken cancellationToken = default) => DisconnectCoreAsync(cancellationToken);
@@ -334,21 +329,10 @@ internal static class Program
             IsAutomationActive = false;
             // Automation lease release and tool shutdown may overlap. Transfer
             // ownership before awaiting, so each native session is closed once.
-            var stop = Interlocked.Exchange(ref _receiveStop, null);
-            var pending = Interlocked.Exchange(ref _pendingFrame, null);
             var tx = Interlocked.Exchange(ref _tx, null);
             var rx = Interlocked.Exchange(ref _rx, null);
-            stop?.Cancel();
-            try
-            {
-                if (pending is not null) { try { await pending; } catch (OperationCanceledException) { } }
-            }
-            finally
-            {
-                stop?.Dispose();
-                try { if (tx is not null) await tx.DisposeAsync(); }
-                finally { if (rx is not null) await rx.DisposeAsync(); }
-            }
+            try { if (tx is not null) await tx.DisposeAsync(); }
+            finally { if (rx is not null) await rx.DisposeAsync(); }
         }
         public ValueTask DisposeAsync() => new(DisconnectCoreAsync(CancellationToken.None));
         private static TransportResource Resource(string id, string channel)

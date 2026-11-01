@@ -42,7 +42,7 @@
 
 ## 通信和设备接口
 
-这些接口已经在 Application 层定义。ITECH 设备已由 `PowerSupplyDeviceService` 贯通 TCP/串口传输、SCPI 会话、驱动和设备会话；HIOKI PW6001 已由 `HiokiPowerAnalyzerDeviceService` 贯通 TCP、SCPI 和只读测量通道。PCAN-Basic 已通过 Infrastructure 适配器接入，真实 PCAN 收发仍需使用现场设备短验收；其他 VISA、ZLG、NI、Kvaser 等厂商后端和外部插件包仍未接入；通用 VISA/CAN 模拟会话继续保留。
+这些接口已经在 Application 层定义。ITECH 设备已由 `PowerSupplyDeviceService` 贯通 TCP/串口传输、SCPI 会话、驱动和设备会话；HIOKI PW6001 已由 `HiokiPowerAnalyzerDeviceService` 贯通 TCP、SCPI 和只读测量通道。PCAN-Basic 已通过 Infrastructure 适配器接入，并完成四通道设备的真实通道 1→2 收发和 OpenTAP 短验收；其他 VISA、ZLG、NI、Kvaser 等厂商后端和外部插件包仍未接入；通用 VISA/CAN 模拟会话继续保留。
 
 | 接口 | 建议职责 | 关键要求 |
 |---|---|---|
