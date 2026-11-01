@@ -19,4 +19,16 @@ public interface IChannelRuntimeCoordinator
     Task WriteAsync(string channelId, JsonElement value, string owner, CancellationToken cancellationToken = default);
     Task<IDisposable> AcquireAutomationAsync(string owner, IEnumerable<string> channels, CancellationToken token = default) => Task.FromResult(AcquireAutomation(owner, channels));
     IDisposable AcquireAutomation(string owner, IEnumerable<string> channels);
+    Task ExecuteManualAsync(Func<Task> operation, CancellationToken token = default);
+    Task<IDisposable> AcquireDiagnosticAsync(CancellationToken token = default);
+}
+
+/// <summary>Awaits asynchronous cleanup before the caller considers automatic execution finished.</summary>
+public sealed class ChannelAutomationScope(IDisposable lease) : IAsyncDisposable
+{
+    public async ValueTask DisposeAsync()
+    {
+        if (lease is IAsyncDisposable asyncLease) await asyncLease.DisposeAsync().ConfigureAwait(false);
+        else lease.Dispose();
+    }
 }

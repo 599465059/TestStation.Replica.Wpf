@@ -50,15 +50,15 @@ public sealed class SimulatedChannelRuntimeCoordinator : IChannelRuntimeCoordina
         public Poller(string channel, TimeSpan interval) { Channel = channel; Interval = interval; }
     }
 
-    private sealed class AutomationLease : IDisposable
+    private sealed class AutomationLease : IDisposable, IAsyncDisposable
     {
         private readonly SimulatedChannelRuntimeCoordinator _owner;
         private int _disposed;
         public AutomationLease(SimulatedChannelRuntimeCoordinator owner) => _owner = owner;
-        public void Dispose()
+        public void Dispose() { if (Interlocked.Exchange(ref _disposed, 1) == 0) _ = _owner.ReleaseAutomationAsync(); }
+        public async ValueTask DisposeAsync()
         {
-            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
-            _ = _owner.ReleaseAutomationAsync();
+            if (Interlocked.Exchange(ref _disposed, 1) == 0) await _owner.ReleaseAutomationAsync().ConfigureAwait(false);
         }
     }
 
@@ -69,6 +69,7 @@ public sealed class SimulatedChannelRuntimeCoordinator : IChannelRuntimeCoordina
     private readonly IChannelIoBackend _io;
     private readonly SemaphoreSlim _ioGate = new(1, 1);
     private int _automationLeases;
+    private int _diagnosticLeases;
     private bool _disposed;
 
     public SimulatedChannelRuntimeCoordinator(ISequenceChannelProvider provider, IChannelIoBackend? io = null)
@@ -222,10 +223,55 @@ public sealed class SimulatedChannelRuntimeCoordinator : IChannelRuntimeCoordina
         await _ioGate.WaitAsync(token).ConfigureAwait(false);
         try
         {
-            if (Devices is not null) await Devices.BeginAutomationAsync(channels, token).ConfigureAwait(false);
-            return AcquireAutomationCore(owner, channels);
+            lock (_sync)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_diagnosticLeases > 0) throw new InvalidOperationException("请先关闭通信诊断，再运行自动测试");
+                if (_automationLeases > 0) throw new InvalidOperationException("已有自动测试正在运行");
+            }
+            var requested = channels.ToArray();
+            try
+            {
+                if (Devices is not null) await Devices.BeginAutomationAsync(requested, token).ConfigureAwait(false);
+                return AcquireAutomationCore(owner, requested);
+            }
+            catch { if (Devices is not null) await Devices.EndAutomationAsync(CancellationToken.None).ConfigureAwait(false); throw; }
         }
         finally { _ioGate.Release(); }
+    }
+    public async Task ExecuteManualAsync(Func<Task> operation, CancellationToken token = default)
+    {
+        await _ioGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            lock (_sync)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_automationLeases > 0) throw new InvalidOperationException("自动测试占用期间禁止修改连接");
+            }
+            await operation().ConfigureAwait(false);
+        }
+        finally { _ioGate.Release(); }
+    }
+    public async Task<IDisposable> AcquireDiagnosticAsync(CancellationToken token = default)
+    {
+        await _ioGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            lock (_sync)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_automationLeases > 0) throw new InvalidOperationException("自动测试运行期间禁止打开通信诊断");
+                _diagnosticLeases++;
+            }
+            return new DiagnosticLease(this);
+        }
+        finally { _ioGate.Release(); }
+    }
+    private sealed class DiagnosticLease(SimulatedChannelRuntimeCoordinator owner) : IDisposable
+    {
+        private int _released;
+        public void Dispose() { if (Interlocked.Exchange(ref _released, 1) == 0) lock (owner._sync) owner._diagnosticLeases--; }
     }
     public IDisposable AcquireAutomation(string owner, IEnumerable<string> channels) => AcquireAutomationAsync(owner, channels).GetAwaiter().GetResult();
 
@@ -247,30 +293,18 @@ public sealed class SimulatedChannelRuntimeCoordinator : IChannelRuntimeCoordina
 
     private async Task ReleaseAutomationAsync()
     {
-        bool last;
-        lock (_sync)
-        {
-            _automationLeases = Math.Max(0, _automationLeases - 1);
-            last = _automationLeases == 0;
-        }
-        if (!last) return;
+        await _ioGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            await _ioGate.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                if (Devices is not null) await Devices.EndAutomationAsync().ConfigureAwait(false);
-                else { }
-            }
-            finally { _ioGate.Release(); }
+            // Manual access must remain paused until temporary sessions have been released.
+            if (Devices is not null) await Devices.EndAutomationAsync().ConfigureAwait(false);
         }
-        catch
+        finally
         {
-            // Lease disposal is fire-and-forget by contract. The device service
-            // has already recorded the connection error; keep the coordinator usable.
-            try { if (Devices is not null) Devices.IsAutomationActive = false; } catch { }
+            lock (_sync) _automationLeases = Math.Max(0, _automationLeases - 1);
+            try { if (Devices is not null) Devices.IsAutomationActive = false; }
+            finally { _ioGate.Release(); AvailabilityChanged?.Invoke(this, EventArgs.Empty); }
         }
-        AvailabilityChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void Remove(Subscription subscription)

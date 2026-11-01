@@ -16,6 +16,7 @@ namespace TestStation.Infrastructure.Transports;
 public sealed class TransportSessionFactory : ITransportSessionFactory
 {
     private readonly IVisaBackend _visa;
+    private readonly CanSessionPool _canPool = new();
     private readonly IReadOnlyDictionary<string, ICanVendorAdapter> _canAdapters;
     public TransportSessionFactory(IVisaBackend? visa = null, IEnumerable<ICanVendorAdapter>? canAdapters = null)
     {
@@ -31,9 +32,18 @@ public sealed class TransportSessionFactory : ITransportSessionFactory
         "tcp" or "modbus_tcp" => new TcpTransportSession(),
         "serial" or "modbus_rtu" => new SerialTransportSession(),
         "visa" => new VisaTransportSession(_visa),
-        "can" => CreateCanSession(resource),
+        "can" => _canPool.Create(CanEndpointKey, endpoint => CreateCanSession(new TransportResource { Type = "can", Settings = endpoint.Settings.ToDictionary(p => p.Key, p => p.Value) })),
         _ => throw new NotSupportedException($"不支持的通信资源类型：{resource.Type}")
     };
+
+    private string CanEndpointKey(TransportEndpoint endpoint)
+    {
+        var backend = endpoint.Settings.TryGetValue("can_backend_id", out var b) ? b.ToString().ToLowerInvariant() : "";
+        if (backend == "peak") backend = "pcan";
+        var channel = endpoint.Settings.TryGetValue("channel", out var c) ? c.ToString() : "";
+        if (_canAdapters.TryGetValue(backend, out var adapter)) channel = adapter.NormalizeChannel(channel);
+        return backend + ":" + channel.ToUpperInvariant();
+    }
 
     private ICanBusSession CreateCanSession(TransportResource resource)
     {

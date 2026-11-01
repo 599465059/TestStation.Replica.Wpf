@@ -1,0 +1,35 @@
+<UserControl x:Class="TestStation.App.Views.TransportResourceEditorView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:text="clr-namespace:TestStation.App.Localization" Foreground="{DynamicResource TextBrush}" Width="580">
+ <Grid Margin="8">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
+   <TextBlock Text="{x:Static text:UiText.Name}" VerticalAlignment="Center"/>
+   <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+   <ComboBox Grid.Column="2" ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" Margin="8,0,0,0"/>
+  </Grid>
+  <StackPanel Grid.Row="1" Margin="0,8">
+   <CheckBox Content="{x:Static text:UiText.Enabled}" IsChecked="{Binding Enabled}"/>
+   <StackPanel Orientation="Horizontal" Margin="0,6">
+    <StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsSerial}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+    <Button Content="{x:Static text:UiText.HwScan}" Command="{Binding ScanCommand}"/>
+    <ComboBox ItemsSource="{Binding SerialPorts}" SelectedItem="{Binding SelectedPort}" Width="180" Margin="8,0"/>
+   </StackPanel>
+   <StackPanel Orientation="Horizontal" Margin="0,6">
+    <StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsCan}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+    <Button Content="{x:Static text:UiText.HwScan}" Command="{Binding ScanCommand}"/>
+    <ComboBox ItemsSource="{Binding HardwareChannels}" SelectedItem="{Binding SelectedHardware}" DisplayMemberPath="ChannelId" Width="300" Margin="8,0"/>
+   </StackPanel>
+  </StackPanel>
+  <ScrollViewer Grid.Row="2" MaxHeight="410" VerticalScrollBarVisibility="Auto">
+   <ItemsControl ItemsSource="{Binding Fields}"><ItemsControl.ItemTemplate><DataTemplate>
+    <Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+     <TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"><TextBox.Style><Style TargetType="TextBox" BasedOn="{StaticResource AppTextBoxStyle}"><Style.Triggers><DataTrigger Binding="{Binding HasOptions}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBox.Style></TextBox>
+     <ComboBox Grid.Column="1" ItemsSource="{Binding Options}" SelectedItem="{Binding Value, UpdateSourceTrigger=PropertyChanged}"><ComboBox.Style><Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasOptions}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></ComboBox.Style></ComboBox>
+    </Grid>
+   </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+  </ScrollViewer>
+  <StackPanel Grid.Row="3" Margin="0,8,0,0"><TextBlock Text="{Binding BackendNote}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/><TextBlock Text="{Binding Error}" Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap"/></StackPanel>
+ </Grid>
+</UserControl>

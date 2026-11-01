@@ -1035,4 +1035,56 @@
   <data name="DeviceTesting" xml:space="preserve"><value>设备测试</value></data>
   <data name="DeviceFamilyUnavailable" xml:space="preserve"><value>设备家族未启用。请在“设备测试 → 设备管理”中启用。</value></data>
   <data name="DeviceChannelUnavailable" xml:space="preserve"><value>设备通道不可用：{0}。请检查设备是否启用，以及当前型号是否支持该通道。</value></data>
+  <data name="HwManagement" xml:space="preserve"><value>设备管理</value></data>
+  <data name="HwResources" xml:space="preserve"><value>通信资源</value></data>
+  <data name="HwInstances" xml:space="preserve"><value>设备实例</value></data>
+  <data name="HwFamilies" xml:space="preserve"><value>设备家族</value></data>
+  <data name="HwModel" xml:space="preserve"><value>型号</value></data>
+  <data name="HwScan" xml:space="preserve"><value>扫描硬件</value></data>
+  <data name="HwEdit" xml:space="preserve"><value>编辑</value></data>
+  <data name="HwUnbind" xml:space="preserve"><value>解除绑定</value></data>
+  <data name="HwUnboundHint" xml:space="preserve"><value>可暂不绑定资源。保存不会连接设备；需要通信时点击连接。资源请先在“通信资源”中创建。</value></data>
+  <data name="HwResourceEditor" xml:space="preserve"><value>通信资源配置</value></data>
+  <data name="HwAutoLocked" xml:space="preserve"><value>自动测试期间不能修改设备或资源</value></data>
+  <data name="HwBoundDevices" xml:space="preserve"><value>绑定设备</value></data>
+  <data name="HwOccupancy" xml:space="preserve"><value>占用状态</value></data>
+  <data name="HwInUse" xml:space="preserve"><value>正在使用</value></data>
+  <data name="HwIdle" xml:space="preserve"><value>空闲</value></data>
+  <data name="HwUnavailable" xml:space="preserve"><value>不可用</value></data>
+  <data name="HwError" xml:space="preserve"><value>错误</value></data>
+  <data name="HwConnected" xml:space="preserve"><value>已连接</value></data>
+  <data name="HwUnbound" xml:space="preserve"><value>未绑定</value></data>
+  <data name="HwDisconnected" xml:space="preserve"><value>未连接</value></data>
+  <data name="HwConnecting" xml:space="preserve"><value>连接中</value></data>
+  <data name="HwAutoInUse" xml:space="preserve"><value>自动占用</value></data>
+  <data name="HwDiagnosticOpened" xml:space="preserve"><value>诊断已打开</value></data>
+  <data name="HwDiagnosticClosed" xml:space="preserve"><value>诊断已关闭</value></data>
+  <data name="HwDiagnostic" xml:space="preserve"><value>通信诊断</value></data>
+  <data name="HwOpenDiagnostic" xml:space="preserve"><value>打开诊断</value></data>
+  <data name="HwCloseDiagnostic" xml:space="preserve"><value>关闭诊断</value></data>
+  <data name="HwPayload" xml:space="preserve"><value>发送内容</value></data>
+  <data name="HwResponse" xml:space="preserve"><value>等待响应</value></data>
+  <data name="HwTerminator" xml:space="preserve"><value>追加终止符</value></data>
+  <data name="HwExtended" xml:space="preserve"><value>扩展帧</value></data>
+  <data name="HwTimeout" xml:space="preserve"><value>超时(ms)</value></data>
+  <data name="HwSend" xml:space="preserve"><value>发送</value></data>
+  <data name="HwReadCan" xml:space="preserve"><value>接收 CAN</value></data>
+  <data name="HwTraffic" xml:space="preserve"><value>通信记录</value></data>
+  <data name="HwEditBinding" xml:space="preserve"><value>配置／更名</value></data>
+  <data name="HwConnect" xml:space="preserve"><value>连接</value></data>
+  <data name="HwDisconnect" xml:space="preserve"><value>断开</value></data>
+  <data name="HwOpenPanel" xml:space="preserve"><value>打开面板</value></data>
+  <data name="HwNoResources" xml:space="preserve"><value>尚未创建通信资源，点击“新建”配置端口</value></data>
+  <data name="HwNoInstances" xml:space="preserve"><value>尚未创建设备实例，点击“新建”选择家族和型号</value></data>
+  <data name="HwResourceSaved" xml:space="preserve"><value>资源已保存，尚未打开连接</value></data>
+  <data name="HwLeased" xml:space="preserve"><value>资源正在使用，请先断开设备或关闭诊断</value></data>
+  <data name="HwDisconnectBeforeEdit" xml:space="preserve"><value>请先断开设备，再修改设备配置</value></data>
+  <data name="HwDeleteDevicePrompt" xml:space="preserve"><value>确认删除设备“{0}”？已有序列对该设备的引用将失效。</value></data>
+  <data name="HwInstanceSaved" xml:space="preserve"><value>设备配置已保存，未自动连接</value></data>
+  <data name="HwCancelledTimeout" xml:space="preserve"><value>操作已取消或超时</value></data>
+  <data name="HwResourcesHint" xml:space="preserve"><value>资源参数统一保存在工程中</value></data>
+  <data name="HwUnsupported" xml:space="preserve"><value>所选后端尚未接入</value></data>
+  <data name="HwRefreshAuto" xml:space="preserve"><value>自动刷新</value></data>
+  <data name="HwPaused" xml:space="preserve"><value>暂停刷新</value></data>
+  <data name="HwReadOnce" xml:space="preserve"><value>读取一次</value></data>
 </root>

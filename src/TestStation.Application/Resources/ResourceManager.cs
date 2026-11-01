@@ -30,9 +30,11 @@ public sealed class ResourceManager : IResourceManager, IDisposable
     private bool _disposed;
     public event EventHandler? Changed;
 
-    public ResourceManager(IResourceCatalogService catalog)
+    private readonly IReadOnlyDictionary<string, ICanVendorAdapter> _canAdapters;
+    public ResourceManager(IResourceCatalogService catalog, IEnumerable<ICanVendorAdapter>? canAdapters = null)
     {
         this.catalog = catalog;
+        _canAdapters = (canAdapters ?? []).ToDictionary(a => a.BackendId, StringComparer.OrdinalIgnoreCase);
         catalog.Changed += CatalogChanged;
         catalog.Changing += CatalogChanging;
         Reload();
@@ -46,6 +48,12 @@ public sealed class ResourceManager : IResourceManager, IDisposable
     }
 
     public IDisposable Acquire(string resourceId, string owner, ResourceLeaseMode? mode = null)
+    {
+        var lease = AcquireCore(resourceId, owner, mode);
+        Changed?.Invoke(this, EventArgs.Empty);
+        return lease;
+    }
+    private IDisposable AcquireCore(string resourceId, string owner, ResourceLeaseMode? mode)
     {
         if (string.IsNullOrWhiteSpace(owner)) throw new ArgumentException("资源占用者不能为空", nameof(owner));
         lock (_sync)
@@ -98,14 +106,18 @@ public sealed class ResourceManager : IResourceManager, IDisposable
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private static string EndpointKey(TransportResource resource)
+    private string EndpointKey(TransportResource resource)
     {
         var values = TransportSettingsAccessor.Read(resource);
+        var backend = (values.CanBackendId ?? "").ToLowerInvariant();
+        if (backend == "peak") backend = "pcan";
+        var channel = values.CanChannel ?? "";
+        if (_canAdapters.TryGetValue(backend, out var adapter)) channel = adapter.NormalizeChannel(channel);
         return TransportSettingsAccessor.NormalizeType(resource.Type) switch
         {
             "tcp" => "tcp:" + ((values.Host ?? "").ToLowerInvariant() is "localhost" or "::1" ? "127.0.0.1" : (values.Host ?? "").ToLowerInvariant()) + ":" + values.TcpPort,
             "serial" => "serial:" + values.Port?.ToUpperInvariant(),
-            "can" => "can:" + (values.CanChannel ?? "").ToLowerInvariant(),
+            "can" => "can:" + backend + ":" + channel.ToLowerInvariant(),
             "visa" => "visa:" + (values.VisaResource ?? "").ToLowerInvariant(),
             _ => resource.Type + ":" + JsonSerializer.Serialize(resource.Settings)
         };

@@ -117,7 +117,7 @@ public static class TransportSettingsAccessor
         foreach (var (key, value) in values)
         {
             if (key is ("baud_rate" or "data_bits" or "tcp_port" or "connect_timeout_ms" or "bitrate" or "data_bitrate" or "unit_id" or "timeout_ms" or "direction_delay_ms" or "max_response_bytes") &&
-                (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) || number <= 0))
+                (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) || (key == "direction_delay_ms" ? number < 0 : number <= 0)))
             { error = $"通信参数 {key} 必须是正整数"; return false; }
             if (key is ("fd_enabled" or "listen_only" or "half_duplex") && !bool.TryParse(value, out _))
             { error = $"{key} 必须填写 true 或 false"; return false; }

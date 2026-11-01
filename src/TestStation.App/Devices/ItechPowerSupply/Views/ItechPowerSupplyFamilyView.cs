@@ -6,7 +6,7 @@ using TestStation.App.Services;
 namespace TestStation.App.Devices.ItechPowerSupply.Views;
 
 /// <summary>Composes operation and configuration views; neither ViewModel owns a View.</summary>
-public sealed class ItechPowerSupplyFamilyView : UserControl, IDisposable
+public sealed class ItechPowerSupplyFamilyView : UserControl, IDisposable, IDevicePanelSelection
 {
     private readonly ItechPowerSupplyView _operation;
     private readonly ItechPowerSupplyAdminView _admin;
@@ -30,5 +30,6 @@ public sealed class ItechPowerSupplyFamilyView : UserControl, IDisposable
         grid.Children.Add(navigation); Grid.SetRow(_content, 1); grid.Children.Add(_content); _content.Content = operation; Content = grid;
     }
     public Task<bool> PrepareToLeaveAsync() => !_admin.CommitEdits() ? Task.FromResult(false) : _model.PrepareToLeaveAsync();
+    public void SelectDevice(string deviceId) { _operation.SelectDevice(deviceId); _configuration = false; _content.Content = _operation; }
     public void Dispose() { _operation.Dispose(); _model.Dispose(); }
 }

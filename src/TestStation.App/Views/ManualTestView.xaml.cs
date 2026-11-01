@@ -16,15 +16,16 @@ public partial class ManualTestView : UserControl, IDisposable
     public bool IsManipulating => false;
     private readonly IManualPluginViewRegistry _pluginRegistry;
     private readonly IChannelRuntimeCoordinator _runtime;
+    private readonly IResourceEditorService? _resourceEditor;
     private readonly Dictionary<string, (Border Document, FrameworkElement View)> _documents = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _knownProviders = new(StringComparer.OrdinalIgnoreCase);
     private string _workspaceName = UiText.ManualTest;
     private bool _disposed;
 
     public ManualTestView(ManualTestViewModel model, IManualPluginViewRegistry pluginRegistry,
-        IChannelRuntimeCoordinator runtime)
+        IChannelRuntimeCoordinator runtime, IResourceEditorService? resourceEditor = null)
     {
-        Model = model; _pluginRegistry = pluginRegistry; _runtime = runtime;
+        Model = model; _pluginRegistry = pluginRegistry; _runtime = runtime; _resourceEditor = resourceEditor;
         InitializeComponent();
         DataContext = model;
         _pluginRegistry.Changed += OnPluginRegistryChanged;
@@ -89,7 +90,7 @@ public partial class ManualTestView : UserControl, IDisposable
     {
         if (!_pluginRegistry.IsEnabled(provider.Id)) return;
         FrameworkElement view;
-        try { view = provider.CreateView(new(Model.DocumentId, _workspaceName, _runtime)); }
+        try { view = provider.CreateView(new(Model.DocumentId, _workspaceName, _runtime, _resourceEditor)); }
         catch (Exception error)
         {
             view = new TextBlock { Text = UiText.Format("ManualPluginLoadFailed", error.Message),

@@ -18,6 +18,7 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
     private readonly IHiokiPowerAnalyzerDeviceService _devices;
     private readonly IResourceManager _resources;
     private readonly ISequenceDialogService _dialogs;
+    private readonly IResourceEditorService? _resourceEditor;
     private readonly SynchronizationContext? _context = SynchronizationContext.Current;
     private readonly List<IDisposable> _subscriptions = [];
     private readonly System.Windows.Threading.DispatcherTimer _freshness = new() { Interval = TimeSpan.FromMilliseconds(500) };
@@ -46,17 +47,12 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
     [ObservableProperty] private TransportResource? _selectedResource;
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private bool _editingResource;
-    [ObservableProperty] private string _resourceId = "";
-    [ObservableProperty] private string _resourceName = "";
-    [ObservableProperty] private string _host = "127.0.0.1";
-    [ObservableProperty] private int _port = 5025;
-    [ObservableProperty] private int _timeoutMs = 1500;
-
+    [ObservableProperty] private bool _autoRefresh = true;
+    partial void OnAutoRefreshChanged(bool value) => UpdatePolling();
     public HiokiPowerAnalyzerViewModel(IChannelRuntimeCoordinator runtime, IHiokiPowerAnalyzerDeviceService devices,
-        IResourceManager resources, ISequenceDialogService dialogs)
+        IResourceManager resources, ISequenceDialogService dialogs, IResourceEditorService? resourceEditor = null)
     {
-        _runtime = runtime; _devices = devices; _resources = resources; _dialogs = dialogs;
+        _runtime = runtime; _devices = devices; _resources = resources; _dialogs = dialogs; _resourceEditor = resourceEditor;
         _devices.Changed += DevicesChanged; _devices.StateChanged += StateChanged; _devices.ValueChanged += ValueChanged;
         _runtime.AvailabilityChanged += RuntimeChanged;
         _freshness.Tick += (_, _) => { foreach (var field in Fields) field.RefreshAge(IsAutomationActive || !IsConnected); };
@@ -92,7 +88,7 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
     private void StopSubscriptions() { foreach (var subscription in _subscriptions) subscription.Dispose(); _subscriptions.Clear(); }
     private void UpdatePolling()
     {
-        StopSubscriptions(); if (!_visible || !IsConnected || IsAutomationActive) return;
+        StopSubscriptions(); if (!AutoRefresh || !_visible || !IsConnected || IsAutomationActive) return;
         foreach (var channel in Fields) _subscriptions.Add(_runtime.Subscribe(channel.DefinitionId, TimeSpan.FromMilliseconds(500), value => Post(() => channel.Accept(value))));
     }
     private async Task RunAsync(Func<Task> action) { IsBusy = true; try { await action(); } catch (Exception error) { Status = error.Message; } finally { IsBusy = false; NotifyState(); } }
@@ -106,18 +102,24 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
     [RelayCommand] private async Task SaveBindingAsync()
     { if (!CanConfigure || SelectedDevice is null) return; await RunAsync(() => { _devices.UpdateDevice(SelectedDevice.Id, SelectedDevice.Name, "PW6001", SelectedResource?.Id ?? ""); Status = SelectedResource is null ? "已保存，尚未绑定资源" : "设备绑定已保存"; return Task.CompletedTask; }); }
     [RelayCommand] private async Task ConnectAsync()
-    { if (!CanConnect || SelectedDevice is null || SelectedResource is null) return; await RunAsync(async () => { _devices.UpdateDevice(SelectedDevice.Id, SelectedDevice.Name, "PW6001", SelectedResource.Id); await _devices.ConnectAsync(SelectedDevice.Id); Status = "已连接"; }); }
+    { if (!CanConnect || SelectedDevice is null || SelectedResource is null) return; await RunAsync(() => _runtime.ExecuteManualAsync(async () => { _devices.UpdateDevice(SelectedDevice.Id, SelectedDevice.Name, "PW6001", SelectedResource.Id); await _devices.ConnectAsync(SelectedDevice.Id); Status = "已连接"; })); }
     [RelayCommand] private async Task DisconnectAsync()
-    { if (!CanDisconnect || SelectedDevice is null) return; await RunAsync(async () => { await _devices.DisconnectDeviceAsync(SelectedDevice.Id); Status = "已断开"; }); }
+    { if (!CanDisconnect || SelectedDevice is null) return; await RunAsync(() => _runtime.ExecuteManualAsync(async () => { await _devices.DisconnectDeviceAsync(SelectedDevice.Id); Status = "已断开"; })); }
     [RelayCommand] private async Task ReadOnceAsync()
     { if (!CanOperate) return; await RunAsync(async () => { foreach (var field in Fields) field.Accept(await _runtime.ReadOnceAsync(field.DefinitionId, "manual")); Status = "读取完成"; }); }
 
-    [RelayCommand] private void EditResource()
-    { if (!CanConfigure || SelectedResource is null || _resources.IsLeased(SelectedResource.Id)) { if (SelectedResource is not null && _resources.IsLeased(SelectedResource.Id)) Status = "资源已连接，请先断开"; return; } var r = SelectedResource; var s = TransportSettingsAccessor.Read(r); ResourceId = r.Id; ResourceName = r.Name; Host = s.Host ?? "127.0.0.1"; Port = s.TcpPort ?? 5025; TimeoutMs = r.Settings.TryGetValue("timeout_ms", out var t) && t.TryGetInt32(out var ms) ? ms : 1500; EditingResource = true; }
-    [RelayCommand] private void NewResource() { if (!CanManage) return; ResourceId = "transport_" + Guid.NewGuid().ToString("N")[..8]; ResourceName = "新 TCP 资源"; Host = "127.0.0.1"; Port = 5025; TimeoutMs = 1500; EditingResource = true; }
-    [RelayCommand] private void CancelResource() => EditingResource = false;
-    [RelayCommand] private async Task SaveResourceAsync()
-    { if (!CanManage) return; await RunAsync(() => { var resource = _devices.Resources.FirstOrDefault(r => r.Id == ResourceId) ?? new TransportResource { Id = ResourceId }; resource.Name = ResourceName.Trim(); resource.Type = "tcp"; TransportSettingsAccessor.Write(resource, new(Host: Host.Trim(), TcpPort: Port, ConnectTimeoutMs: TimeoutMs)); resource.Settings["timeout_ms"] = JsonSerializer.SerializeToElement(TimeoutMs); _devices.SaveResource(resource); _resourceItems = _devices.Resources.ToArray(); OnPropertyChanged(nameof(Resources)); SelectedResource = Resources.FirstOrDefault(r => r.Id == resource.Id); EditingResource = false; Status = "资源已保存"; return Task.CompletedTask; }); }
+    [RelayCommand] private Task EditResourceAsync() => EditResourceCoreAsync(false);
+    [RelayCommand] private Task NewResourceAsync() => EditResourceCoreAsync(true);
+    private async Task EditResourceCoreAsync(bool create)
+    {
+        if (!CanConfigure || _resourceEditor is null || (!create && SelectedResource is null)) return;
+        await RunAsync(async () =>
+        {
+            var resource = await _resourceEditor.EditAsync(create ? null : SelectedResource, ["tcp"]);
+            if (resource is null) return;
+            Reload(); SelectedResource = Resources.FirstOrDefault(r => r.Id == resource.Id);
+        });
+    }
 
     public void Dispose() { StopPolling(); _devices.Changed -= DevicesChanged; _devices.StateChanged -= StateChanged; _devices.ValueChanged -= ValueChanged; _runtime.AvailabilityChanged -= RuntimeChanged; }
 }

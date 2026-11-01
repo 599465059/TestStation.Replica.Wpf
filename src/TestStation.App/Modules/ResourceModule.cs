@@ -8,6 +8,8 @@ using TestStation.App.Views;
 using TestStation.Application.Hardware;
 using TestStation.Infrastructure.Transports;
 using TestStation.Infrastructure.Transports.Can.Pcan;
+using TestStation.Application.Devices;
+using TestStation.App.Services;
 
 namespace TestStation.App.Modules;
 
@@ -18,7 +20,16 @@ public sealed class ResourceModule : IModule
         registry.RegisterSingleton<IResourceCatalogRepository, ResourceCatalogRepository>();
         registry.RegisterSingleton<IResourceCatalogService, ResourceCatalogService>();
         registry.RegisterSingleton<IResourceCatalogEditingService, ResourceCatalogEditingService>();
-        registry.RegisterSingleton<IResourceManager, ResourceManager>();
+        registry.RegisterSingleton<IResourceManager>(provider => new ResourceManager(provider.Resolve<IResourceCatalogService>(), [provider.Resolve<PcanVendorAdapter>()]));
+        registry.RegisterSingleton<IResourceConfigurationService, ResourceConfigurationService>();
+        registry.RegisterSingleton<ITransportDiscoveryService>(provider => new TransportDiscoveryService([provider.Resolve<PcanVendorAdapter>()]));
+        registry.RegisterSingleton<ITransportDiagnosticService, TransportDiagnosticService>();
+        registry.RegisterSingleton<IResourceEditorService, ResourceEditorService>();
+        registry.RegisterSingleton<IDeviceManagementService>(provider => new DeviceManagementService([
+            provider.Resolve<PowerSupplyManagementAdapter>(), provider.Resolve<HiokiManagementAdapter>()]));
+        registry.RegisterSingleton<DeviceNavigationService>();
+        registry.RegisterSingleton<DeviceManagementViewModel>();
+        registry.RegisterSingleton<DeviceManagementView>();
         registry.RegisterSingleton<TestStation.Application.Drivers.IDeviceDriverFactory, SimulatedDeviceDriverFactory>();
         registry.RegisterSingleton<TestStation.Application.Hardware.IDeviceDriverFactory, LegacyDeviceDriverFactoryAdapter>();
         registry.RegisterSingleton<ITransportFactory, LegacyTransportFactoryAdapter>();

@@ -37,6 +37,12 @@ public sealed class ProtocolDialogService : IProtocolDialogService, IAppDialogSe
         return result.Accepted ? result.Value : null;
     }
     private DialogHost? _host;
+    public Task<bool> ShowDeviceEditorAsync(ViewModels.DeviceInstanceEditorViewModel model) =>
+        ShowEditorAsync(UiText.Get("HwInstances"), new Views.DeviceInstanceEditorView { DataContext = model });
+    public async Task<bool> ConfirmMessageAsync(string title, string message) =>
+        await Host().ShowAsync(new DialogOptions { Title = title, PrimaryText = UiText.Confirm, CloseText = UiText.Cancel }, Content(message)) == IndustrialDialogResult.Primary;
+    public async Task<bool> ShowEditorAsync(string title, FrameworkElement content) =>
+        await Host().ShowAsync(new DialogOptions { Title = title, PrimaryText = UiText.Save, CloseText = UiText.Cancel }, content) == IndustrialDialogResult.Primary;
     public void Attach(DialogHost host) => _host = host;
     public async Task<SequenceUnsavedChoice> AskUnsavedSequenceAsync(string name)
     {

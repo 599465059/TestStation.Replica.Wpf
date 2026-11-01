@@ -6,7 +6,12 @@ using TestStation.Application;
 namespace TestStation.App.Services;
 
 /// <summary>Context supplied when a plugin view is created inside one manual-test subpage.</summary>
-public sealed record ManualPluginViewContext(string WorkspaceId, string WorkspaceName, IChannelRuntimeCoordinator Runtime);
+public sealed record ManualPluginViewContext(string WorkspaceId, string WorkspaceName, IChannelRuntimeCoordinator Runtime, IResourceEditorService? ResourceEditor = null);
+
+public interface IDevicePanelSelection
+{
+    void SelectDevice(string deviceId);
+}
 
 /// <summary>Metadata and factory for one device plugin's manual-test view.</summary>
 public interface IManualPluginViewProvider

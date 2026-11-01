@@ -16,6 +16,7 @@ public sealed class DeviceFamilyModule : IModule
     public void RegisterTypes(IContainerRegistry registry)
     {
         registry.RegisterSingleton<IHiokiPowerAnalyzerDeviceService, HiokiPowerAnalyzerDeviceService>();
+        registry.RegisterSingleton<TestStation.Application.Devices.HiokiManagementAdapter>();
         registry.RegisterSingleton<HiokiPowerAnalyzerPanelProvider>();
     }
 
@@ -33,7 +34,7 @@ public sealed class HiokiPowerAnalyzerPanelProvider(
 
     public FrameworkElement CreateView(ManualPluginViewContext context)
     {
-        var model = new HiokiPowerAnalyzerViewModel(context.Runtime, devices, resources, dialogs);
+        var model = new HiokiPowerAnalyzerViewModel(context.Runtime, devices, resources, dialogs, context.ResourceEditor);
         return new HiokiPowerAnalyzerView(model);
     }
 }

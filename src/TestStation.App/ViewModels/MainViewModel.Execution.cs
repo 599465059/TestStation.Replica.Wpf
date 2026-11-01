@@ -105,8 +105,8 @@ public partial class MainViewModel
                     simulation.TryAdd(pair.Key, JsonElementValue(pair.Value));
             if (_channelRuntime is TestStation.Application.Drivers.IExternalChannelRuntime externalRuntime)
                 foreach (var channel in externalRuntime.ExternalChannelIds) simulation.Remove(channel);
-            using var automationLease = await _channelRuntime.AcquireAutomationAsync("automatic",
-                usedChannels);
+            await using var automationLease = new ChannelAutomationScope(await _channelRuntime.AcquireAutomationAsync("automatic",
+                usedChannels));
             _runSequences = Sequences.ToDictionary(item => item.Id,
                 item => JsonSerializer.Deserialize<SequenceDefinition>(JsonSerializer.Serialize(item))!, StringComparer.Ordinal);
             var candidate = _runSequences[_sequence!.Id];

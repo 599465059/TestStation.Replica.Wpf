@@ -46,6 +46,13 @@ public sealed class ResourceCatalogEditingService(IResourceCatalogService catalo
 
     public TransportResource AddTransport(string type = "serial")
     {
+        var item = CreateTransportDraft(type);
+        Catalog.Transports.Add(item);
+        return item;
+    }
+
+    public static TransportResource CreateTransportDraft(string type)
+    {
         type = type.Trim().ToLowerInvariant();
         var item = new TransportResource
         {
@@ -69,7 +76,6 @@ public sealed class ResourceCatalogEditingService(IResourceCatalogService catalo
                 TransportSettingsAccessor.Write(item, new(VisaResource: "TCPIP::127.0.0.1::5025::INSTR", VisaBackend: ""));
                 break;
         }
-        Catalog.Transports.Add(item);
         return item;
     }
 

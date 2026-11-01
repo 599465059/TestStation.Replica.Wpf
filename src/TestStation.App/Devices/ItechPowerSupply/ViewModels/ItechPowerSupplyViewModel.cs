@@ -19,6 +19,7 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     private readonly IItechPowerSupplyProfileStore _profiles;
     private readonly IResourceManager _resources;
     private readonly ISequenceDialogService _dialogs;
+    private readonly IResourceEditorService? _resourceEditor;
     private readonly SynchronizationContext? _context = SynchronizationContext.Current;
     private readonly List<IDisposable> _subscriptions = [];
     private readonly System.Windows.Threading.DispatcherTimer _freshness = new() { Interval = TimeSpan.FromMilliseconds(500) };
@@ -66,28 +67,12 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     [ObservableProperty] private TransportResource? _selectedResource;
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private bool _editingResource;
-    [ObservableProperty] private string _resourceId = "";
-    [ObservableProperty] private string _resourceName = "";
-    [ObservableProperty] private string _resourceType = "tcp";
-    [ObservableProperty] private string _host = "127.0.0.1";
-    [ObservableProperty] private int _port = 5025;
-    [ObservableProperty] private string _serialPort = "COM1";
-    [ObservableProperty] private int _baudRate = 115200;
-    [ObservableProperty] private int _dataBits = 8;
-    [ObservableProperty] private string _parity = "None";
-    [ObservableProperty] private string _stopBits = "One";
-    [ObservableProperty] private int _timeoutMs = 1500;
-    public string[] ResourceTypes { get; } = ["tcp", "serial"];
-    public string[] Parities { get; } = ["None", "Odd", "Even", "Mark", "Space"];
-    public string[] StopBitOptions { get; } = ["One", "Two", "OnePointFive"];
-    public bool IsTcp => ResourceType == "tcp";
-    public bool IsSerial => ResourceType == "serial";
-    partial void OnResourceTypeChanged(string value) { OnPropertyChanged(nameof(IsTcp)); OnPropertyChanged(nameof(IsSerial)); }
+    [ObservableProperty] private bool _autoRefresh = true;
+    partial void OnAutoRefreshChanged(bool value) => UpdatePolling();
     public ItechPowerSupplyViewModel(IChannelRuntimeCoordinator runtime, IPowerSupplyDeviceService devices,
-        IItechPowerSupplyProfileStore profiles, IResourceManager resources, ISequenceDialogService dialogs)
+        IItechPowerSupplyProfileStore profiles, IResourceManager resources, ISequenceDialogService dialogs, IResourceEditorService? resourceEditor = null)
     {
-        _runtime = runtime; _devices = devices; _profiles = profiles; _resources = resources; _dialogs = dialogs;
+        _runtime = runtime; _devices = devices; _profiles = profiles; _resources = resources; _dialogs = dialogs; _resourceEditor = resourceEditor;
         _devices.Changed += DevicesChanged; _devices.StateChanged += DevicesStateChanged;
         _devices.Traffic += TrafficReceived; _devices.ValueChanged += DeviceValueChanged; _runtime.AvailabilityChanged += AvailabilityChanged;
         _freshness.Tick += (_, _) => { foreach (var field in Fields) field.RefreshAge(!IsConnected || IsAutomationActive); };
@@ -131,7 +116,7 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
         foreach (var name in new[] { nameof(Models), nameof(Resources), nameof(Model), nameof(Setpoints), nameof(Measurements), nameof(Protection), nameof(Extra), nameof(Output), nameof(HasExtra), nameof(HasOutput), nameof(HasProtection), nameof(ResourceSummary) }) OnPropertyChanged(name);
         NotifyState(); UpdatePolling();
     }
-    partial void OnSelectedModelChanged(PowerSupplyModel? value) { if (!_refreshing) { OnPropertyChanged(nameof(Resources)); if (SelectedResource is null || !Resources.Any(r => r.Id == SelectedResource.Id)) SelectedResource = Resources.FirstOrDefault(); } }
+    partial void OnSelectedModelChanged(PowerSupplyModel? value) { if (!_refreshing) { OnPropertyChanged(nameof(Resources)); if (SelectedResource is null || !Resources.Any(r => r.Id == SelectedResource.Id)) SelectedResource = null; } }
     partial void OnSelectedResourceChanged(TransportResource? value) => OnPropertyChanged(nameof(ResourceSummary));
     partial void OnIsBusyChanged(bool value) => NotifyState();
     private void NotifyState()
@@ -141,7 +126,7 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     private void StopSubscriptions() { foreach (var subscription in _subscriptions) subscription.Dispose(); _subscriptions.Clear(); }
     private void UpdatePolling()
     {
-        StopSubscriptions(); if (!_visible || !IsConnected || !_devices.FamilyEnabled) return;
+        StopSubscriptions(); if (!AutoRefresh || !_visible || !IsConnected || !_devices.FamilyEnabled) return;
         foreach (var field in Fields.Where(f => f.Definition.Poll && f.Definition.CanRead))
             _subscriptions.Add(_runtime.Subscribe(field.Definition.Id, TimeSpan.FromMilliseconds(field.Definition.IntervalMs), value => Post(() => field.Accept(value))));
     }
@@ -156,10 +141,10 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     {
         if (!CanConnect || SelectedDevice is null || SelectedModel is null || SelectedResource is null) return;
         var id = SelectedDevice.Id; var name = SelectedDevice.Name; var model = SelectedModel.Id; var resource = SelectedResource.Id;
-        await RunAsync(async () => { _devices.UpdateDevice(id, name, model, resource); await _devices.ConnectAsync(id); Status = "已连接"; });
+        await RunAsync(() => _runtime.ExecuteManualAsync(async () => { _devices.UpdateDevice(id, name, model, resource); await _devices.ConnectAsync(id); Status = "已连接"; }));
     }
     [RelayCommand] private async Task DisconnectAsync()
-    { if (!CanDisconnect || SelectedDevice is null) return; await RunAsync(async () => { await _devices.DisconnectDeviceAsync(SelectedDevice.Id); Status = "已断开"; }); }
+    { if (!CanDisconnect || SelectedDevice is null) return; await RunAsync(() => _runtime.ExecuteManualAsync(async () => { await _devices.DisconnectDeviceAsync(SelectedDevice.Id); Status = "已断开"; })); }
     [RelayCommand] private async Task AddDeviceAsync()
     {
         if (!CanManage) return;
@@ -194,31 +179,19 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     { if (!CanOperate || field is null || !field.Definition.CanRead) return; await RunAsync(async () => field.Accept(await _runtime.ReadOnceAsync(field.Definition.Id, "manual"))); }
     [RelayCommand] private async Task WriteFieldAsync(PowerSupplyField? field)
     { if (!CanOperate || field is null || !field.Definition.CanWrite) return; await RunAsync(async () => { await _runtime.WriteAsync(field.Definition.Id, field.ReadInput(), "manual"); Status = "通道写入完成"; }); }
-    [RelayCommand] private void EditResource()
+    [RelayCommand] private Task EditResourceAsync() => EditResourceCoreAsync(false);
+    [RelayCommand] private Task NewResourceAsync() => EditResourceCoreAsync(true);
+    private async Task EditResourceCoreAsync(bool create)
     {
-        if (!CanConfigure || SelectedResource is null) return;
-        if (_resources.IsLeased(SelectedResource.Id)) { Status = "资源已连接，请先断开占用设备"; return; }
-        var r = SelectedResource; var s = TransportSettingsAccessor.Read(r);
-        ResourceId = r.Id; ResourceName = r.Name; ResourceType = r.Type; Host = s.Host ?? "127.0.0.1"; Port = s.TcpPort ?? 5025;
-        SerialPort = s.Port ?? "COM1"; BaudRate = s.BaudRate ?? 115200; DataBits = s.DataBits ?? 8; Parity = s.Parity ?? "None"; StopBits = s.StopBits == "1" ? "One" : s.StopBits ?? "One";
-        TimeoutMs = r.Settings.TryGetValue("timeout_ms", out var t) ? t.GetInt32() : 1500; EditingResource = true;
-    }
-    [RelayCommand] private void NewResource()
-    { if (!CanManage) return; ResourceId = "transport_" + Guid.NewGuid().ToString("N")[..8]; ResourceName = "新通信资源"; ResourceType = "tcp"; EditingResource = true; }
-    [RelayCommand] private void CancelResource() => EditingResource = false;
-    [RelayCommand] private async Task SaveResourceAsync()
-    {
-        if (!CanManage) return;
-        await RunAsync(() =>
+        if (!CanConfigure || _resourceEditor is null || (!create && SelectedResource is null)) return;
+        await RunAsync(async () =>
         {
-            var resource = _devices.Resources.FirstOrDefault(r => r.Id == ResourceId) ?? new TransportResource { Id = ResourceId };
-            resource.Name = ResourceName.Trim(); resource.Type = ResourceType;
-            TransportSettingsAccessor.Write(resource, new(Port: SerialPort, BaudRate: BaudRate, DataBits: DataBits, Parity: Parity, StopBits: StopBits, Host: Host.Trim(), TcpPort: Port, ConnectTimeoutMs: TimeoutMs));
-            resource.Settings["timeout_ms"] = JsonSerializer.SerializeToElement(TimeoutMs);
-            _devices.SaveResource(resource); _resourceItems = _devices.Resources.ToArray(); OnPropertyChanged(nameof(Resources)); SelectedResource = Resources.FirstOrDefault(r => r.Id == resource.Id); EditingResource = false; Status = "资源参数已保存";
-            return Task.CompletedTask;
+            var resource = await _resourceEditor.EditAsync(create ? null : SelectedResource, ["tcp", "serial"]);
+            if (resource is null) return;
+            Reload(); SelectedResource = Resources.FirstOrDefault(r => r.Id == resource.Id);
         });
     }
+
     public void Dispose()
     { StopPolling(); _devices.Changed -= DevicesChanged; _devices.StateChanged -= DevicesStateChanged; _devices.Traffic -= TrafficReceived; _devices.ValueChanged -= DeviceValueChanged; _runtime.AvailabilityChanged -= AvailabilityChanged; }
 }

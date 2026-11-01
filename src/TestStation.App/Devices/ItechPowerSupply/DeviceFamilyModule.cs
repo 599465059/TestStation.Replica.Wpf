@@ -26,6 +26,7 @@ public sealed class DeviceFamilyModule : IModule
             return catalog;
         });
         registry.RegisterSingleton<IPowerSupplyDeviceService, PowerSupplyDeviceService>();
+        registry.RegisterSingleton<PowerSupplyManagementAdapter>();
         registry.RegisterSingleton<PowerSupplyPanelProvider>();
     }
     public void OnInitialized(IContainerProvider provider) { }
@@ -39,7 +40,7 @@ public sealed class PowerSupplyPanelProvider(IPowerSupplyDeviceService devices, 
     public string Version => "2.0";
     public FrameworkElement CreateView(ManualPluginViewContext context)
     {
-        var operation = new ItechPowerSupplyViewModel(context.Runtime, devices, profiles, resources, sequenceDialogs);
+        var operation = new ItechPowerSupplyViewModel(context.Runtime, devices, profiles, resources, sequenceDialogs, context.ResourceEditor);
         var view = new ItechPowerSupplyView(operation);
         if (context.WorkspaceId != "device-testing") return view;
         var admin = new ItechPowerSupplyAdminViewModel(profiles, devices, context.Runtime, sequenceDialogs);

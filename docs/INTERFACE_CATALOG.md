@@ -25,6 +25,12 @@
 | `IDeviceFamilyCatalog` | 已安装家族元数据和启用状态边界 | `ManualPluginViewRegistry` 组合根适配；外部扫描器暂未接入 |
 | `IDeviceFamilyModule` | 家族型号目录和驱动工厂的 WPF 无关契约 | `ItechPowerSupplyFamilyModule`；首期应用内注册，外部插件包暂未接入 |
 | `IDeviceInstanceService` | 工程设备实例、资源绑定和会话生命周期边界 | ITECH 具体实现由 `PowerSupplyDeviceService` 提供；PW6001 由 `HiokiPowerAnalyzerDeviceService` 提供 |
+| `IResourceConfigurationService` | 资源草稿校验、原子保存、删除和租约检查 | `ResourceConfigurationService` |
+| `IDeviceManagementService` | 聚合设备家族实例列表、连接状态和批量断开 | `DeviceManagementService` |
+| `ITransportDiscoveryService` | 串口、PCAN 和 VISA 后端可用性发现 | `TransportDiscoveryService` |
+| `ITransportDiagnosticService` | 使用正式传输工厂进行原始字节/CAN 诊断 | `TransportDiagnosticService` |
+| `IByteTransportSession` | TCP、串口和 VISA 字节交换 | `TcpTransportSession`、`SerialTransportSession`、`VisaTransportSession` |
+| `ICanBusSession` | CAN/CAN FD 帧发送、持续接收和过滤 | `PcanCanBusSession`、`SimulatedCanBusSession` |
 
 ### App 层
 
@@ -37,7 +43,7 @@
 | `IIndustrialControlsThemeAdapter` | 将应用语义资源映射到 Industrial.Controls | 不调用库的全局主题覆盖 |
 | `ISequenceDialogService` | 序列未保存、删除和切换确认 | 使用发布控件库弹窗 |
 | `IProtocolDialogService` | 协议未保存、删除和导入提示 | 使用发布控件库弹窗 |
-| `IManualPluginViewProvider` | 提供一个设备插件的手动测试界面及版本信息 | `ManualTestView` 宿主；插件加载器尚未接入 |
+| `IManualPluginViewProvider` | 提供一个设备插件的手动测试界面及版本信息 | `ManualTestView` 与 `DeviceTestingView` 宿主；外部插件包尚未接入 |
 | `IManualPluginViewRegistry` | 注册、移除和通知手动插件界面 | `ManualPluginViewRegistry` |
 
 ## 通信和设备接口
