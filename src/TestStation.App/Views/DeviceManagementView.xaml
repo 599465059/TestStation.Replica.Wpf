@@ -22,7 +22,7 @@
   <Grid Grid.Row="1" Visibility="{Binding ShowResources, Converter={StaticResource Visible}}">
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="160"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <DockPanel Margin="0,0,0,12"><Border/>
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" IsEnabled="{Binding CanManage}"><Button Content="{x:Static text:UiText.New}" Command="{Binding NewResourceCommand}" Margin="4,0" AutomationProperties.AutomationId="NewHardwareResource"/><Button Content="{x:Static text:UiText.HwEdit}" Command="{Binding EditResourceCommand}" Margin="4,0"/><Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteResourceCommand}" Margin="4,0"/></StackPanel>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="{x:Static text:UiText.New}" Command="{Binding NewResourceCommand}" IsEnabled="{Binding CanManage}" Margin="4,0" AutomationProperties.AutomationId="NewHardwareResource"/><Button Content="{x:Static text:UiText.HwEdit}" Command="{Binding EditResourceCommand}" IsEnabled="{Binding CanEditSelectedResource}" Margin="4,0"/><Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteResourceCommand}" IsEnabled="{Binding CanDeleteSelectedResource}" Margin="4,0"/></StackPanel>
    </DockPanel>
    <Grid Grid.Row="1"><DataGrid ItemsSource="{Binding Resources}" SelectedItem="{Binding SelectedResource}" Style="{StaticResource ManagedGrid}">
     <DataGrid.Columns>
@@ -30,7 +30,7 @@
      <DataGridTextColumn Header="{x:Static text:UiText.Type}" Binding="{Binding TypeText}" Width="85" MinWidth="80"/>
      <DataGridTextColumn Header="{x:Static text:UiText.SettingsSummary}" Binding="{Binding Summary}" Width="260" MinWidth="220"/>
      <DataGridTextColumn Header="{x:Static text:UiText.HwBoundDevices}" Binding="{Binding BoundDevices}" Width="180" MinWidth="140"/>
-     <DataGridTextColumn Header="{x:Static text:UiText.HwOccupancy}" Binding="{Binding Occupancy}" Width="100" MinWidth="90"/>
+     <DataGridTemplateColumn Header="{x:Static text:UiText.HwOccupancy}" Width="130" MinWidth="110"><DataGridTemplateColumn.CellTemplate><DataTemplate><TextBlock Text="{Binding Occupancy}" ToolTip="{Binding Owners}" VerticalAlignment="Center"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
     </DataGrid.Columns>
    </DataGrid><TextBlock Text="{x:Static text:UiText.HwNoResources}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Resources.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid>
    <GroupBox Grid.Row="2" Header="{x:Static text:UiText.HwDiagnostic}" Margin="0,12,0,0">

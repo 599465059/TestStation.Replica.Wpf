@@ -25,16 +25,16 @@ public sealed class ResourceConfigurationService(IResourceCatalogService catalog
         if (resources.IsLeased(draft.Id)) throw new ResourceLeaseException("资源正在使用，请先断开设备或关闭诊断");
         TransportSettingsAccessor.ValidateEndpoint(draft);
         var next = Clone(catalog.Catalog);
-        var index = next.Transports.FindIndex(r => r.Id == draft.Id);
+        var index = next.Transports.FindIndex(r => r.Id.Equals(draft.Id, StringComparison.OrdinalIgnoreCase));
         if (index < 0) next.Transports.Add(Clone(draft)); else next.Transports[index] = Clone(draft);
         catalog.Save(next);
     }
     public void Delete(string resourceId)
     {
         if (resources.IsLeased(resourceId)) throw new ResourceLeaseException("资源正在使用，请先断开设备或关闭诊断");
-        if (catalog.Catalog.Devices.Any(d => d.TransportId == resourceId)) throw new ResourceLeaseException("资源仍被设备绑定，请先解除绑定");
+        if (catalog.Catalog.Devices.Any(d => d.TransportId.Equals(resourceId, StringComparison.OrdinalIgnoreCase))) throw new ResourceLeaseException("资源仍被设备绑定，请先解除绑定");
         var next = Clone(catalog.Catalog);
-        next.Transports.RemoveAll(r => r.Id == resourceId);
+        next.Transports.RemoveAll(r => r.Id.Equals(resourceId, StringComparison.OrdinalIgnoreCase));
         catalog.Save(next);
     }
 }

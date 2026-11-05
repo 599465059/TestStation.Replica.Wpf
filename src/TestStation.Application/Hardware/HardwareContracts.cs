@@ -6,6 +6,15 @@ namespace TestStation.Application.Hardware;
 
 public enum ResourceLeaseMode { Exclusive, SharedBus }
 
+/// <summary>当前传输资源的租约快照，用于管理页面显示和操作前置判断。</summary>
+public sealed record ResourceOccupancy(
+    string ResourceId,
+    bool IsLeased,
+    ResourceLeaseMode? Mode,
+    int LeaseCount,
+    IReadOnlyDictionary<string, int> Owners,
+    string Endpoint);
+
 public sealed record TransportEndpoint(
     string ResourceId,
     string Type,
@@ -156,6 +165,7 @@ public interface IResourceManager
     TransportResource? Find(string resourceId);
     IDisposable Acquire(string resourceId, string owner, ResourceLeaseMode? mode = null);
     bool IsLeased(string resourceId);
+    ResourceOccupancy GetOccupancy(string resourceId);
     event EventHandler? Changed;
 }
 

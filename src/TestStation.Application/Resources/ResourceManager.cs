@@ -47,6 +47,22 @@ public sealed class ResourceManager : IResourceManager, IDisposable
         lock (_sync) return _slots.TryGetValue(resourceId, out var slot) && (slot.Exclusive > 0 || slot.Shared > 0);
     }
 
+    public ResourceOccupancy GetOccupancy(string resourceId)
+    {
+        lock (_sync)
+        {
+            if (!_slots.TryGetValue(resourceId, out var slot))
+                return new(resourceId, false, null, 0, new Dictionary<string, int>(), "");
+            lock (slot.Sync)
+            {
+                var owners = new Dictionary<string, int>(slot.Counts, StringComparer.OrdinalIgnoreCase);
+                var count = owners.Values.Sum();
+                ResourceLeaseMode? mode = slot.Exclusive > 0 ? ResourceLeaseMode.Exclusive : slot.Shared > 0 ? ResourceLeaseMode.SharedBus : null;
+                return new(resourceId, count > 0, mode, count, owners, slot.Endpoint);
+            }
+        }
+    }
+
     public IDisposable Acquire(string resourceId, string owner, ResourceLeaseMode? mode = null)
     {
         var lease = AcquireCore(resourceId, owner, mode);

@@ -45,6 +45,9 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
     [ObservableProperty] private int _timeoutMs = 1500;
     public bool ShowDevices => !ShowResources;
     public bool CanManage => _catalog.ProjectRoot is not null && !IsBusy && !_runtime.IsAutomationActive;
+    public bool SelectedResourceLeased => SelectedResource is not null && _resources.IsLeased(SelectedResource.Definition.Id);
+    public bool CanEditSelectedResource => CanManage && SelectedResource is not null && !SelectedResourceLeased;
+    public bool CanDeleteSelectedResource => CanEditSelectedResource;
     public bool DiagnosticOpen => _diagnostics.IsOpen;
     public bool CanDiagnostic => CanManage && !DiagnosticOpen;
     public bool DiagnosticByte => !DiagnosticCan;
@@ -65,10 +68,11 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
     private void Post(Action action) { if (_context is null) action(); else _context.Post(_ => action(), null); }
     private void Changed(object? sender, EventArgs e) => Post(Reload);
     partial void OnShowResourcesChanged(bool value) { OnPropertyChanged(nameof(ShowDevices)); OnPropertyChanged(nameof(HardwareTabIndex)); }
+    partial void OnSelectedResourceChanged(ResourceManagementRow? value) => NotifyState();
     /// <summary>In-page tab strip on the hardware configuration page: 0 = communication resources, 1 = device instances.</summary>
     public int HardwareTabIndex { get => ShowResources ? 0 : 1; set => ShowResources = value != 1; }
     partial void OnIsBusyChanged(bool value) => NotifyState();
-    private void NotifyState() { foreach (var name in new[] { nameof(CanManage), nameof(DiagnosticOpen), nameof(CanToggleDiagnostic), nameof(DiagnosticCan), nameof(DiagnosticByte), nameof(CanDiagnostic), nameof(DiagnosticState) }) OnPropertyChanged(name); }
+    private void NotifyState() { foreach (var name in new[] { nameof(CanManage), nameof(SelectedResourceLeased), nameof(CanEditSelectedResource), nameof(CanDeleteSelectedResource), nameof(DiagnosticOpen), nameof(CanToggleDiagnostic), nameof(DiagnosticCan), nameof(DiagnosticByte), nameof(CanDiagnostic), nameof(DiagnosticState) }) OnPropertyChanged(name); }
     private void Reload()
     {
         var resourceId = SelectedResource?.Definition.Id; var deviceId = SelectedDevice?.Definition.Id;
@@ -78,7 +82,10 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
             var s = TransportSettingsAccessor.Read(resource);
             var summary = resource.Type switch { "tcp" => $"{s.Host}:{s.TcpPort}", "udp" => $"{s.Host}:{s.TcpPort}", "serial" => $"{s.Port} · {s.SerialMode} · {s.BaudRate}", "can" => $"{s.CanBackendId} · {s.CanChannel} · {s.CanBitrate}", "visa" => s.VisaResource ?? "", _ => resource.Type };
             var bound = string.Join("、", _catalog.Catalog.Devices.Where(d => d.TransportId == resource.Id).Select(d => d.Name));
-            Resources.Add(new(resource, summary, bound, _resources.IsLeased(resource.Id) ? UiText.Get("HwInUse") : UiText.Get("HwIdle")));
+            var occupancy = _resources.GetOccupancy(resource.Id);
+            var occupancyText = occupancy.IsLeased ? $"{UiText.Get("HwInUse")} ({occupancy.LeaseCount})" : UiText.Get("HwIdle");
+            var owners = occupancy.Owners.Count == 0 ? "" : string.Join("、", occupancy.Owners.Select(item => $"{item.Key} ×{item.Value}"));
+            Resources.Add(new(resource, summary, bound, occupancyText, owners));
         }
         Devices.Clear();
         foreach (var device in _catalog.Catalog.Devices)
@@ -103,10 +110,10 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
         finally { _operation.Dispose(); _operation = null; IsBusy = false; Reload(); }
     }
     [RelayCommand] private async Task NewResourceAsync() { if (!CanManage) return; await RunAsync(async _ => { var created = await _editor.EditAsync(); if (created is not null) { Reload(); SelectedResource = Resources.First(r => r.Definition.Id == created.Id); Status = UiText.Get("HwResourceSaved"); } }); }
-    [RelayCommand] private async Task EditResourceAsync() { if (!CanManage || SelectedResource is null) return; var selected = SelectedResource.Definition; await RunAsync(async _ => { if (_resources.IsLeased(selected.Id)) throw new InvalidOperationException(UiText.Get("HwLeased")); await _editor.EditAsync(selected); }); }
+    [RelayCommand] private async Task EditResourceAsync() { if (!CanEditSelectedResource || SelectedResource is null) return; var selected = SelectedResource.Definition; await RunAsync(async _ => { await _editor.EditAsync(selected); }); }
     [RelayCommand] private async Task DeleteResourceAsync()
     {
-        if (!CanManage || SelectedResource is null) return;
+        if (!CanDeleteSelectedResource || SelectedResource is null) return;
         var resource = SelectedResource.Definition;
         if (!await _dialogs.ConfirmMessageAsync(UiText.Delete, resource.Name)) return;
         await RunAsync(_ => _runtime.ExecuteManualAsync(() => { _configuration.Delete(resource.Id); return Task.CompletedTask; }));
@@ -197,7 +204,7 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
     public async Task LeaveAsync() { Cancel(); await _diagnostics.CloseAsync(); NotifyState(); }
 }
 
-public sealed record ResourceManagementRow(TransportResource Definition, string Summary, string BoundDevices, string Occupancy)
+public sealed record ResourceManagementRow(TransportResource Definition, string Summary, string BoundDevices, string Occupancy, string Owners)
 {
     /// <summary>Display name of the stored transport type id.</summary>
     public string TypeText => TestStation.Application.Resources.TransportSettingsAccessor.NormalizeType(Definition.Type) switch
