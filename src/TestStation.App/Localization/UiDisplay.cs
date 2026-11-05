@@ -42,31 +42,29 @@ public static class UiDisplay
         "SKIPPED" => UiText.Skipped, "PENDING" => UiText.Pending, _ => state
     };
 
-    public static string StepState(string state, bool hasJudgment)
+    /// <summary>
+    /// Row status text. Judgment steps report 通过/失败; ordinary steps report
+    /// 完成/异常. Steps that have not run show a dash so an idle table stays quiet.
+    /// </summary>
+    public static string StepState(string state, bool hasJudgment) => state.ToUpperInvariant() switch
     {
-        if (hasJudgment) return state.ToUpperInvariant() switch
-        {
-            "PASSED" or "COMPLETED" => "通过", "FAILED" => "失败", "RUNNING" or "PENDING" => "未完成",
-            "SKIPPED" or "STOPPED" => "未完成", _ => string.IsNullOrWhiteSpace(state) ? "未完成" : state
-        };
-        return state.ToUpperInvariant() switch
-        {
-            "PASSED" or "COMPLETED" => "完成", "RUNNING" or "PENDING" or "FAILED" or "STOPPED" or "SKIPPED" => "未完成",
-            _ => string.IsNullOrWhiteSpace(state) ? "未完成" : state
-        };
-    }
+        "PASSED" or "COMPLETED" => hasJudgment ? UiText.Passed : "完成",
+        "FAILED" => hasJudgment ? UiText.Failed : "异常",
+        "RUNNING" => UiText.Running,
+        "SKIPPED" => UiText.Skipped,
+        "STOPPED" => UiText.Stopped,
+        "" or "PENDING" => "—",
+        _ => state
+    };
 
-    public static string StepStateColor(string state, bool hasJudgment)
+    /// <summary>Semantic status category; the view maps it to theme brushes.</summary>
+    public static string StepStateKind(string state) => state.ToUpperInvariant() switch
     {
-        if (hasJudgment) return state.ToUpperInvariant() switch
-        {
-            "PASSED" or "COMPLETED" => "#22C55E", "FAILED" => "#EF4444", "RUNNING" => "#C084FC", _ => "#F59E0B"
-        };
-        return state.ToUpperInvariant() switch
-        {
-            "PASSED" or "COMPLETED" => "#60A5FA", "RUNNING" => "#C084FC", _ => "#F59E0B"
-        };
-    }
+        "PASSED" or "COMPLETED" => "success",
+        "FAILED" => "error",
+        "RUNNING" => "running",
+        _ => "idle"
+    };
 
     public static string LogLevel(string level) => level.ToUpperInvariant() switch
     {

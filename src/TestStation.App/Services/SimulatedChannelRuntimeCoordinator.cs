@@ -55,7 +55,17 @@ public sealed class SimulatedChannelRuntimeCoordinator : IChannelRuntimeCoordina
         private readonly SimulatedChannelRuntimeCoordinator _owner;
         private int _disposed;
         public AutomationLease(SimulatedChannelRuntimeCoordinator owner) => _owner = owner;
-        public void Dispose() { if (Interlocked.Exchange(ref _disposed, 1) == 0) _ = _owner.ReleaseAutomationAsync(); }
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+            // The coordinator exposes IDisposable for existing callers that use
+            // a normal `using` scope. Fire-and-forget release left the runtime
+            // marked as automatic for a short, nondeterministic window after
+            // the scope ended, so manual access and tests could observe a stale
+            // lock. Complete the same release synchronously; the async path is
+            // still used by `await using`.
+            _owner.ReleaseAutomationAsync().GetAwaiter().GetResult();
+        }
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.Exchange(ref _disposed, 1) == 0) await _owner.ReleaseAutomationAsync().ConfigureAwait(false);
@@ -184,7 +194,12 @@ public sealed class SimulatedChannelRuntimeCoordinator : IChannelRuntimeCoordina
                     return new ChannelRuntimeValue(channelId, value.Clone(), DateTimeOffset.Now);
                 }
             }
-            var actual = await _io.ReadAsync(channelId, cancellationToken).ConfigureAwait(false);
+            // Unsubscribing stops future polls, but must not interrupt an in-flight
+            // request and leave a partial response on a shared device connection.
+            cancellationToken.ThrowIfCancellationRequested();
+            var transactionToken = owner.Equals("manual-poll", StringComparison.OrdinalIgnoreCase)
+                ? CancellationToken.None : cancellationToken;
+            var actual = await _io.ReadAsync(channelId, transactionToken).ConfigureAwait(false);
             return new ChannelRuntimeValue(channelId, actual, DateTimeOffset.Now);
         }
         finally { _ioGate.Release(); }
@@ -235,7 +250,12 @@ public sealed class SimulatedChannelRuntimeCoordinator : IChannelRuntimeCoordina
                 if (Devices is not null) await Devices.BeginAutomationAsync(requested, token).ConfigureAwait(false);
                 return AcquireAutomationCore(owner, requested);
             }
-            catch { if (Devices is not null) await Devices.EndAutomationAsync(CancellationToken.None).ConfigureAwait(false); throw; }
+            catch (Exception error)
+            {
+                try { if (Devices is not null) await Devices.EndAutomationAsync(CancellationToken.None).ConfigureAwait(false); }
+                catch (Exception cleanup) { error.Data["AutomationRollback"] = cleanup.ToString(); }
+                throw;
+            }
         }
         finally { _ioGate.Release(); }
     }

@@ -1,4 +1,4 @@
-> 当前接入记录。正式页面使用 Industrial.Controls 1.0.0；最新迁移结果及缺项以 CONTROL_LIBRARY_GAPS.md 和 CONTROL_USAGE_INVENTORY.json 为准。
+> 当前接入记录。正式页面使用 Industrial.Controls 1.1.0；最新迁移结果及缺项以 CONTROL_LIBRARY_GAPS.md 和 CONTROL_USAGE_INVENTORY.json 为准。
 
 # Industrial.Controls 第一轮接入
 
@@ -6,10 +6,10 @@
 
 ## 固定包与来源
 
-- 来源：`F:\opencode\web_py\UI库\IndustrialKit\dist\packages\Industrial.Controls.1.0.0.nupkg`。
-- 本工程保存位置：`vendor/nuget/Industrial.Controls.1.0.0.nupkg`。
-- 原包与工程内副本 SHA-256：`FB2DCE6556E46F2183B8301157535EBC6E29896129B6E8E1B8B8FAFB648E85BE`。
-- App 项目以 `Version="[1.0.0]"` 精确引用。NuGet.Config 为此包指定工程内源，其余包使用 nuget.org。
+- 来源：`F:\opencode\web_py\UI库\IndustrialKit\dist\packages\Industrial.Controls.1.1.0.nupkg`。
+- 本工程保存位置：`vendor/nuget/Industrial.Controls.1.1.0.nupkg`。
+- 原包与工程内副本 SHA-256：`256C88D61791DD7B6F1765612FFD7948F53AFF7C7BA0057E4D03B5A5FDBB1E04`。
+- App 项目以 `Version="[1.1.0]"` 精确引用。NuGet.Config 为此包指定工程内源，其余包使用 nuget.org。
 - 当前目标框架为 .NET 10，HandyControl 3.5.1、MaterialDesignThemes 5.3.2 继续使用现有版本。
 
 只消费已发布的包。IndustrialKit 源码与 Gallery 保持只读；源码中尚未发布到此版本包的功能不会自动进入本软件。
@@ -55,7 +55,7 @@ SurfaceBrush、SubtleBrush、TextBrush、MutedBrush、AccentBrush、SuccessBrush
 
 ## 当前边界
 
-正式页面和自动测试编辑器已使用同一套 1.0.0 资源入口；AvalonDock 继续作为停靠宿主，不复制控件库模板。
+正式页面和自动测试编辑器已使用同一套 1.1.0 资源入口；AvalonDock 继续作为停靠宿主，不复制控件库模板。
 
 库的 FluentWindow 等组件依赖库内部 Theme.Mode/Changed。本轮保留现有主窗口；后续接入这些组件时，需要确认库提供外部主题状态和通知接口，不能通过反射修改其私有状态，也不能让两个全局主题管理器同时覆盖资源。
 
@@ -72,7 +72,7 @@ dotnet restore TestStation.slnx
 dotnet build TestStation.slnx --no-restore
 dotnet run --no-build --project src/TestStation.Smoke/TestStation.Smoke.csproj
 dotnet run --no-build --project src/TestStation.Smoke/TestStation.Smoke.csproj -- --ui
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\jmytest\TestStation.Replica.Wpf\artifacts\demo-project"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\TestStation.Replica.Wpf\artifacts\demo-project"
 ```
 
 ## 验收记录
@@ -85,7 +85,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Ve
 - 页面生命周期：离开预览页后卸载控件并关闭弹窗，返回保持样例数据，工程和序列未被预览操作修改。
 - 无工程入口：预览页可以直接打开，并可返回工程选择页。
 - 正式 Prism 程序：实际 EXE 的依赖注入、预览入口、确认命令、启用/禁用及标题栏主题切换通过；最大化后的序列编辑区占比仍为 65.1%，程序保持响应。
-- 包文件一致性：原包与工程内副本 SHA-256 一致；包内 DLL 与实际 App 输出 DLL 的 SHA-256 均为 `8E934CC023A9BB7669B5B73100B608198E8F7BD630FBC88481A4A4A6A8B3ACE0`，确认实际加载最新发布控件。
+- 包文件一致性：原包与工程内副本 SHA-256 一致；包内 DLL 与实际 App 输出 DLL 的 SHA-256 均为 `FC474321CCD0C10D4664CA8B3C655F1ACA83D97184C52E4D870CDE9ADC510EA2`，确认实际加载最新发布控件。
 
 控件截图：`artifacts/ui/controls-preview-light.png`、`controls-preview-dark.png`。
 正式程序检查另输出 `artifacts/ui/prism-controls-light.png`、`prism-controls-dark.png`。

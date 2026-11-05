@@ -99,7 +99,7 @@ public partial class ManualWorkspaceView : UserControl
         if (e.PropertyName is nameof(ManualWorkspaceTab.Title) or nameof(ManualWorkspaceTab.Name)) AdaptDocumentHeaders();
     }
 
-    // MdiWorkspace 1.0.0 exposes no title setter/header template. Bind its public
+    // MdiWorkspace 1.1.0 exposes no title setter/header template. Bind its public
     // composed header elements without reflection, private state or template replacement.
     private void AdaptDocumentHeaders()
     {

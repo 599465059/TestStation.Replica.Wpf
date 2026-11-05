@@ -1015,8 +1015,8 @@
   <data name="ManualCascade" xml:space="preserve"><value>层叠</value></data>
   <data name="ManualTabbedView" xml:space="preserve"><value>切换为标签视图</value></data>
   <data name="ManualWindowView" xml:space="preserve"><value>切换为窗口视图</value></data>
-  <data name="PluginManagement" xml:space="preserve"><value>设备管理</value></data>
-  <data name="PluginManagementHint" xml:space="preserve"><value>管理内置设备家族的启用状态。</value></data>
+  <data name="PluginManagement" xml:space="preserve"><value>插件</value></data>
+  <data name="PluginManagementHint" xml:space="preserve"><value>启用或停用设备家族。停用后该家族不再出现在设备页和手动测试中，设备实例和配置保留。从目录加载或卸载插件包尚未接入。</value></data>
   <data name="PluginEnable" xml:space="preserve"><value>启用设备</value></data>
   <data name="PluginDisable" xml:space="preserve"><value>禁用设备</value></data>
   <data name="PluginId" xml:space="preserve"><value>设备家族标识</value></data>
@@ -1027,13 +1027,13 @@
   <data name="PluginStateChanged" xml:space="preserve"><value>{0}：{1}。手动界面和通道列表已同步。</value></data>
   <data name="ManualPluginHint" xml:space="preserve"><value>选择设备标签，或平铺查看多个设备。</value></data>
   <data name="ManualPluginEmpty" xml:space="preserve"><value>没有已启用的手动设备界面</value></data>
-  <data name="ManualPluginEmptyHint" xml:space="preserve"><value>可从顶部添加设备界面；设备已禁用时，请进入“设备测试 → 设备管理”启用。</value></data>
+  <data name="ManualPluginEmptyHint" xml:space="preserve"><value>从顶部“添加设备界面”选择需要的工程设备。每组最多显示 4 个面板。</value></data>
   <data name="ManualPluginTabs" xml:space="preserve"><value>标签查看</value></data>
   <data name="ManualPluginTile" xml:space="preserve"><value>平铺查看</value></data>
   <data name="ManualAddDevice" xml:space="preserve"><value>添加设备界面</value></data>
   <data name="ManualPluginLoadFailed" xml:space="preserve"><value>设备界面加载失败：{0}</value></data>
   <data name="DeviceTesting" xml:space="preserve"><value>设备测试</value></data>
-  <data name="DeviceFamilyUnavailable" xml:space="preserve"><value>设备家族未启用。请在“设备测试 → 设备管理”中启用。</value></data>
+  <data name="DeviceFamilyUnavailable" xml:space="preserve"><value>设备家族未启用。请在“插件”页启用。</value></data>
   <data name="DeviceChannelUnavailable" xml:space="preserve"><value>设备通道不可用：{0}。请检查设备是否启用，以及当前型号是否支持该通道。</value></data>
   <data name="HwManagement" xml:space="preserve"><value>设备管理</value></data>
   <data name="HwResources" xml:space="preserve"><value>通信资源</value></data>
@@ -1087,4 +1087,164 @@
   <data name="HwRefreshAuto" xml:space="preserve"><value>自动刷新</value></data>
   <data name="HwPaused" xml:space="preserve"><value>暂停刷新</value></data>
   <data name="HwReadOnce" xml:space="preserve"><value>读取一次</value></data>
+  <data name="Workbench" xml:space="preserve"><value>工作台</value></data>
+  <data name="Devices" xml:space="preserve"><value>设备</value></data>
+  <data name="HardwareConfig" xml:space="preserve"><value>硬件配置</value></data>
+  <data name="NoDeviceFamilies" xml:space="preserve"><value>没有已启用的设备家族。在“插件”页启用后会显示在这里。</value></data>
+  <data name="StatusDevicesOnline" xml:space="preserve"><value>设备在线 {0} / {1}</value></data>
+  <data name="StatusDevicesTooltip" xml:space="preserve"><value>已连接的设备实例 / 工程中配置的设备实例</value></data>
+  <data name="StatusExecutor" xml:space="preserve"><value>执行器：</value></data>
+  <data name="WorkbenchSubtitle" xml:space="preserve"><value>先确认工位状态，再开始测试</value></data>
+  <data name="WorkbenchOpenAutomatic" xml:space="preserve"><value>进入自动测试</value></data>
+  <data name="WorkbenchManageResources" xml:space="preserve"><value>管理通信资源</value></data>
+  <data name="WorkbenchDevicesHint" xml:space="preserve"><value>点击设备进入设备页</value></data>
+  <data name="WorkbenchNoDevices" xml:space="preserve"><value>工程中还没有设备实例。在“硬件配置”中添加通信资源和设备实例后，这里会显示它们的连接状态。</value></data>
+  <data name="WorkbenchRecentRuns" xml:space="preserve"><value>最近运行</value></data>
+  <data name="WorkbenchAll" xml:space="preserve"><value>全部</value></data>
+  <data name="WorkbenchNoRuns" xml:space="preserve"><value>还没有运行记录。运行主序列后，结果会显示在这里。</value></data>
+  <data name="WorkbenchProject" xml:space="preserve"><value>工程</value></data>
+  <data name="WorkbenchProjectName" xml:space="preserve"><value>名称</value></data>
+  <data name="WorkbenchMainSequence" xml:space="preserve"><value>主序列</value></data>
+  <data name="WorkbenchSubprojects" xml:space="preserve"><value>序列子工程</value></data>
+  <data name="WorkbenchSequences" xml:space="preserve"><value>序列</value></data>
+  <data name="WorkbenchManage" xml:space="preserve"><value>管理</value></data>
+  <data name="WorkbenchMissingPlugins" xml:space="preserve"><value>工程需要但未安装的设备家族：</value></data>
+  <data name="WorkbenchNone" xml:space="preserve"><value>无</value></data>
+  <data name="WorkbenchPluginNotLoaded" xml:space="preserve"><value>插件未加载</value></data>
+  <data name="WorkbenchPluginsAllLoaded" xml:space="preserve"><value>已启用 {0} 个设备家族。</value></data>
+  <data name="WorkbenchPluginsSomeDisabled" xml:space="preserve"><value>已启用 {0} 个设备家族；已停用：{1}。</value></data>
+  <data name="WorkbenchToday" xml:space="preserve"><value>今天</value></data>
+  <data name="WorkbenchYesterday" xml:space="preserve"><value>昨天</value></data>
+  <data name="WorkbenchDuration" xml:space="preserve"><value>用时</value></data>
+  <data name="RunHistorySubtitle" xml:space="preserve"><value>主序列的每次运行和测试报告</value></data>
+  <data name="RunHistoryOpenReport" xml:space="preserve"><value>打开报告</value></data>
+  <data name="RunHistorySection" xml:space="preserve"><value>区域</value></data>
+  <data name="RunHistoryDuration" xml:space="preserve"><value>耗时</value></data>
+  <data name="RunHistoryEmpty" xml:space="preserve"><value>还没有运行记录。运行主序列后会显示在这里；调试子序列不生成记录。</value></data>
+  <data name="RunHistorySelectHint" xml:space="preserve"><value>在左侧选择一条运行记录</value></data>
+  <data name="RunHistoryNoSteps" xml:space="preserve"><value>这次运行没有步骤结果</value></data>
+  <data name="RunHistoryDetails" xml:space="preserve"><value>序列：{0}
+结果：{1}
+开始：{2}
+结束：{3}
+步骤数：{4}</value></data>
+  <data name="StatusLiveOutputs" xml:space="preserve"><value>输出中 {0} 台</value></data>
+  <data name="StatusLiveOne" xml:space="preserve"><value>输出中</value></data>
+  <data name="StatusLiveTooltip" xml:space="preserve"><value>有设备的输出处于开启状态，点击查看</value></data>
+  <data name="SafeOffFailedTitle" xml:space="preserve"><value>请确认电源输出</value></data>
+  <data name="SafeOffFailedMessage" xml:space="preserve"><value>断开设备前关闭输出没有成功，连接已经断开，输出可能仍处于开启状态。请到现场确认后再继续操作。
+
+{0}</value></data>
+  <data name="SettingsLook" xml:space="preserve"><value>外观</value></data>
+  <data name="SettingsSafety" xml:space="preserve"><value>安全</value></data>
+  <data name="SettingsExecutor" xml:space="preserve"><value>执行器</value></data>
+  <data name="SettingsLogs" xml:space="preserve"><value>日志与诊断</value></data>
+  <data name="SettingsAbout" xml:space="preserve"><value>关于</value></data>
+  <data name="SettingsScopeLocal" xml:space="preserve"><value>本机设置，所有工程共用。保存在 </value></data>
+  <data name="SettingsThemeGroup" xml:space="preserve"><value>主题</value></data>
+  <data name="SettingsLayoutGroup" xml:space="preserve"><value>布局</value></data>
+  <data name="SettingsOutputGroup" xml:space="preserve"><value>输出</value></data>
+  <data name="SettingsThemeMode" xml:space="preserve"><value>明暗</value></data>
+  <data name="SettingsThemeModeHint" xml:space="preserve"><value>立即生效，下次启动保持这次的选择</value></data>
+  <data name="SettingsDark" xml:space="preserve"><value>深色</value></data>
+  <data name="SettingsLight" xml:space="preserve"><value>浅色</value></data>
+  <data name="SettingsAccent" xml:space="preserve"><value>强调色</value></data>
+  <data name="SettingsAccentHint" xml:space="preserve"><value>只影响按钮、选中和焦点，不改变状态颜色</value></data>
+  <data name="SettingsAccentOrange" xml:space="preserve"><value>橙色</value></data>
+  <data name="SettingsNavStartup" xml:space="preserve"><value>启动时导航栏</value></data>
+  <data name="SettingsNavStartupHint" xml:space="preserve"><value>也可以随时用导航栏左下角的按钮切换</value></data>
+  <data name="SettingsNavExpanded" xml:space="preserve"><value>展开</value></data>
+  <data name="SettingsNavCollapsed" xml:space="preserve"><value>收起</value></data>
+  <data name="SettingsTurnOutputOff" xml:space="preserve"><value>断开设备前关闭输出</value></data>
+  <data name="SettingsTurnOutputOffHint" xml:space="preserve"><value>手动断开、切换工程、关闭软件和自动测试结束时，先向电源发送关闭输出命令再断开。关闭失败会提示，请到现场确认输出状态。</value></data>
+  <data name="SettingsRunLock" xml:space="preserve"><value>运行期间锁定编辑</value></data>
+  <data name="SettingsRunLockHint" xml:space="preserve"><value>序列、模拟值和设备配置在运行、暂停和清理期间不能修改。这是固定规则。</value></data>
+  <data name="SettingsAlwaysOn" xml:space="preserve"><value>始终开启</value></data>
+  <data name="SettingsExecutorLocation" xml:space="preserve"><value>执行器位置</value></data>
+  <data name="SettingsExecutorDefault" xml:space="preserve"><value>程序目录中的 OpenTapHost。设置环境变量 TESTSTATION_OPENTAP_HOST 可以指定其他位置。</value></data>
+  <data name="SettingsExecutorOverride" xml:space="preserve"><value>由环境变量 TESTSTATION_OPENTAP_HOST 指定：{0}</value></data>
+  <data name="SettingsStopWait" xml:space="preserve"><value>停止等待时间</value></data>
+  <data name="SettingsStopWaitHint" xml:space="preserve"><value>点“停止”后，执行器先执行清理段（CLEANUP）再退出；超过这个时间仍未结束会被强制结束。清理段较长时调大。</value></data>
+  <data name="SettingsSeconds" xml:space="preserve"><value>{0} 秒</value></data>
+  <data name="SettingsLogDirectory" xml:space="preserve"><value>日志位置</value></data>
+  <data name="SettingsOpen" xml:space="preserve"><value>打开</value></data>
+  <data name="SettingsControlPreview" xml:space="preserve"><value>控件预览</value></data>
+  <data name="SettingsControlPreviewHint" xml:space="preserve"><value>查看界面控件在当前主题下的样子（开发用）</value></data>
+  <data name="SettingsLibraries" xml:space="preserve"><value>运行时和界面库</value></data>
+  <data name="SettingsFile" xml:space="preserve"><value>设置文件</value></data>
+  <data name="SettingsVersion" xml:space="preserve"><value>版本 {0}，.NET {1}</value></data>
+  <data name="SettingsSaved" xml:space="preserve"><value>已保存</value></data>
+  <data name="SettingsSaveFailed" xml:space="preserve"><value>保存失败：{0}</value></data>
+  <data name="HwTypeSerial" xml:space="preserve"><value>串口</value></data>
+  <data name="PluginNone" xml:space="preserve"><value>没有已安装的设备家族插件</value></data>
+  <data name="RunStripCurrentStep" xml:space="preserve"><value>当前：{0} / {1}</value></data>
+  <data name="RunStripPreparing" xml:space="preserve"><value>正在准备执行器…</value></data>
+  <data name="PreviewOpen" xml:space="preserve"><value>打开</value></data>
+  <data name="PreviewLastRun" xml:space="preserve"><value>最近运行</value></data>
+  <data name="PreviewNoRuns" xml:space="preserve"><value>还没有运行记录</value></data>
+  <data name="RefSelectModel" xml:space="preserve"><value>请选择型号</value></data>
+  <data name="RefAutomationBusy" xml:space="preserve"><value>自动测试占用 · 手动访问暂停</value></data>
+  <data name="RefConnected" xml:space="preserve"><value>已连接</value></data>
+  <data name="RefDisconnected" xml:space="preserve"><value>未连接</value></data>
+  <data name="RefNewDevice" xml:space="preserve"><value>新增设备实例</value></data>
+  <data name="RefDeviceInstance" xml:space="preserve"><value>设备实例</value></data>
+  <data name="RefBindingSaved" xml:space="preserve"><value>设备配置已保存</value></data>
+  <data name="RefReadComplete" xml:space="preserve"><value>读取完成</value></data>
+  <data name="RefWriteComplete" xml:space="preserve"><value>写入完成</value></data>
+  <data name="RefExecute" xml:space="preserve"><value>执行</value></data>
+  <data name="RefWrite" xml:space="preserve"><value>写入</value></data>
+  <data name="RefRead" xml:space="preserve"><value>读取</value></data>
+  <data name="RefNotRead" xml:space="preserve"><value>未读取</value></data>
+  <data name="RefValid" xml:space="preserve"><value>有效</value></data>
+  <data name="RefError" xml:space="preserve"><value>错误：</value></data>
+  <data name="RefStale" xml:space="preserve"><value>过期 · 已断开</value></data>
+  <data name="RefInvalidInput" xml:space="preserve"><value>输入不符合通道类型：</value></data>
+  <data name="RefModel" xml:space="preserve"><value>型号</value></data>
+  <data name="RefResource" xml:space="preserve"><value>通信资源</value></data>
+  <data name="RefSaveBinding" xml:space="preserve"><value>保存绑定</value></data>
+  <data name="RefConnect" xml:space="preserve"><value>连接</value></data>
+  <data name="RefDisconnect" xml:space="preserve"><value>断开</value></data>
+  <data name="RefChannel" xml:space="preserve"><value>通道／动作</value></data>
+  <data name="RefDataType" xml:space="preserve"><value>数据类型</value></data>
+  <data name="RefInput" xml:space="preserve"><value>写入值</value></data>
+  <data name="RefOperations" xml:space="preserve"><value>操作</value></data>
+  <data name="RefEmpty" xml:space="preserve"><value>当前型号暂无可用通道；请查看型号接入状态</value></data>
+  <data name="RefAutoRefresh" xml:space="preserve"><value>自动刷新</value></data>
+  <data name="RefReadOnce" xml:space="preserve"><value>读取一次</value></data>
+  <data name="ManualDefaultGroup" xml:space="preserve"><value>默认分组</value></data>
+  <data name="ManualGroupNumber" xml:space="preserve"><value>分组 {0}</value></data>
+  <data name="ManualInvalidGroup" xml:space="preserve"><value>分组名不能为空、重复或超过 100 字，最多支持 100 个分组。</value></data>
+  <data name="ManualGroup" xml:space="preserve"><value>面板分组</value></data>
+  <data name="ManualGroupManage" xml:space="preserve"><value>分组管理</value></data>
+  <data name="ManualNewGroup" xml:space="preserve"><value>新建分组</value></data>
+  <data name="ManualRenameGroup" xml:space="preserve"><value>重命名分组</value></data>
+  <data name="ManualDeleteGroup" xml:space="preserve"><value>删除分组（仅移除面板）</value></data>
+  <data name="ManualOpenedPanels" xml:space="preserve"><value>已打开设备</value></data>
+  <data name="ManualColumns" xml:space="preserve"><value>双栏</value></data>
+  <data name="ManualQuad" xml:space="preserve"><value>四宫格</value></data>
+  <data name="ManualChooseInstances" xml:space="preserve"><value>选择工程设备实例</value></data>
+  <data name="ManualSearchDevices" xml:space="preserve"><value>搜索设备名称、标识、家族或型号</value></data>
+  <data name="ManualNoInstances" xml:space="preserve"><value>没有匹配的设备实例。请先在“硬件配置 → 设备实例”中创建设备。</value></data>
+  <data name="ManualAddSelected" xml:space="preserve"><value>添加所选</value></data>
+  <data name="ManualGroupLimit" xml:space="preserve"><value>每组最多 4 个面板，超出后自动创建新组。</value></data>
+  <data name="ManualUnavailablePanels" xml:space="preserve"><value>本组设备已删除或家族已禁用，请在硬件配置中检查；布局引用已保留。</value></data>
+  <data name="ManualInstanceBindingUnsupported" xml:space="preserve"><value>此设备页面暂不支持绑定指定实例。</value></data>
+  <data name="VariableEditor" xml:space="preserve"><value>变量编辑</value></data>
+  <data name="VariableReferenceHint" xml:space="preserve"><value>引用：Locals.名称 / Globals.名称 / Station.名称</value></data>
+  <data name="VariableEmpty" xml:space="preserve"><value>暂无变量，可右键新建。</value></data>
+  <data name="Rename" xml:space="preserve"><value>重命名</value></data>
+  <data name="Validate" xml:space="preserve"><value>校验</value></data>
+  <data name="PanelConnectionSettings" xml:space="preserve"><value>设备与连接配置</value></data>
+  <data name="PanelOutputSettings" xml:space="preserve"><value>输出设定</value></data>
+  <data name="PanelMeasurements" xml:space="preserve"><value>测量读数</value></data>
+  <data name="PanelApplySettings" xml:space="preserve"><value>应用设定</value></data>
+  <data name="PanelApplyOutput" xml:space="preserve"><value>应用开关</value></data>
+  <data name="PanelProtection" xml:space="preserve"><value>保护功能</value></data>
+  <data name="PanelExtraChannels" xml:space="preserve"><value>扩展通道</value></data>
+  <data name="PanelTraffic" xml:space="preserve"><value>通信记录</value></data>
+  <data name="PanelResourceParameters" xml:space="preserve"><value>资源参数</value></data>
+  <data name="PanelNewResource" xml:space="preserve"><value>新增资源</value></data>
+  <data name="PanelEnabled" xml:space="preserve"><value>开启</value></data>
+  <data name="PanelNoHioki" xml:space="preserve"><value>尚未创建 HIOKI 设备实例</value></data>
+  <data name="PanelNoDevice" xml:space="preserve"><value>尚未创建设备实例，请展开设备与连接配置</value></data>
 </root>

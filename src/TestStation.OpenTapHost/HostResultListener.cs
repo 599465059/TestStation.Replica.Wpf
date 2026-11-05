@@ -29,7 +29,9 @@ public sealed class HostResultListener : ResultListener
     {
         if (!_context.Steps.TryGetValue(stepRun.TestStepId, out var metadata)) return;
         _context.Outcomes.TryRemove(stepRun.Id, out var outcome);
-        var status = _context.WasStopped ? "stopped" : outcome?.Status is { Length: > 0 } state ? state : State(stepRun.Verdict);
+        // Steps interrupted by Stop report "stopped"; CLEANUP steps that ran after Stop keep their real result.
+        var interrupted = _context.WasStopped && (stepRun.Exception is OperationCanceledException || stepRun.Verdict == Verdict.Aborted);
+        var status = interrupted ? "stopped" : outcome?.Status is { Length: > 0 } state ? state : State(stepRun.Verdict);
         var message = outcome?.Message is { Length: > 0 } failure ? failure : stepRun.Exception?.Message ?? stepRun.TestStepName;
         var result = StepEvent("step_finished", stepRun, metadata, status, message);
         if (metadata.RecordResult) _context.RecordedSteps.Enqueue(result);

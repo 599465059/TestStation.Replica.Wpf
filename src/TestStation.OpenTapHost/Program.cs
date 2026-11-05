@@ -51,5 +51,6 @@ while (await Console.In.ReadLineAsync() is { } line)
     catch (Exception error) { await Publish(new HostEvent { Type = ExecutionProtocol.Error, Status = "failed", Message = error.Message }); }
 }
 // Losing the parent pipe also cancels a run (for example if WPF exits unexpectedly).
+channelAccess.Close();
 if (activeRun is { IsCompleted: false }) await runner.StopAsync();
 if (activeRun is not null) await activeRun;

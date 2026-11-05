@@ -22,12 +22,12 @@ namespace TestStation.Smoke;
 
 internal static class UiRegression
 {
-    public static void Run(bool documentsOnly = false)
+    public static void Run(bool documentsOnly = false, bool previewOnly = false)
     {
         Exception? failure = null;
         var thread = new Thread(() =>
         {
-            try { Verify(documentsOnly); }
+            try { Verify(documentsOnly, previewOnly); }
             catch (Exception error) { failure = error; }
         });
         thread.SetApartmentState(ApartmentState.STA);
@@ -36,7 +36,7 @@ internal static class UiRegression
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
     }
 
-    private static void Verify(bool documentsOnly)
+    private static void Verify(bool documentsOnly, bool previewOnly)
     {
         var app = new System.Windows.Application();
         SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(app.Dispatcher));
@@ -45,22 +45,22 @@ internal static class UiRegression
         VerifyControlStyleBases(app);
         var theme = new ThemeService();
         if (documentsOnly) { DocumentUiRegression.Verify(theme); DocumentUiRegression.VerifyRunningClose(theme); app.Shutdown(); return; }
-        var model = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs());
+        var model = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs(),
+            workspaceService: new SmokeAutomaticWorkspaceService());
         model.CreateProject(Path.Combine(Path.GetTempPath(), "test-station-ui", Guid.NewGuid().ToString("N")), "ui");
         model.NewSequenceCommand.Execute(null);
         model.AddStep("IF");
-        var protocols = ProtocolUiRegression.Create();
-        protocols.Pages.OpenProject(model.ProjectPath!);
-        var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), new ProtocolDialogService(), ManualCanvasRegression.CreateView());
+        var window = ShellSmokeFixture.Create(model, theme);
         try
         {
             ((FrameworkElement)window.FindName("StartupView")).Visibility = Visibility.Collapsed;
             ((FrameworkElement)window.FindName("WorkspaceView")).Visibility = Visibility.Visible;
             window.Show();
             Pump();
+            VerifyShellNavigation(window);
             NavigationSmokeHelper.Invoke(window, "自动测试");
             Pump();
+            if (previewOnly) { ControlsPreviewRegression.Verify(window, theme, model); return; }
             var view = (SequenceWorkspace)window.FindName("SequenceView");
             var grid = (DataGrid)view.FindName("StepGrid");
             VerifyToolbarScope(window, view);
@@ -174,10 +174,10 @@ internal static class UiRegression
                 var selectedTree = Find<TreeViewItem>(palette).First(item => item.IsSelected);
                 var sequencesList = (ListBox)view.FindName("SequenceList");
                 var selectedSequenceItem = Find<ListBoxItem>(sequencesList).First(item => item.IsSelected);
-                Require(color == (Color)ColorConverter.ConvertFromString(mode == AppThemeMode.Light ? "#FFFFFF" : "#3A4147"), "Theme did not apply its actual palette");
+                Require(color == (Color)ColorConverter.ConvertFromString(mode == AppThemeMode.Light ? "#F7F8FA" : "#2B3138"), "Theme did not apply its actual palette");
                 Require(((SolidColorBrush)grid.Background).Color == color, "Step table retained old background");
                 var textBox = Find<TextBox>(view).Single(item => System.Windows.Automation.AutomationProperties.GetAutomationId(item) == "StepName");
-                Require(((SolidColorBrush)textBox.Background).Color == color, "Input retained old skin");
+                Require(((SolidColorBrush)textBox.Background).Color == ((SolidColorBrush)app.Resources["InputBackgroundBrush"]).Color, "Input retained old skin");
                 var button = Find<Button>(view).First(item => item.Content is string title && title == UiText.Apply);
                 Require(((SolidColorBrush)button.Background).Color == color, "Button retained old skin");
                 var themeButton = (Button)window.FindName("ThemeButton");
@@ -227,12 +227,29 @@ internal static class UiRegression
             Require(Find<TextBox>(scroll).Where(item => item.IsVisible).All(item => item.ActualHeight >= 28), "Small properties pane compressed inputs");
             Console.WriteLine("PASS: live WPF shell, double-click insertion, ENABLED, repeated theme/accent changes, context menu, panel restore, property sizes");
             ControlsPreviewRegression.Verify(window, theme, model);
-            ProtocolUiRegression.Verify(window, theme, protocols);
             DocumentUiRegression.Verify(theme);
             DocumentUiRegression.VerifyRunningClose(theme);
         }
         catch { Capture(window, "failure"); throw; }
         finally { window.Close(); app.Shutdown(); }
+    }
+
+    private static void VerifyShellNavigation(MainWindow window)
+    {
+        foreach (var page in new[] { "工程概览", "自动测试", "手动测试", "settings" })
+            Require(NavigationSmokeHelper.HasPage(window, page), $"Current shell navigation is missing '{page}'.");
+        foreach (var page in new[] { "协议库", "自定义协议", "DBC 数据库", "协议测试", "控件预览" })
+        {
+            Require(!NavigationSmokeHelper.HasPage(window, page), $"Removed top-level page '{page}' was restored unexpectedly.");
+            var rejected = false;
+            try { NavigationSmokeHelper.Invoke(window, page); }
+            catch (InvalidOperationException) { rejected = true; }
+            Require(rejected, $"Missing navigation '{page}' was silently accepted.");
+        }
+        var protocolHost = (ContentControl)window.FindName("ProtocolHost");
+        Require(protocolHost.Content is null && protocolHost.Visibility == Visibility.Collapsed,
+            "Removed protocol pages are still hosted by the product shell.");
+        Console.WriteLine("PASS: current shell navigation, explicit missing-route errors and removed protocol pages remain absent");
     }
 
     private static void VerifyChineseChoices(SequenceWorkspace view, MainViewModel model)
@@ -248,8 +265,13 @@ internal static class UiRegression
         Require(model.VariableType == "integer" && type.SelectedItem?.ToString() == "integer",
             $"Chinese option changed the type identifier: model={model.VariableType}, selection={type.SelectedItem}");
         model.VariableName = "limit"; model.VariableDefault = "3"; model.ApplyVariableCommand.Execute(null);
+        Require(model.SelectedSequence!.Variables.Any(variable => variable.Name == "limit"),
+            $"Variable edit was not applied: {model.Status}; name={model.VariableName}; scope={model.VariableScope}; editable={model.CanEditSequence}");
         model.SaveSequenceCommand.Execute(null);
-        var saved = ProjectWorkspace.Open(model.ProjectPath!).LoadSequences().Single();
+        var saved = new AutomaticWorkspaceService().Load(ProjectWorkspace.Open(model.ProjectPath!))
+            .Subprojects.SelectMany(project => project.Sequences).Single(sequence => sequence.Id == model.SelectedSequence.Id);
+        Require(saved.Variables.Any(variable => variable.Name == "limit"),
+            $"Variable edit was not saved: {model.Status}; sequence={model.SelectedSequence.Id}; saved={saved.Id}");
         Require(saved.Variables.Single().Name == "limit" && saved.Variables.Single().DataType == "integer"
             && saved.Variables.Single().Scope == "local" && saved.Variables.Single().Default?.GetInt64() == 3,
             "Localized variable edit changed persisted identifiers or values");
@@ -304,10 +326,11 @@ internal static class UiRegression
         // retired element name.
         if (window.FindName("ProjectToolBar") is ToolBar projectToolbar)
             Require(!Find<Button>(projectToolbar).Any(button => button.ToolTip is string text && text.Contains("序列")), "Project toolbar contains sequence commands");
-        foreach (var name in new[] { "工程概览", "协议库", "自定义协议", "DBC 数据库", "协议测试", "控件预览" })
+        foreach (var name in new[] { "工程概览", "手动测试", "devices", "hardware", "插件管理", "settings" })
         {
             NavigationSmokeHelper.Invoke(window, name);
             Pump();
+            Require(((MainViewModel)window.DataContext).CurrentPage == name, $"Navigation did not enter {name}");
             Require(!toolbar.IsVisible && !run.IsVisible, $"Sequence execution toolbar leaked into {name}");
         }
         NavigationSmokeHelper.Invoke(window, "自动测试");
@@ -373,17 +396,18 @@ internal static class UiRegression
         var pause = (Button)view.FindName("PauseButton");
         NativePointer.Click(run.PointToScreen(new Point(run.ActualWidth / 2, run.ActualHeight / 2)));
         Pump();
-        Require(model.ExecutionState == "RUNNING", "Sequence toolbar run did not start the engine");
+        Require(model.ExecutionState == "RUNNING", $"Sequence toolbar run did not start the engine: {model.ExecutionState}; {model.Status}");
         Require(!((TreeView)view.FindName("StepPalette")).IsEnabled && !((ListBox)view.FindName("SequenceList")).IsEnabled
             && !((Button)view.FindName("UndoButton")).IsEnabled && !((Button)view.FindName("DuplicateSequenceButton")).IsEnabled,
             "Runtime did not lock library/chooser/history/management controls");
         Require(!Find<TextBox>(view).Single(box => System.Windows.Automation.AutomationProperties.GetAutomationId(box) == "StepName").IsEnabled,
             "Runtime property editor is still writable");
+        for (var attempt = 0; attempt < 60 && model.CurrentExecutionRow is null && model.IsExecutionBusy; attempt++) Pump();
         NativePointer.Click(pause.PointToScreen(new Point(pause.ActualWidth / 2, pause.ActualHeight / 2)));
-        Pump();
-        Require(model.ExecutionState == "PAUSED" && Find<TextBlock>(pause).Any(text => text.Text == "继续"), "Pause did not change the toolbar to Continue");
+        for (var attempt = 0; attempt < 60 && model.ExecutionState != "PAUSED" && model.IsExecutionBusy; attempt++) Pump();
+        Require(model.ExecutionState == "PAUSED" && Find<TextBlock>(pause).Any(text => text.Text == "继续"), $"Pause did not change the toolbar to Continue: {model.ExecutionState}; {model.Status}");
         NativePointer.Click(pause.PointToScreen(new Point(pause.ActualWidth / 2, pause.ActualHeight / 2)));
-        Pump();
+        for (var attempt = 0; attempt < 60 && model.ExecutionState == "PAUSED"; attempt++) Pump();
         Require(model.ExecutionState == "RUNNING" && Find<TextBlock>(pause).Any(text => text.Text == "暂停"), "Continue did not resume the engine or restore the Pause label");
         var stop = Find<Button>(view).Single(button => button.ToolTip is string text && text == "停止当前序列");
         NativePointer.Click(stop.PointToScreen(new Point(stop.ActualWidth / 2, stop.ActualHeight / 2)));
@@ -433,18 +457,24 @@ internal static class UiRegression
     {
         var checkedCells = 0;
         var checkedColumns = new HashSet<string>();
+        var expectedColumns = new HashSet<string> { "#", UiText.Type, UiText.SettingsSummary, UiText.Status };
         foreach (var row in Find<DataGridRow>(grid).Where(row => row.IsVisible))
-        foreach (var column in grid.Columns.OfType<DataGridTextColumn>())
+        foreach (var column in grid.Columns.Where(column => expectedColumns.Contains(column.Header.ToString()!)))
         {
-            if (column.GetCellContent(row) is not TextBlock { Text.Length: > 0 } text) continue;
-            var bounds = text.TransformToAncestor(row).TransformBounds(new Rect(text.RenderSize));
-            Require(Math.Abs(bounds.Top + bounds.Height / 2 - row.ActualHeight / 2) <= 1.1,
-                $"Column {column.Header} is not vertically centered: text={bounds}, rowHeight={row.ActualHeight}");
-            checkedCells++;
-            checkedColumns.Add(column.Header.ToString()!);
+            if (column.GetCellContent(row) is not { } content) continue;
+            // Status is a template column so its semantic colour can follow the theme.
+            foreach (var text in (content is TextBlock block ? new[] { block } : Find<TextBlock>(content))
+                .Where(text => text.IsVisible && text.Text.Length > 0))
+            {
+                var bounds = text.TransformToAncestor(row).TransformBounds(new Rect(text.RenderSize));
+                Require(Math.Abs(bounds.Top + bounds.Height / 2 - row.ActualHeight / 2) <= 1.1,
+                    $"Column {column.Header} is not vertically centered: text={bounds}, rowHeight={row.ActualHeight}");
+                checkedCells++;
+                checkedColumns.Add(column.Header.ToString()!);
+            }
         }
         Require(checkedCells >= 8, "Not enough visible text cells checked for vertical alignment");
-        Require(checkedColumns.SetEquals(new[] { "#", UiText.Type, UiText.SettingsSummary, UiText.Status }),
+        Require(checkedColumns.SetEquals(expectedColumns),
             $"Alignment check missed sequence text columns: {string.Join(", ", checkedColumns)}");
         Console.WriteLine($"PASS: {checkedCells} rendered sequence text cells vertically centered");
     }

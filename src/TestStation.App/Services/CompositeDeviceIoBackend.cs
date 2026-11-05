@@ -18,13 +18,8 @@ public sealed class CompositeDeviceIoBackend : IAutomationChannelBackend
     public Task<JsonElement> ReadAsync(string channelId, CancellationToken token = default) => Resolve(channelId).ReadAsync(channelId, token);
     public Task WriteAsync(string channelId, JsonElement value, CancellationToken token = default) => Resolve(channelId).WriteAsync(channelId, value, token);
     public Task DisconnectAsync(CancellationToken token = default) => Task.WhenAll(_backends.Select(item => item.DisconnectAsync(token)));
-    public async Task BeginAutomationAsync(IEnumerable<string> channels, CancellationToken token = default)
-    {
-        var requested = channels.ToArray();
-        foreach (var backend in _backends) await backend.BeginAutomationAsync(requested.Where(backend.OwnsChannel), token).ConfigureAwait(false);
-    }
-    public async Task EndAutomationAsync(CancellationToken token = default)
-    { foreach (var backend in _backends) await backend.EndAutomationAsync(token).ConfigureAwait(false); }
-    public async ValueTask DisposeAsync()
-    { foreach (var backend in _backends) await backend.DisposeAsync().ConfigureAwait(false); }
+    public Task BeginAutomationAsync(IEnumerable<string> channels, CancellationToken token = default) =>
+        AutomationBackendLifecycle.BeginAsync(_backends, channels, token);
+    public Task EndAutomationAsync(CancellationToken token = default) => AutomationBackendLifecycle.EndAsync(_backends);
+    public ValueTask DisposeAsync() => new(AutomationBackendLifecycle.DisposeAsync(_backends));
 }

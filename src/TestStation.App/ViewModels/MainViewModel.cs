@@ -168,6 +168,7 @@ public partial class MainViewModel : ObservableObject, IProjectSaveParticipant
             _globalRuntime.Clear();
             _stationVariables.Clear(); _stationVariables.AddRange(snapshot.StationVariables);
             _workspaceBaseline = JsonSerializer.Serialize(SequenceSubprojects);
+            _stationBaseline = JsonSerializer.Serialize(_stationVariables);
         }
         finally { _selectionSync = false; _changingSubproject = false; }
         LoadSimulationValues(simulation);

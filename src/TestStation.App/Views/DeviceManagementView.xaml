@@ -9,16 +9,25 @@
    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/><Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/><Setter Property="SelectionMode" Value="Single"/>
   </Style>
  </UserControl.Resources>
- <Grid Margin="18"><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-  <Grid Visibility="{Binding ShowResources, Converter={StaticResource Visible}}">
+ <Grid Margin="18"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <!-- Page header with in-page tabs; replaces the two former second-level navigation entries. -->
+  <StackPanel Margin="0,0,0,10">
+   <TextBlock Text="{x:Static text:UiText.HardwareConfig}" FontSize="19" FontWeight="SemiBold" Margin="0,0,0,8"/>
+   <TabControl SelectedIndex="{Binding HardwareTabIndex, Mode=TwoWay}" Background="Transparent" BorderThickness="0" AutomationProperties.AutomationId="HardwareTabs">
+    <TabItem Header="{x:Static text:UiText.HwResources}" AutomationProperties.AutomationId="HardwareTabResources"/>
+    <TabItem Header="{x:Static text:UiText.HwInstances}" AutomationProperties.AutomationId="HardwareTabDevices"/>
+    <TabControl.ContentTemplate><DataTemplate><Grid/></DataTemplate></TabControl.ContentTemplate>
+   </TabControl>
+  </StackPanel>
+  <Grid Grid.Row="1" Visibility="{Binding ShowResources, Converter={StaticResource Visible}}">
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="160"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-   <DockPanel Margin="0,0,0,12"><TextBlock Text="{x:Static text:UiText.HwResources}" FontSize="19" FontWeight="SemiBold"/>
+   <DockPanel Margin="0,0,0,12"><Border/>
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" IsEnabled="{Binding CanManage}"><Button Content="{x:Static text:UiText.New}" Command="{Binding NewResourceCommand}" Margin="4,0" AutomationProperties.AutomationId="NewHardwareResource"/><Button Content="{x:Static text:UiText.HwEdit}" Command="{Binding EditResourceCommand}" Margin="4,0"/><Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteResourceCommand}" Margin="4,0"/></StackPanel>
    </DockPanel>
    <Grid Grid.Row="1"><DataGrid ItemsSource="{Binding Resources}" SelectedItem="{Binding SelectedResource}" Style="{StaticResource ManagedGrid}">
     <DataGrid.Columns>
      <DataGridTextColumn Header="{x:Static text:UiText.Name}" Binding="{Binding Definition.Name}" Width="*" MinWidth="160"/>
-     <DataGridTextColumn Header="{x:Static text:UiText.Type}" Binding="{Binding Definition.Type}" Width="85" MinWidth="80"/>
+     <DataGridTextColumn Header="{x:Static text:UiText.Type}" Binding="{Binding TypeText}" Width="85" MinWidth="80"/>
      <DataGridTextColumn Header="{x:Static text:UiText.SettingsSummary}" Binding="{Binding Summary}" Width="260" MinWidth="220"/>
      <DataGridTextColumn Header="{x:Static text:UiText.HwBoundDevices}" Binding="{Binding BoundDevices}" Width="180" MinWidth="140"/>
      <DataGridTextColumn Header="{x:Static text:UiText.HwOccupancy}" Binding="{Binding Occupancy}" Width="100" MinWidth="90"/>
@@ -26,7 +35,7 @@
    </DataGrid><TextBlock Text="{x:Static text:UiText.HwNoResources}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Resources.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid>
    <GroupBox Grid.Row="2" Header="{x:Static text:UiText.HwDiagnostic}" Margin="0,12,0,0">
     <StackPanel Margin="10">
-     <WrapPanel><Button Content="{x:Static text:UiText.HwOpenDiagnostic}" Command="{Binding OpenDiagnosticCommand}" IsEnabled="{Binding CanDiagnostic}" Margin="0,0,6,6"/><Button Content="{x:Static text:UiText.HwCloseDiagnostic}" Command="{Binding CloseDiagnosticCommand}" Margin="0,0,12,6"/><TextBlock Text="{Binding DiagnosticState}" VerticalAlignment="Center" Margin="0,0,0,6"/></WrapPanel>
+     <WrapPanel><Button Command="{Binding ToggleDiagnosticCommand}" IsEnabled="{Binding CanToggleDiagnostic}" Margin="0,0,12,6" AutomationProperties.AutomationId="ToggleDiagnostic"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource AppButtonStyle}"><Setter Property="Content" Value="{x:Static text:UiText.HwOpenDiagnostic}"/><Style.Triggers><DataTrigger Binding="{Binding DiagnosticOpen}" Value="True"><Setter Property="Content" Value="{x:Static text:UiText.HwCloseDiagnostic}"/></DataTrigger></Style.Triggers></Style></Button.Style></Button><TextBlock Text="{Binding DiagnosticState}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,6"/></WrapPanel>
      <WrapPanel Margin="0,4" IsEnabled="{Binding CanManage}"><TextBlock Text="{x:Static text:UiText.HwPayload}" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBox Text="{Binding Payload, UpdateSourceTrigger=PropertyChanged}" Width="300"/><CheckBox Content="HEX" IsChecked="{Binding Hex}" Margin="12,0" VerticalAlignment="Center"/><CheckBox Content="{x:Static text:UiText.HwResponse}" Visibility="{Binding DiagnosticByte, Converter={StaticResource Visible}}" IsChecked="{Binding ExpectResponse}" Margin="4,0" VerticalAlignment="Center"/><CheckBox Content="{x:Static text:UiText.HwTerminator}" Visibility="{Binding DiagnosticByte, Converter={StaticResource Visible}}" IsChecked="{Binding AppendTerminator}" Margin="8,0" VerticalAlignment="Center"/></WrapPanel>
      <WrapPanel Visibility="{Binding DiagnosticCan, Converter={StaticResource Visible}}" Margin="0,4" IsEnabled="{Binding CanManage}"><TextBlock Text="CAN ID (HEX)" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBox Text="{Binding CanId, UpdateSourceTrigger=PropertyChanged}" Width="95"/><CheckBox Content="{x:Static text:UiText.HwExtended}" IsChecked="{Binding Extended}" Margin="10,0" VerticalAlignment="Center"/><CheckBox Content="CAN FD" IsChecked="{Binding Fd}" Margin="8,0" VerticalAlignment="Center"/><CheckBox Content="BRS" IsChecked="{Binding Brs}" Margin="8,0" VerticalAlignment="Center"/><TextBlock Text="{x:Static text:UiText.HwTimeout}" VerticalAlignment="Center" Margin="8,0"/><TextBox Text="{Binding TimeoutMs}" Width="70"/></WrapPanel>
      <WrapPanel Margin="0,6,0,0"><Button Content="{x:Static text:UiText.HwSend}" Command="{Binding SendCommand}" IsEnabled="{Binding CanManage}" Margin="0,0,6,0"/><Button Content="{x:Static text:UiText.HwReadCan}" Command="{Binding ReadCanCommand}" Visibility="{Binding DiagnosticCan, Converter={StaticResource Visible}}" IsEnabled="{Binding CanManage}" Margin="0,0,6,0"/><Button Content="{x:Static text:UiText.Stop}" Command="{Binding CancelCommand}" Margin="0,0,6,0"/><Button Content="{x:Static text:UiText.Clear}" Command="{Binding ClearTrafficCommand}"/></WrapPanel>
@@ -34,8 +43,8 @@
    </GroupBox>
    <Expander Grid.Row="3" Header="{x:Static text:UiText.HwTraffic}" IsExpanded="False" Margin="0,8,0,0"><ListBox ItemsSource="{Binding Traffic}" Height="150" FontFamily="Consolas" ScrollViewer.HorizontalScrollBarVisibility="Auto"/></Expander>
   </Grid>
-  <Grid Visibility="{Binding ShowDevices, Converter={StaticResource Visible}}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-   <DockPanel Margin="0,0,0,12"><TextBlock Text="{x:Static text:UiText.HwInstances}" FontSize="19" FontWeight="SemiBold"/>
+  <Grid Grid.Row="1" Visibility="{Binding ShowDevices, Converter={StaticResource Visible}}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <DockPanel Margin="0,0,0,12"><Border/>
     <WrapPanel HorizontalAlignment="Right" IsEnabled="{Binding CanManage}"><Button Content="{x:Static text:UiText.New}" Command="{Binding NewDeviceCommand}" Margin="3,0" AutomationProperties.AutomationId="NewDeviceInstance"/><Button Content="{x:Static text:UiText.HwEditBinding}" Command="{Binding EditDeviceCommand}" Margin="3,0"/><Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteDeviceCommand}" Margin="3,0"/><Button Content="{x:Static text:UiText.HwConnect}" Command="{Binding ConnectCommand}" Margin="3,0"/><Button Content="{x:Static text:UiText.HwDisconnect}" Command="{Binding DisconnectCommand}" Margin="3,0"/><Button Content="{x:Static text:UiText.HwOpenPanel}" Command="{Binding OpenPanelCommand}" Margin="3,0"/></WrapPanel>
    </DockPanel>
    <Grid Grid.Row="1"><DataGrid ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" Style="{StaticResource ManagedGrid}">
@@ -51,6 +60,6 @@
    </DataGrid><TextBlock Text="{x:Static text:UiText.HwNoInstances}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Devices.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></Grid>
    <TextBlock Grid.Row="2" Text="{Binding SelectedDevice.Error}" Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
   </Grid>
-  <TextBlock Grid.Row="1" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,10,0,0" Foreground="{DynamicResource MutedBrush}"/>
+  <TextBlock Grid.Row="2" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,10,0,0" Foreground="{DynamicResource MutedBrush}"/>
  </Grid>
 </UserControl>

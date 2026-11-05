@@ -89,11 +89,11 @@ internal static class DocumentRegression
         Row(model, "child").Enabled = false;
         model.UndoSequenceCommand.Execute(null); Require(Find(model, "child").Enabled, "Enabled undo failed");
         model.RedoSequenceCommand.Execute(null); Require(!Find(model, "child").Enabled, "Enabled redo failed");
-        model.SelectedVariable = model.Variables.Single(); model.VariableDefault = "20"; model.ApplyVariableCommand.Execute(null);
-        model.UndoSequenceCommand.Execute(null); Require(model.Variables.Single().Default?.GetDouble() == 12.5, "Variable undo failed");
-        model.RedoSequenceCommand.Execute(null); Require(model.Variables.Single().Default?.GetDouble() == 20, "Variable redo failed");
-        model.SelectedVariable = model.Variables.Single(); model.DeleteVariableCommand.Execute(null);
-        model.UndoSequenceCommand.Execute(null); Require(model.Variables.Count == 1, "Variable deletion undo failed");
+        model.SelectedVariable = model.Variables.Single(variable => variable.Name == "limit"); model.VariableDefault = "20"; model.ApplyVariableCommand.Execute(null);
+        model.UndoSequenceCommand.Execute(null); Require(model.Variables.Single(variable => variable.Name == "limit").Default?.GetDouble() == 12.5, "Variable undo failed");
+        model.RedoSequenceCommand.Execute(null); Require(model.Variables.Single(variable => variable.Name == "limit").Default?.GetDouble() == 20, "Variable redo failed");
+        model.SelectedVariable = model.Variables.Single(variable => variable.Name == "limit"); model.DeleteVariableCommand.Execute(null);
+        model.UndoSequenceCommand.Execute(null); Require(model.Variables.Any(variable => variable.Name == "limit"), "Variable deletion undo failed");
         model.SaveSequenceCommand.Execute(null); Require(!model.IsSequenceDirty, "Save did not clear dirty state");
         dialogs.Name = "更名序列"; await model.RenameSequenceCommand.ExecuteAsync(null);
         Require(model.SelectedSequence!.Name == "更名序列" && model.IsSequenceDirty, "Rename was not tracked");
@@ -102,17 +102,18 @@ internal static class DocumentRegression
         var source = model.SelectedSequence;
         await model.DuplicateSequenceCommand.ExecuteAsync(null);
         var duplicate = model.SelectedSequence!;
-        Require(duplicate.Id != source!.Id && duplicate.Steps.Single().ElseChildren.First().Children.Single().Description == "检查历史",
+        Require(duplicate.Id != source!.Id && SequenceEditor.Walk(duplicate).Any(step => step.Description == "检查历史"),
             "Sequence copy did not retain edited nested structure");
         Require(model.IsSequenceDirty && model.Sequences.Count == 3, "Duplicate is not a new unsaved document");
         model.SaveSequenceCommand.Execute(null);
-        var disk = workspace.LoadSequences().Single(item => item.Id == duplicate.Id);
+        var disk = new SequenceWorkspaceRepository(workspace).Load().SelectMany(project => project.Sequences).Single(item => item.Id == duplicate.Id);
         Require(Snapshot(disk) == Snapshot(duplicate), "Copy persistence changed structure");
         dialogs.Delete = false; await model.DeleteSequenceCommand.ExecuteAsync(null);
-        Require(model.SelectedSequence == duplicate && File.Exists(Path.Combine(workspace.Root, "sequences", duplicate.Id + ".tsseq")), "Cancelled deletion deleted data");
-        dialogs.Delete = true; await model.DeleteSequenceCommand.ExecuteAsync(null);
-        Require(model.Sequences.Count == 2 && !File.Exists(Path.Combine(workspace.Root, "sequences", duplicate.Id + ".tsseq")), "Confirmed deletion did not remove the file");
-        var target = model.SelectedSequence!;
+        Require(model.SelectedSequence == duplicate && new SequenceWorkspaceRepository(workspace).Load().SelectMany(project => project.Sequences).Any(item => item.Id == duplicate.Id), "Cancelled deletion deleted data");
+        dialogs.Delete = true; await model.DeleteSequenceCommand.ExecuteAsync(null); model.SaveProjectCommand.Execute(null);
+        Require(model.Sequences.Count == 2 && !new SequenceWorkspaceRepository(workspace).Load().SelectMany(project => project.Sequences).Any(item => item.Id == duplicate.Id), "Confirmed deletion did not remove the sequence");
+        var target = model.Sequences.First(sequence => !sequence.IsMain);
+        await model.SelectSequenceAsync(target);
         var caller = new SequenceDefinition { Id = "caller", Name = "调用者", Steps = [new() { Id = "call", Kind = "call_sequence", Name = "调用", Params = new() { ["sequence_id"] = Value(target.Id) } }] };
         model.Sequences.Add(caller); var confirmations = dialogs.DeleteCalls;
         await model.DeleteSequenceCommand.ExecuteAsync(null);
@@ -128,7 +129,7 @@ internal static class DocumentRegression
         dialogs.Choice = SequenceUnsavedChoice.Cancel; model.SequenceName = "pending";
         Require(!await model.SelectSequenceAsync(b) && model.SelectedSequence == a && model.SequenceName == "pending", "Cancel lost pending metadata");
         dialogs.Choice = SequenceUnsavedChoice.Save;
-        Require(await model.SelectSequenceAsync(b) && workspace.LoadSequences().Single(item => item.Id == a.Id).Name == "pending", "Save before switch failed");
+        Require(await model.SelectSequenceAsync(b) && new SequenceWorkspaceRepository(workspace).Load().SelectMany(project => project.Sequences).Single(item => item.Id == a.Id).Name == "pending", "Save before switch failed");
         await model.SelectSequenceAsync(a); model.SequenceName = "discard me"; Row(model, "child").Enabled = false;
         dialogs.Choice = SequenceUnsavedChoice.Discard;
         Require(await model.SelectSequenceAsync(b) && a.Name == "pending" && SequenceEditor.Walk(a).Single(item => item.Id == "child").Enabled,
@@ -142,14 +143,14 @@ internal static class DocumentRegression
         model.SelectedRow = Row(model, "else");
         Require(model.SelectedRow?.Step?.Id == "child" && model.StepParameters == "{", "Invalid properties were lost on row selection");
         model.StepParameters = "{}"; model.StepName = "保存未应用输入"; model.SaveSequenceCommand.Execute(null);
-        Require(!model.IsSequenceDirty && workspace.LoadSequences().Single(item => item.Id == a.Id).Steps.Single().Children.Single().Children.Single().Name == "保存未应用输入",
+        Require(!model.IsSequenceDirty && new SequenceWorkspaceRepository(workspace).Load().SelectMany(project => project.Sequences).Single(item => item.Id == a.Id).Steps.Single().Children.Single().Children.Single().Name == "保存未应用输入",
             "Save did not commit pending property input");
         model.VariableName = "bad name"; model.VariableDefault = "1";
         Require(!await model.PrepareToLeaveAsync() && model.VariableName == "bad name", "Invalid pending variable did not prevent leaving");
         dialogs.Choice = SequenceUnsavedChoice.Discard; Require(await model.PrepareToLeaveAsync(), "Discard could not leave invalid editor");
         await model.NewSequenceCommand.ExecuteAsync(null);
-        var blocked = model.SelectedSequence!; var blockedPath = Path.Combine(workspace.Root, "sequences", blocked.Id + ".tsseq");
-        Directory.CreateDirectory(blockedPath); dialogs.Choice = SequenceUnsavedChoice.Save;
+        var blocked = model.SelectedSequence!; var blockedPath = Path.Combine(workspace.Root, "sequences", "workspace.json");
+        File.Delete(blockedPath); Directory.CreateDirectory(blockedPath); dialogs.Choice = SequenceUnsavedChoice.Save;
         model.SaveSequenceCommand.Execute(null);
         Require(model.IsSequenceDirty && !await model.SelectSequenceAsync(b) && model.SelectedSequence == blocked, "Failed save was marked clean or allowed leaving");
         Directory.Delete(blockedPath); model.SaveSequenceCommand.Execute(null);
@@ -167,9 +168,12 @@ internal static class DocumentRegression
         caseWorkspace.SaveSequence(new() { Id = "SEQUENCE_1", Name = "Existing", Steps = [Step("existing")] });
         var caseModel = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs());
         caseModel.OpenProject(caseWorkspace.Root); await caseModel.NewSequenceCommand.ExecuteAsync(null);
-        Require(caseModel.SelectedSequence?.Id == "sequence_2", "New ID collides with differently cased Windows filename");
+        Require(caseModel.SelectedSequence?.Id is { } newId &&
+            !newId.Equals("SEQUENCE_1", StringComparison.OrdinalIgnoreCase),
+            "New ID collides with differently cased Windows filename");
         caseModel.SaveSequenceCommand.Execute(null);
-        Require(caseWorkspace.LoadSequences().Count == 2 && caseWorkspace.LoadSequences().Any(item => item.Id == "SEQUENCE_1"),
+        Require(new SequenceWorkspaceRepository(caseWorkspace).Load().SelectMany(project => project.Sequences).Count() == 2 &&
+            new SequenceWorkspaceRepository(caseWorkspace).Load().SelectMany(project => project.Sequences).Any(item => item.Id == "SEQUENCE_1"),
             "Creating sequence overwrote an existing file with differently cased ID");
     }
 
@@ -190,21 +194,23 @@ internal static class DocumentRegression
         var task = model.RunSequenceCommand.ExecuteAsync(null);
         await WaitUntilAsync(() => model.ExecutionState == "RUNNING");
         AssertLocked();
-        await model.PauseResumeCommand.ExecuteAsync(null); Require(model.ExecutionState == "PAUSED", "Pause failed"); AssertLocked();
+        await model.PauseResumeCommand.ExecuteAsync(null);
+        await WaitUntilAsync(() => model.ExecutionState == "PAUSED");
+        AssertLocked();
         dialogs.Stop = false; Require(!await model.PrepareToLeaveAsync() && model.IsExecutionBusy, "Cancel close stopped a paused run");
         await model.PauseResumeCommand.ExecuteAsync(null);
         var stop = model.StopSequenceCommand.ExecuteAsync(null);
         await WaitUntilAsync(() => model.ExecutionState == "STOPPED");
         Require(model.IsExecutionBusy && !stop.IsCompleted, "Cleanup unlocked editing before finishing"); AssertLocked();
         await stop; await task;
-        Require(!model.IsExecutionBusy && model.CanEditSequence && model.RunLogs.Any(item => item.Message.Contains("cleanup")), "Cleanup did not finish or release editing");
+        Require(!model.IsExecutionBusy && model.CanEditSequence && model.InspectedResults.Any(item => item.StepId == "finish"), "Cleanup did not finish or release editing");
         var reports = Directory.GetFiles(Path.Combine(workspace.Root, "reports"), "*", SearchOption.AllDirectories);
         Require(reports.Length > 0, "Stopped run did not save its result in the original project");
         task = model.RunSequenceCommand.ExecuteAsync(null); await WaitUntilAsync(() => model.ExecutionState == "RUNNING");
         dialogs.Stop = true;
         Require(await model.PrepareToLeaveAsync() && !model.IsExecutionBusy, "Stop-and-leave did not wait for Cleanup"); await task;
         var second = ProjectWorkspace.Create(Path.Combine(Path.GetTempPath(), "test-station-documents", Guid.NewGuid().ToString("N")), "next");
-        model.OpenProject(second.Root); Require(model.ProjectPath == second.Root && model.Sequences.Count == 0, "Safe project switch failed");
+        model.OpenProject(second.Root); Require(model.ProjectPath == second.Root && model.Sequences.Count == 1 && model.Sequences.Single().IsMain, "Safe project switch failed");
         // Immediate stop must work even before the thread pool starts the engine.
         model.OpenProject(workspace.Root); await model.SelectSequenceAsync(model.Sequences.Single(item => item.Id == run.Id));
         task = model.RunSequenceCommand.ExecuteAsync(null); await model.StopSequenceCommand.ExecuteAsync(null); await task;

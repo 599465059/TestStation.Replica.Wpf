@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Data;
@@ -33,13 +34,16 @@ public sealed class ThemeService : IThemeService
     private readonly Dictionary<object, PaletteColor> _paletteColors = [];
     private readonly IIndustrialControlsThemeAdapter _industrialControls;
     private bool _selectionAliasesBound;
+    private readonly TestStation.Application.IStationSettings? _settings;
 
-    public ThemeService(IIndustrialControlsThemeAdapter? industrialControls = null)
+    public ThemeService(IIndustrialControlsThemeAdapter? industrialControls = null, TestStation.Application.IStationSettings? settings = null)
     {
         _industrialControls = industrialControls ?? new IndustrialControlsThemeAdapter();
         _resources = System.Windows.Application.Current?.Resources ?? new ResourceDictionary();
-        CurrentMode = ThemeMode.Dark;
-        CurrentAccent = AccentPalette.Blue;
+        _settings = settings;
+        // Start from the saved choice; the shell applies it before showing the window.
+        CurrentMode = settings is not null && Enum.TryParse<ThemeMode>(settings.Current.Theme, out var mode) ? mode : ThemeMode.Dark;
+        CurrentAccent = settings is not null && Enum.TryParse<AccentPalette>(settings.Current.Accent, out var accent) ? accent : AccentPalette.Blue;
     }
 
     public ThemeMode CurrentMode { get; private set; }
@@ -69,7 +73,6 @@ public sealed class ThemeService : IThemeService
             Source = new Uri($"/TestStation.App;component/Themes/UiTheme.{mode}.xaml", UriKind.Relative)
         };
         if (themeIndex >= 0) dictionaries[themeIndex] = themeDictionary;
-        else dictionaries.Insert(0, themeDictionary);
 
         // HandyControl ships separate resource dictionaries for its light and dark
         // control templates. Keep that skin in sync with the project's theme while
@@ -84,6 +87,10 @@ public sealed class ThemeService : IThemeService
         };
         if (handySkinIndex >= 0) dictionaries[handySkinIndex] = handySkin;
         else dictionaries.Insert(0, handySkin);
+        // Insert only after replacing entries found above. Inserting the first
+        // project theme earlier shifts handySkinIndex, overwrites that theme
+        // with the skin and leaves a second, stale skin in the collection.
+        if (themeIndex < 0) dictionaries.Insert(0, themeDictionary);
 
         // Promote every skin and project palette token, so controls in detached
         // popup/floating windows see the same resources as the application shell.
@@ -92,25 +99,28 @@ public sealed class ThemeService : IThemeService
         foreach (var key in themeDictionary.Keys.Cast<object>())
             Synchronize(key, themeDictionary[key]);
 
-        var colors = GetAccentColors(mode, accent);
-        SetBrush("AccentBrush", colors.Accent);
-        SetBrush("PrimaryBrush", colors.Accent);
-        _resources["PrimaryColor"] = colors.Accent;
-        SetBrush("AccentHoverBrush", colors.Accent);
-        SetBrush("AccentSoftBrush", colors.Soft);
-        // Selection is a solid accent surface. It must not be a translucent
-        // soft tint mixed with the monochrome page background.
-        SetBrush("SelectedRowBrush", colors.Accent);
-        _resources["SelectedRowColor"] = colors.Accent;
-        var selectionText = ContrastForeground(colors.Accent);
+        var content = ((SolidColorBrush)_resources["ContentBrush"]).Color;
+        var accentColor = GetAccentColor(mode, accent);
+        SetBrush("AccentBrush", accentColor);
+        SetBrush("PrimaryBrush", accentColor);
+        _resources["PrimaryColor"] = accentColor;
+        SetBrush("AccentHoverBrush", accentColor);
+        // Selection and current-step surfaces are opaque accent tints mixed into
+        // the content background. A solid accent bar hid row icons and status
+        // colors; the tint keeps rows readable while still following the accent.
+        var soft = Mix(accentColor, content, mode == ThemeMode.Dark ? 0.16 : 0.10);
+        var selected = Mix(accentColor, content, mode == ThemeMode.Dark ? 0.24 : 0.18);
+        SetBrush("AccentSoftBrush", soft);
+        SetBrush("SelectedRowBrush", selected);
+        _resources["SelectedRowColor"] = selected;
+        var selectionText = ((SolidColorBrush)_resources["TextBrush"]).Color;
         SetBrush("SelectionTextBrush", selectionText);
         _resources["SelectionTextColor"] = selectionText;
         BindSelectionAliases();
-        SetBrush("InfoBrush", colors.Accent);
+        SetBrush("InfoBrush", accentColor);
         var window = ((SolidColorBrush)_resources["WindowBrush"]).Color;
         var surface = ((SolidColorBrush)_resources["SurfaceBrush"]).Color;
         var subtle = ((SolidColorBrush)_resources["SubtleBrush"]).Color;
-        var content = ((SolidColorBrush)_resources["ContentBrush"]).Color;
         var input = ((SolidColorBrush)_resources["InputBackgroundBrush"]).Color;
         SetBrush("RegionBrush", surface);
         _resources["RegionColor"] = surface;
@@ -138,13 +148,17 @@ public sealed class ThemeService : IThemeService
         SetBrush("DarkMaskBrush", mask);
         SetBrush("MaskBrush", mask);
         SetBrush("PrimaryTextBrush", ((SolidColorBrush)_resources["TextBrush"]).Color);
-        SetBrush("DarkPrimaryBrush", colors.Accent);
-        SetBrush("TextIconBrush", ContrastForeground(colors.Accent));
+        SetBrush("DarkPrimaryBrush", accentColor);
+        // Text on solid accent faces (primary buttons). List/tree selection
+        // overrides this alias locally with SelectionTextColor.
+        SetBrush("TextIconBrush", ContrastForeground(accentColor));
         SetBrush("SecondaryBorderBrush", ((SolidColorBrush)_resources["BorderBrush"]).Color);
         foreach (var token in _industrialControls.GetPalette(_resources))
             SetBrush(token.Key, token.Value);
         CurrentMode = mode;
         CurrentAccent = accent;
+        try { _settings?.Update(s => s with { Theme = mode.ToString(), Accent = accent.ToString() }); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { /* theme still applies; saving is best effort */ }
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -203,22 +217,26 @@ public sealed class ThemeService : IThemeService
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 
-    private static (Color Accent, Color Soft, Color Selected) GetAccentColors(ThemeMode mode, AccentPalette accent)
+    private static Color GetAccentColor(ThemeMode mode, AccentPalette accent)
     {
         var values = accent switch
         {
-            AccentPalette.Teal => (Light: "#0F766E", Dark: "#4FD1C5", SoftLight: "#F2F2F2", SoftDark: "#2A2A2A", SelectedLight: "#0F766E", SelectedDark: "#4FD1C5"),
-            AccentPalette.Purple => (Light: "#7C3AED", Dark: "#B794F4", SoftLight: "#F2F2F2", SoftDark: "#2A2A2A", SelectedLight: "#7C3AED", SelectedDark: "#B794F4"),
-            AccentPalette.Orange => (Light: "#C2410C", Dark: "#FDBA74", SoftLight: "#F2F2F2", SoftDark: "#2A2A2A", SelectedLight: "#C2410C", SelectedDark: "#FDBA74"),
-            _ => (Light: "#2563EB", Dark: "#5DA9FF", SoftLight: "#F2F2F2", SoftDark: "#2A2A2A", SelectedLight: "#2563EB", SelectedDark: "#5DA9FF")
+            AccentPalette.Teal => (Light: "#0F766E", Dark: "#4FD1C5"),
+            AccentPalette.Purple => (Light: "#7C3AED", Dark: "#B794F4"),
+            AccentPalette.Orange => (Light: "#C2410C", Dark: "#FDBA74"),
+            _ => (Light: "#2563EB", Dark: "#5DA9FF")
         };
-        return mode == ThemeMode.Dark
-            ? (Parse(values.Dark), Parse(values.SoftDark), Parse(values.SelectedDark))
-            : (Parse(values.Light), Parse(values.SoftLight), Parse(values.SelectedLight));
+        return Parse(mode == ThemeMode.Dark ? values.Dark : values.Light);
+    }
+
+    /// <summary>Opaque blend of <paramref name="tint"/> over <paramref name="background"/>.</summary>
+    private static Color Mix(Color tint, Color background, double amount)
+    {
+        byte Channel(byte t, byte b) => (byte)Math.Round(b + (t - b) * amount);
+        return Color.FromRgb(Channel(tint.R, background.R), Channel(tint.G, background.G), Channel(tint.B, background.B));
     }
 
     private static Color Parse(string value) => (Color)ColorConverter.ConvertFromString(value);
-
     private static Color ContrastForeground(Color background) =>
         IndustrialControlsThemeAdapter.ContrastRatio(Colors.White, background) >=
         IndustrialControlsThemeAdapter.ContrastRatio(Colors.Black, background) ? Colors.White : Colors.Black;

@@ -17,6 +17,8 @@ public sealed class ManualTestModule : IModule
         registry.RegisterSingleton<ManualInstrumentFactory>();
         registry.RegisterSingleton<IManualCanvasRepository, ManualCanvasRepository>();
         registry.RegisterSingleton<ManualTestViewModel>();
+        registry.RegisterSingleton<IManualPanelLayoutRepository, ManualPanelLayoutRepository>();
+        registry.RegisterSingleton<ManualPanelWorkspaceViewModel>();
         registry.RegisterSingleton<ManualTestView>();
         registry.RegisterSingleton<IManualWorkspaceRepository, ManualWorkspaceRepository>();
         registry.Register<IManualWorkspaceDialogService>(provider => provider.Resolve<ProtocolDialogService>());

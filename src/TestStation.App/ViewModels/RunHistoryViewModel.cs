@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TestStation.App.Localization;
 using TestStation.Application;
 
 namespace TestStation.App.ViewModels;
@@ -10,28 +11,36 @@ namespace TestStation.App.ViewModels;
 public sealed partial class RunHistoryViewModel : ObservableObject
 {
     private string? _root;
-    [ObservableProperty] private RunReportSummary? _selectedReport;
-    [ObservableProperty] private string _details = "请选择一条运行记录";
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(OpenReportCommand))] private RunReportSummary? _selectedReport;
+    [ObservableProperty] private string _details = UiText.Get("RunHistorySelectHint");
     public ObservableCollection<RunReportSummary> Reports { get; } = [];
     public ObservableCollection<StepRunResult> Steps { get; } = [];
+    public bool HasReports => Reports.Count > 0;
+    public bool HasSelection => SelectedReport is not null;
+    public bool HasSteps => Steps.Count > 0;
 
     partial void OnSelectedReportChanged(RunReportSummary? value)
     {
         Steps.Clear();
-        Details = value is null ? "请选择一条运行记录" :
-            $"序列：{value.SequenceName}\n结果：{value.Status}\n开始：{value.StartedAt:yyyy-MM-dd HH:mm:ss}\n结束：{value.FinishedAt:yyyy-MM-dd HH:mm:ss}\n步骤数：{value.StepCount}";
+        // Status is a stored identifier (completed / failed / stopped); show the localized text.
+        Details = value is null ? UiText.Get("RunHistorySelectHint") : UiText.Format("RunHistoryDetails",
+            value.SequenceName, UiDisplay.State(value.Status), value.StartedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"),
+            value.FinishedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"), value.StepCount);
         if (value is not null && _root is not null)
             foreach (var step in new RunResultRepository(_root).LoadResult(value.Id)?.Steps ?? []) Steps.Add(step);
+        OnPropertyChanged(nameof(HasSelection)); OnPropertyChanged(nameof(HasSteps));
     }
 
     [RelayCommand]
     private void Refresh() { if (_root is not null) OpenProject(_root); }
 
-    [RelayCommand]
+    private bool CanOpenReport() => SelectedReport is not null && File.Exists(SelectedReport.HtmlPath);
+
+    [RelayCommand(CanExecute = nameof(CanOpenReport))]
     private void OpenReport()
     {
-        if (SelectedReport is null || !File.Exists(SelectedReport.HtmlPath)) return;
-        Process.Start(new ProcessStartInfo(SelectedReport.HtmlPath) { UseShellExecute = true });
+        if (!CanOpenReport()) return;
+        Process.Start(new ProcessStartInfo(SelectedReport!.HtmlPath) { UseShellExecute = true });
     }
 
     public void OpenProject(string root)
@@ -39,6 +48,7 @@ public sealed partial class RunHistoryViewModel : ObservableObject
         _root = root;
         Reports.Clear();
         foreach (var report in new RunResultRepository(root).LoadSummaries()) Reports.Add(report);
+        OnPropertyChanged(nameof(HasReports));
         SelectedReport = Reports.FirstOrDefault();
     }
 }

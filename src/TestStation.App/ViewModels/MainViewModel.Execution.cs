@@ -216,6 +216,7 @@ public partial class MainViewModel
                     else _activeHostSteps.Remove(value.StepRunId);
                 }
                 var status = value.Status.ToUpperInvariant();
+                if (value.Type == "step_finished") CountStepResult(value.StepRunId, value.Status);
                 // Step IDs are only unique inside their own sequence.
                 _runStepStatuses[(value.SequenceId, value.StepId)] = status;
                 if (value.SequenceId == _sequence?.Id)

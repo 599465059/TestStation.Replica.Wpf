@@ -69,6 +69,11 @@ internal static class Program
     }
     private static async Task Run(string root, string[] args)
     {
+        if (args.Contains("--reference-short", StringComparer.OrdinalIgnoreCase))
+        {
+            await ReferenceRuntimeAcceptance.RunAsync(_output);
+            return;
+        }
         if (args.Contains("--real-serial", StringComparer.OrdinalIgnoreCase))
         {
             await RunRealSerialAsync(root, args);
@@ -138,6 +143,47 @@ internal static class Program
             using (var automation = await runtime.AcquireAutomationAsync("automatic", new[] { "ITECH01.Voltage.Measurement", "ITECH02.Voltage.Measurement" }))
             { Check(devices.ConnectionFor("ITECH01").Connected && devices.ConnectionFor("ITECH02").Connected, "自动租约按通道自动连接设备"); await runtime.ReadOnceAsync("ITECH01.Voltage.Measurement", "automatic"); await Reject(() => runtime.ReadOnceAsync("ITECH01.Voltage.Measurement", "manual"), "自动占用暂停手动读取"); }
             Check(!runtime.IsAutomationActive, "自动租约结束恢复手动访问状态");
+
+            // Exercise the real automatic path: OpenTAP Host requests channel
+            // reads/writes through the coordinator, which routes them to the
+            // same ITECH device session used by the manual panel.
+            var automaticSequence = new SequenceDefinition
+            {
+                Id = "itech_tcp_automatic", Name = "ITECH TCP 自动调用", Role = "main",
+                Steps =
+                [
+                    new SequenceStep { Id = "set", Kind = "set_value", Name = "设置电压", Params = new()
+                    {
+                        ["channel_id"] = JsonSerializer.SerializeToElement("ITECH01.Voltage.Setpoint"),
+                        ["value"] = JsonSerializer.SerializeToElement(9.5)
+                    } },
+                    new SequenceStep { Id = "output", Kind = "set_value", Name = "打开输出", Params = new()
+                    {
+                        ["channel_id"] = JsonSerializer.SerializeToElement("ITECH01.Output.Enabled"),
+                        ["value"] = JsonSerializer.SerializeToElement(true)
+                    } },
+                    new SequenceStep { Id = "read", Kind = "read_value", Name = "读取电压", Params = new()
+                    {
+                        ["channel_id"] = JsonSerializer.SerializeToElement("ITECH01.Voltage.Measurement")
+                    } },
+                    new SequenceStep { Id = "assert", Kind = "assert", Name = "验证电压", Params = new()
+                    {
+                        ["channel_id"] = JsonSerializer.SerializeToElement("ITECH01.Voltage.Measurement"),
+                        ["comparator"] = JsonSerializer.SerializeToElement("=="),
+                        ["expected"] = JsonSerializer.SerializeToElement(9.5)
+                    } }
+                ]
+            };
+            using (var automatic = await runtime.AcquireAutomationAsync("automatic", ["ITECH01.Voltage.Setpoint", "ITECH01.Output.Enabled", "ITECH01.Voltage.Measurement"]))
+            {
+                var host = new OpenTapHostClient(runtime);
+                var execution = await host.RunAsync(automaticSequence, [automaticSequence],
+                    new Dictionary<string, object?>(), new Dictionary<string, object?>());
+                Check(execution.Result.Status == "completed" && execution.Result.Steps.Any(step => step.StepId == "assert" && step.Status == "passed"),
+                    "OpenTAP 自动序列通过同一 ITECH TCP 会话");
+            }
+            Check(!runtime.IsAutomationActive && !devices.ConnectionFor("ITECH01").Connected && !devices.ConnectionFor("ITECH02").Connected,
+                "OpenTAP 自动结束释放 ITECH 会话和资源");
         }
         finally { window?.Close(); if(!first.HasExited) first.Kill(true); if(!second.HasExited) second.Kill(true); }
     }

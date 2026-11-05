@@ -57,12 +57,12 @@ Infrastructure implementation
 
 ## 模块拆分计划
 
-当前已经存在 `ShellModule`、`ProtocolModule` 和 `ManualTestModule`。下一阶段按以下边界扩展：
+当前启动链使用 `ShellModule`、`ManualTestModule` 和 `ResourceModule`。协议页面实现仍按独立模块边界保留，待功能重新接入时恢复 `ProtocolModule`；下一阶段按以下边界扩展：
 
 | 模块 | 内容 | 注册位置 |
 |---|---|---|
 | Shell | 工程入口、主题、全局导航、近期工程 | `ShellModule` |
-| Protocol | 协议库、自定义帧、DBC、离线测试 | `ProtocolModule` |
+| Protocol | 协议库、自定义帧、DBC、离线测试（当前暂不注册） | 恢复接入时使用 `ProtocolModule` |
 | ManualTest | 画布、控件工具箱、属性和通道绑定 | `ManualTestModule` |
 | AutoTest | 步骤库、序列编辑、变量、日志、执行工具栏 | 新增 `AutoTestModule`，从 Shell 页面组合中逐步拆出 |
 | Resources | 设备、通信资源、通道、映射和轮询策略 | `ResourceModule`，资源结构编辑通过 `IResourceCatalogEditingService` |
@@ -87,7 +87,7 @@ Infrastructure implementation
 
 ## 当前架构整理状态（2026-10）
 
-本轮将自动测试和手动测试作为当前产品入口，主窗口不再启动协议、CAN、设备资源模块；协议和资源代码仍保留在仓库中，作为后续模块恢复时的独立实现。通用对话框通过 Shell 提供的 `IAppDialogService` 注册，自动测试不再通过协议模块解析对话框。工程文件、序列工作区、站变量、模拟通道和模拟场景的读写已经集中到 `IAutomaticWorkspaceService`，运行报告读取集中到 `ISequenceReportService`，ViewModel 不再直接创建这些仓储。
+本轮将自动测试和手动测试作为当前产品入口，主窗口不再启动协议、CAN 页面；协议和 CAN 实现仍保留在仓库中，作为后续模块恢复时的独立实现。设备资源模块仍由当前启动链提供设备和通信资源管理。通用对话框通过 Shell 提供的 `IAppDialogService` 注册，自动测试不再通过协议模块解析对话框。工程文件、序列工作区、站变量、模拟通道和模拟场景的读写已经集中到 `IAutomaticWorkspaceService`，运行报告读取集中到 `ISequenceReportService`，ViewModel 不再直接创建这些仓储。
 
 步骤属性中的普通步骤和判定步骤已经分开保存：普通步骤使用 `on_complete`，判定步骤使用 `on_failure`。`ISequenceStepCatalog` / `BuiltInSequenceStepCatalog` 为步骤元数据和后续插件注册提供应用层边界；预检使用该目录识别内置步骤。
 

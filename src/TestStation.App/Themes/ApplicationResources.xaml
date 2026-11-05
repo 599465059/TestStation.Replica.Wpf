@@ -9,6 +9,8 @@
         <converters:StepKindToIconConverter x:Key="StepKindToIcon"/>
         <converters:IndentToMarginConverter x:Key="IndentToMargin" IndentWidth="22"/>
         <converters:UiValueConverter x:Key="UiValue"/>
+        <!-- Live measured values: monospaced digits so refreshing numbers do not jitter. -->
+        <FontFamily x:Key="ReadoutFontFamily">Cascadia Mono, Consolas, Microsoft YaHei UI</FontFamily>
         <DataTemplate x:Key="UiOptionTemplate">
             <TextBlock Text="{Binding Converter={StaticResource UiValue}}"/>
         </DataTemplate>

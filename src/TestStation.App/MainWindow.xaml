@@ -51,9 +51,12 @@
             </MenuItem>
             <MenuItem Header="{x:Static text:UiText.View}" Style="{StaticResource ShellMenuItem}">
                 <MenuItem Header="{x:Static text:UiText.ToggleNavigation}" Click="ToggleNavigation_Click"/>
-                <MenuItem Header="{x:Static text:UiText.ManualTest}" Tag="手动测试" Click="NavigateMenu_Click"/>
                 <MenuItem Header="{x:Static text:UiText.AutomaticTest}" Tag="自动测试" Click="NavigateMenu_Click"/>
-                <MenuItem Header="{x:Static text:UiText.PluginManagement}" Tag="设备管理" Click="NavigateMenu_Click"/>
+                <MenuItem Header="{x:Static text:UiText.ManualTest}" Tag="手动测试" Click="NavigateMenu_Click"/>
+                <MenuItem Header="{x:Static text:UiText.Devices}" Tag="devices" Click="NavigateMenu_Click"/>
+                <MenuItem Header="{x:Static text:UiText.HardwareConfig}" Tag="hardware" Click="NavigateMenu_Click"/>
+                <MenuItem Header="{x:Static text:UiText.PluginManagement}" Tag="插件管理" Click="NavigateMenu_Click"/>
+                <MenuItem Header="{x:Static text:UiText.Settings}" Tag="settings" Click="NavigateMenu_Click"/>
                 <MenuItem Header="{x:Static text:UiText.RestoreLayout}" Click="RestoreLayout_Click"/>
             </MenuItem>
             <MenuItem Header="{x:Static text:UiText.Help}" Style="{StaticResource ShellMenuItem}">
@@ -61,7 +64,7 @@
             </MenuItem>
         </Menu>
             <Grid Grid.Row="2" MinHeight="0" ClipToBounds="True">
-            <StackPanel x:Name="StartupView" VerticalAlignment="Center" HorizontalAlignment="Center" Width="560">
+            <StackPanel x:Name="StartupView" VerticalAlignment="Center" HorizontalAlignment="Stretch" MaxWidth="980" Margin="24,0">
                 <TextBlock Text="{x:Static text:UiText.ProductName}" FontSize="25" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                 <TextBlock Text="{x:Static text:UiText.StartupHint}" Margin="0,12,0,28" HorizontalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -69,7 +72,9 @@
                     <Button Content="{x:Static text:UiText.OpenProject}" Width="145" Height="40" Click="OpenProject_Click"/>
                 </StackPanel>
                 <TextBlock Text="{x:Static text:UiText.RecentProjects}" Margin="0,28,0,8"/>
-                <ListBox x:Name="RecentList" MinHeight="180" MaxHeight="232" MouseDoubleClick="RecentList_MouseDoubleClick"
+                <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="430"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <ListBox x:Name="RecentList" MinHeight="180" MaxHeight="232" MouseDoubleClick="RecentList_MouseDoubleClick" SelectionChanged="RecentList_SelectionChanged"
                          ItemContainerStyle="{StaticResource RecentProjectItem}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -80,14 +85,65 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+                <!-- Project preview: what the selected recent project contains, read without opening it. -->
+                <Border x:Name="ProjectPreviewCard" Grid.Column="2" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Padding="16,12" Visibility="Collapsed" AutomationProperties.AutomationId="ProjectPreview">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,8">
+                            <Button DockPanel.Dock="Right" Content="{x:Static text:UiText.PreviewOpen}" Style="{DynamicResource AccentButton}" Click="PreviewOpen_Click"/>
+                            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}"/>
+                        </DockPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                            <TextBlock Text="{x:Static text:UiText.WorkbenchMainSequence}" Foreground="{DynamicResource MutedBrush}" Margin="0,3,16,3"/>
+                            <TextBlock Grid.Column="1" Text="{Binding MainSequences}" TextTrimming="CharacterEllipsis" Margin="0,3"/>
+                            <TextBlock Grid.Row="1" Text="{x:Static text:UiText.WorkbenchSequences}" Foreground="{DynamicResource MutedBrush}" Margin="0,3,16,3"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SequenceCount}" Margin="0,3"/>
+                            <TextBlock Grid.Row="2" Text="{x:Static text:UiText.HwInstances}" Foreground="{DynamicResource MutedBrush}" Margin="0,3,16,3"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,3"><Run Text="{Binding DeviceCount, Mode=OneWay}"/><Run Text="  "/><Run Text="{Binding Families, Mode=OneWay}" Foreground="{DynamicResource MutedBrush}"/></TextBlock>
+                            <TextBlock Grid.Row="3" Text="{x:Static text:UiText.HwResources}" Foreground="{DynamicResource MutedBrush}" Margin="0,3,16,3"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ResourceCount}" Margin="0,3"/>
+                            <TextBlock Grid.Row="4" Text="{x:Static text:UiText.PreviewLastRun}" Foreground="{DynamicResource MutedBrush}" Margin="0,3,16,3"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding LastRun}" Margin="0,3">
+                                <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers>
+                                    <DataTrigger Binding="{Binding LastRunKind}" Value="success"><Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/></DataTrigger>
+                                    <DataTrigger Binding="{Binding LastRunKind}" Value="error"><Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/></DataTrigger>
+                                </Style.Triggers></Style></TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                        <TextBlock Text="{Binding Problem}" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" Margin="0,8,0,0">
+                            <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasProblem}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+                </Grid>
             </StackPanel>
             <Grid x:Name="WorkspaceView" Visibility="Collapsed">
-                <Grid.ColumnDefinitions><ColumnDefinition x:Name="NavigationColumn" Width="228" MinWidth="76"/><ColumnDefinition Width="*" MinWidth="0"/></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition x:Name="NavigationColumn" Width="228" MinWidth="64"/><ColumnDefinition Width="*" MinWidth="0"/></Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <Grid>
-                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                        <kit:NavigationView x:Name="NavigationItems" Grid.Row="0" Width="228" MinWidth="76" IsExpanded="True" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
-                        <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="4,3" HorizontalAlignment="Stretch">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <!-- Current project and quick switch. Reuses the File menu handlers. -->
+                        <Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="6,6">
+                            <Button x:Name="ProjectSwitchButton" AutomationProperties.AutomationId="ProjectSwitch" Style="{StaticResource NavButton}" Margin="0" Padding="8,6"
+                                    HorizontalContentAlignment="Stretch" ToolTip="{Binding ProjectPath}" Click="ProjectSwitch_Click">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <md:PackIcon Kind="FolderOpenOutline" Width="18" Height="18" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="ProjectSwitchName" Grid.Column="1" Text="{Binding ProjectName}" FontWeight="SemiBold" Margin="10,0,6,0" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                    <md:PackIcon x:Name="ProjectSwitchChevron" Grid.Column="2" Kind="UnfoldMoreHorizontal" Width="16" Height="16" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="{x:Static text:UiText.OpenProject}" Click="OpenProject_Click"><MenuItem.Icon><md:PackIcon Kind="FolderOpenOutline" Width="16" Height="16"/></MenuItem.Icon></MenuItem>
+                                        <MenuItem Header="{x:Static text:UiText.NewProject}" Click="CreateProject_Click"><MenuItem.Icon><md:PackIcon Kind="FilePlusOutline" Width="16" Height="16"/></MenuItem.Icon></MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+                        </Border>
+                        <kit:NavigationView x:Name="NavigationItems" Grid.Row="1" Width="228" MinWidth="64" IsExpanded="True" HorizontalAlignment="Left" VerticalAlignment="Stretch" />
+                        <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="4,3" HorizontalAlignment="Stretch">
                             <Button x:Name="NavigationToggleButton" ToolTip="{x:Static text:UiText.CollapseNavigation}" Style="{StaticResource IconButton}" Click="ToggleNavigation_Click" HorizontalAlignment="Left" Width="34" Height="30" Padding="0">
                                 <md:PackIcon x:Name="NavigationToggleIcon" Kind="MenuOpen" Width="16" Height="16"/>
                             </Button>
@@ -96,10 +152,12 @@
                 </Border>
                 <Grid Grid.Column="1">
                     <Grid x:Name="OverviewView" Visibility="Collapsed">
+                    <ContentControl x:Name="WorkbenchHost"/>
+                    <Grid x:Name="LegacyOverview">
                         <Grid.RowDefinitions><RowDefinition Height="56"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Margin="28,0,28,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,9">
-                                <TextBlock Text="{x:Static text:UiText.Workspace}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{x:Static text:UiText.Workbench}" FontWeight="SemiBold"/>
                                 <TextBlock Text="{x:Static text:UiText.WorkspaceSubtitle}" Foreground="{DynamicResource MutedBrush}"/>
                             </StackPanel>
                         </Border>
@@ -114,6 +172,7 @@
                             </StackPanel>
                         </StackPanel>
                     </Grid>
+                    </Grid>
                     <ContentControl x:Name="ManualTestHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="PluginManagementHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="DeviceTestingHost" Visibility="Collapsed"/>
@@ -127,13 +186,67 @@
                         </StackPanel>
                     </Grid>
                     <ContentControl x:Name="SequenceHost" Visibility="Collapsed"/>
+                    <ContentControl x:Name="SettingsHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="ControlPreviewHost" Visibility="Collapsed"/>
                     <ContentControl x:Name="ProtocolHost" Visibility="Collapsed"/>
                 </Grid>
             </Grid>
         </Grid>
-        <StatusBar Grid.Row="3" Background="{DynamicResource SurfaceBrush}">
-            <TextBlock Text="{Binding Status}" Foreground="{DynamicResource MutedBrush}"/>
+        <StatusBar Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate><DockPanel LastChildFill="True"/></ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <!-- Station summary: DataContext is StationStatusViewModel (set in code). Hidden when not registered. -->
+            <StatusBarItem x:Name="StationStatusPanel" DockPanel.Dock="Left" Padding="4,0,14,0" AutomationProperties.AutomationId="StationDevices">
+                <StackPanel Orientation="Horizontal" ToolTip="{x:Static text:UiText.StatusDevicesTooltip}">
+                    <StackPanel.Style>
+                        <!-- No configured devices (or no project): show nothing rather than "0 / 0". -->
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers><DataTrigger Binding="{Binding HasDevices}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{DynamicResource StatusOnlineBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ConnectedDevices}" Value="0"><Setter Property="Fill" Value="{DynamicResource StatusIdleBrush}"/></DataTrigger>
+                                    <DataTrigger Binding="{Binding HasFaults}" Value="True"><Setter Property="Fill" Value="{DynamicResource StatusFaultBrush}"/></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Text="{Binding DevicesText}" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
+                </StackPanel>
+            </StatusBarItem>
+            <!-- "输出中 n 台": only when a connected device reports its output on. Click opens the device page. -->
+            <StatusBarItem x:Name="LiveOutputsItem" DockPanel.Dock="Right" Padding="4,0" AutomationProperties.AutomationId="LiveOutputs">
+                <Button Click="LiveOutputs_Click" Padding="10,0" MinHeight="20" Height="20" BorderThickness="0" Cursor="Hand"
+                        Background="{DynamicResource LiveSurfaceBrush}" ToolTip="{x:Static text:UiText.StatusLiveTooltip}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource AppButtonStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasLiveOutputs}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource LiveSurfaceBrush}"/></Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon Kind="LightningBolt" Width="12" Height="12" Margin="0,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource LiveBrush}"/>
+                        <TextBlock Text="{Binding LiveText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource LiveTextBrush}"/>
+                    </StackPanel>
+                </Button>
+            </StatusBarItem>
+            <StatusBarItem DockPanel.Dock="Left" Padding="4,0,14,0" AutomationProperties.AutomationId="ExecutorState">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{x:Static text:UiText.StatusExecutor}" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
+                    <TextBlock Text="{Binding ExecutionState, Converter={StaticResource UiValue}, ConverterParameter=State}" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem Padding="4,0">
+                <TextBlock Text="{Binding Status}" FontSize="12" Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis"/>
+            </StatusBarItem>
         </StatusBar>
     </Grid>
     </Border>

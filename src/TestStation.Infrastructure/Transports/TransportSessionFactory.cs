@@ -1,5 +1,6 @@
 using System.IO.Ports;
 using System.Net.Sockets;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Collections.Concurrent;
@@ -30,6 +31,7 @@ public sealed class TransportSessionFactory : ITransportSessionFactory
     public ITransportSession Create(TransportResource resource) => TransportSettingsAccessor.NormalizeType(resource.Type) switch
     {
         "tcp" or "modbus_tcp" => new TcpTransportSession(),
+        "udp" => new UdpTransportSession(),
         "serial" or "modbus_rtu" => new SerialTransportSession(),
         "visa" => new VisaTransportSession(_visa),
         "can" => _canPool.Create(CanEndpointKey, endpoint => CreateCanSession(new TransportResource { Type = "can", Settings = endpoint.Settings.ToDictionary(p => p.Key, p => p.Value) })),
@@ -81,6 +83,8 @@ public abstract class ByteTransportSessionBase : TransportSessionBase, IByteTran
 {
     protected ByteTransportSessionBase(string type) : base(type) { }
     public abstract Task<ReadOnlyMemory<byte>?> ExchangeAsync(ReadOnlyMemory<byte> request, bool expectResponse, TimeSpan timeout, CancellationToken cancellationToken = default);
+    public virtual Task<ReadOnlyMemory<byte>> ExchangeFramedAsync(ReadOnlyMemory<byte> request, ByteResponseFraming framing, TimeSpan timeout, CancellationToken cancellationToken = default)
+        => Task.FromException<ReadOnlyMemory<byte>>(new NotSupportedException("该传输后端尚未实现按帧接收"));
 }
 
 public sealed class TcpTransportSession : ByteTransportSessionBase
@@ -89,6 +93,8 @@ public sealed class TcpTransportSession : ByteTransportSessionBase
     private NetworkStream? _stream;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private string _terminator = "\n";
+    private int _responseLength;
+    private int _idleReadMs = 20;
     private int _maxResponseBytes = 1024 * 1024;
     public TcpTransportSession() : base("tcp") { }
 
@@ -102,6 +108,8 @@ public sealed class TcpTransportSession : ByteTransportSessionBase
             var port = Number(endpoint.Settings, "tcp_port", 5025);
             var connectTimeout = Number(endpoint.Settings, "connect_timeout_ms", 1500);
             _terminator = Text(endpoint.Settings, "terminator") ?? "\n";
+            _responseLength = endpoint.Settings.TryGetValue("response_length", out var responseLength) && int.TryParse(responseLength.ToString(), out var length) && length >= 0 ? length : 0;
+            _idleReadMs = Number(endpoint.Settings, "idle_read_ms", 20);
             _maxResponseBytes = Number(endpoint.Settings, "max_response_bytes", 1024 * 1024);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken); timeout.CancelAfter(connectTimeout);
             try
@@ -115,7 +123,13 @@ public sealed class TcpTransportSession : ByteTransportSessionBase
         finally { _gate.Release(); }
     }
 
-    public override async Task<ReadOnlyMemory<byte>?> ExchangeAsync(ReadOnlyMemory<byte> request, bool expectResponse, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public override Task<ReadOnlyMemory<byte>?> ExchangeAsync(ReadOnlyMemory<byte> request, bool expectResponse, TimeSpan timeout, CancellationToken cancellationToken = default)
+        => ExchangeCoreAsync(request, expectResponse, null, timeout, cancellationToken);
+
+    public override async Task<ReadOnlyMemory<byte>> ExchangeFramedAsync(ReadOnlyMemory<byte> request, ByteResponseFraming framing, TimeSpan timeout, CancellationToken cancellationToken = default)
+        => (await ExchangeCoreAsync(request, true, framing, timeout, cancellationToken).ConfigureAwait(false))!.Value;
+
+    private async Task<ReadOnlyMemory<byte>?> ExchangeCoreAsync(ReadOnlyMemory<byte> request, bool expectResponse, ByteResponseFraming? framing, TimeSpan timeout, CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -126,17 +140,27 @@ public sealed class TcpTransportSession : ByteTransportSessionBase
             {
                 await stream.WriteAsync(request, linked.Token).ConfigureAwait(false);
                 if (!expectResponse) return null;
+                if (framing is not null) return await ByteResponseReader.ReadAsync(stream, framing, _maxResponseBytes, linked.Token).ConfigureAwait(false);
                 var result = new List<byte>(); var one = new byte[1]; var terminator = Encoding.ASCII.GetBytes(_terminator);
                 while (true)
                 {
                     if (await stream.ReadAsync(one, linked.Token).ConfigureAwait(false) == 0) throw new EndOfStreamException("TCP 资源已断开");
                     result.Add(one[0]);
+                    if (result.Count > _maxResponseBytes) throw new InvalidDataException("TCP 响应超过最大响应长度");
+                    if (_responseLength > 0 && result.Count >= _responseLength) return result.Take(_responseLength).ToArray();
+                    if (terminator.Length == 0)
+                    {
+                        await Task.Delay(_idleReadMs, linked.Token).ConfigureAwait(false);
+                        while (stream.DataAvailable)
+                        { if (await stream.ReadAsync(one, linked.Token).ConfigureAwait(false) == 0) break; result.Add(one[0]); if (result.Count > _maxResponseBytes) throw new InvalidDataException("TCP 响应超过最大响应长度"); }
+                        return result.ToArray();
+                    }
                     if (result.Count >= terminator.Length && result[^terminator.Length..].SequenceEqual(terminator)) return result.Take(result.Count - terminator.Length).ToArray();
                     if (result.Count > _maxResponseBytes) throw new InvalidDataException("TCP 响应超过最大响应长度");
                 }
             }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { SetState(TransportState.Faulted); await CloseCoreAsync(); throw new TimeoutException("TCP 通信超时"); }
-            catch { SetState(TransportState.Faulted); await CloseCoreAsync(); throw; }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { await CloseCoreAsync(); SetState(TransportState.Faulted); throw new TimeoutException("TCP 通信超时"); }
+            catch { await CloseCoreAsync(); SetState(TransportState.Faulted); throw; }
         }
         finally { _gate.Release(); }
     }
@@ -154,6 +178,8 @@ public sealed class SerialTransportSession : ByteTransportSessionBase
     private SerialPort? _port;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private string _terminator = "\n";
+    private int _responseLength;
+    private int _idleReadMs = 20;
     private bool _halfDuplex;
     private int _directionDelayMs;
     private int _maxResponseBytes = 1024 * 1024;
@@ -166,36 +192,56 @@ public sealed class SerialTransportSession : ByteTransportSessionBase
         {
             ResourceId = endpoint.ResourceId; SetState(TransportState.Opening); CloseCore();
             var port = Text(endpoint.Settings, "port") ?? throw new ArgumentException("串口资源缺少 port");
+            _terminator = Text(endpoint.Settings, "terminator") ?? "\n";
             serial = new SerialPort(port, Number(endpoint.Settings, "baud_rate", 115200), ParseParity(Text(endpoint.Settings, "parity")), Number(endpoint.Settings, "data_bits", 8), ParseStopBits(Text(endpoint.Settings, "stop_bits")))
-            { NewLine = Text(endpoint.Settings, "terminator") ?? "\n", ReadTimeout = Number(endpoint.Settings, "timeout_ms", 1500), WriteTimeout = Number(endpoint.Settings, "timeout_ms", 1500), Handshake = ParseHandshake(Text(endpoint.Settings, "flow_control")) };
+            { NewLine = string.IsNullOrEmpty(_terminator) ? "\n" : _terminator, ReadTimeout = Number(endpoint.Settings, "timeout_ms", 1500), WriteTimeout = Number(endpoint.Settings, "timeout_ms", 1500), Handshake = ParseHandshake(Text(endpoint.Settings, "flow_control")) };
             _halfDuplex = IsTrue(endpoint.Settings, "half_duplex"); _directionDelayMs = Number(endpoint.Settings, "direction_delay_ms", 0);
+            _responseLength = OptionalNumber(endpoint.Settings, "response_length", 0); _idleReadMs = Number(endpoint.Settings, "idle_read_ms", 20);
             _maxResponseBytes = Number(endpoint.Settings, "max_response_bytes", 1024 * 1024);
-            serial.Open(); _terminator = serial.NewLine; _port = serial; serial = null; SetState(TransportState.Open);
+            serial.Open(); _port = serial; serial = null; SetState(TransportState.Open);
         }
         catch { try { serial?.Dispose(); } catch { } SetState(TransportState.Faulted); throw; }
         finally { _gate.Release(); }
     }
-    public override async Task<ReadOnlyMemory<byte>?> ExchangeAsync(ReadOnlyMemory<byte> request, bool expectResponse, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public override Task<ReadOnlyMemory<byte>?> ExchangeAsync(ReadOnlyMemory<byte> request, bool expectResponse, TimeSpan timeout, CancellationToken cancellationToken = default)
+        => ExchangeCoreAsync(request, expectResponse, null, timeout, cancellationToken);
+
+    public override async Task<ReadOnlyMemory<byte>> ExchangeFramedAsync(ReadOnlyMemory<byte> request, ByteResponseFraming framing, TimeSpan timeout, CancellationToken cancellationToken = default)
+        => (await ExchangeCoreAsync(request, true, framing, timeout, cancellationToken).ConfigureAwait(false))!.Value;
+
+    private async Task<ReadOnlyMemory<byte>?> ExchangeCoreAsync(ReadOnlyMemory<byte> request, bool expectResponse, ByteResponseFraming? framing, TimeSpan timeout, CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var port = _port ?? throw new IOException("串口资源尚未打开");
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken); linked.CancelAfter(timeout);
+            // Windows serial streams do not reliably cancel an outstanding read.
+            using var abort = linked.Token.Register(() => { try { port.Dispose(); } catch { } });
             try
             {
                 await port.BaseStream.WriteAsync(request, linked.Token).ConfigureAwait(false); await port.BaseStream.FlushAsync(linked.Token).ConfigureAwait(false);
                 if (_directionDelayMs > 0 && _halfDuplex) await Task.Delay(_directionDelayMs, linked.Token).ConfigureAwait(false);
                 if (!expectResponse) return null;
+                if (framing is not null) return await ByteResponseReader.ReadAsync(port.BaseStream, framing, _maxResponseBytes, linked.Token).ConfigureAwait(false);
                 var result = new List<byte>(); var one = new byte[1]; var terminator = Encoding.ASCII.GetBytes(_terminator);
                 while (true)
                 {
                     if (await port.BaseStream.ReadAsync(one, linked.Token).ConfigureAwait(false) == 0) throw new EndOfStreamException("串口已断开");
-                    result.Add(one[0]); if (result.Count > _maxResponseBytes) throw new InvalidDataException("串口响应超过最大响应长度"); if (result.Count >= terminator.Length && result[^terminator.Length..].SequenceEqual(terminator)) return result.Take(result.Count - terminator.Length).ToArray();
+                    result.Add(one[0]); if (result.Count > _maxResponseBytes) throw new InvalidDataException("串口响应超过最大响应长度");
+                    if (_responseLength > 0 && result.Count >= _responseLength) return result.Take(_responseLength).ToArray();
+                    if (terminator.Length == 0)
+                    { await Task.Delay(_idleReadMs, linked.Token).ConfigureAwait(false); while (port.BytesToRead > 0) { var read = port.BaseStream.ReadByte(); if (read < 0) break; result.Add((byte)read); if (result.Count > _maxResponseBytes) throw new InvalidDataException("串口响应超过最大响应长度"); } return result.ToArray(); }
+                    if (result.Count >= terminator.Length && result[^terminator.Length..].SequenceEqual(terminator)) return result.Take(result.Count - terminator.Length).ToArray();
                 }
             }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { SetState(TransportState.Faulted); CloseCore(); throw new TimeoutException("串口通信超时"); }
-            catch { SetState(TransportState.Faulted); CloseCore(); throw; }
+            catch (Exception error) when (linked.IsCancellationRequested)
+            {
+                CloseCore(); SetState(TransportState.Faulted);
+                if (cancellationToken.IsCancellationRequested) throw new OperationCanceledException("串口事务已取消", error, cancellationToken);
+                throw new TimeoutException("串口通信超时", error);
+            }
+            catch { CloseCore(); SetState(TransportState.Faulted); throw; }
         }
         finally { _gate.Release(); }
     }
@@ -208,6 +254,47 @@ public sealed class SerialTransportSession : ByteTransportSessionBase
     private static StopBits ParseStopBits(string? value) => value switch { "1" => StopBits.One, "2" => StopBits.Two, "1.5" => StopBits.OnePointFive, _ => Enum.TryParse<StopBits>(value, true, out var result) ? result : StopBits.One };
     private static Handshake ParseHandshake(string? value) => value switch { "RtsCts" => Handshake.RequestToSend, "XOnXOff" => Handshake.XOnXOff, _ => Handshake.None };
     private static bool IsTrue(IReadOnlyDictionary<string, JsonElement> values, string key) => values.TryGetValue(key, out var value) && (value.ValueKind == JsonValueKind.True || bool.TryParse(value.ToString(), out var result) && result);
+    private static int OptionalNumber(IReadOnlyDictionary<string, JsonElement> values, string key, int fallback) => values.TryGetValue(key, out var value) && int.TryParse(value.ToString(), out var number) && number >= 0 ? number : fallback;
+}
+
+/// <summary>Datagram transport for devices whose protocol is explicitly UDP.</summary>
+public sealed class UdpTransportSession : ByteTransportSessionBase
+{
+    private UdpClient? _client;
+    private IPEndPoint? _remote;
+    private readonly SemaphoreSlim _gate = new(1, 1);
+    public UdpTransportSession() : base("udp") { }
+    public override async Task OpenAsync(TransportEndpoint endpoint, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ResourceId = endpoint.ResourceId; SetState(TransportState.Opening); await CloseCoreAsync();
+            var host = endpoint.Settings.TryGetValue("host", out var h) ? h.ToString() : "127.0.0.1";
+            var port = endpoint.Settings.TryGetValue("udp_port", out var p) && p.TryGetInt32(out var parsed) ? parsed : endpoint.Settings.TryGetValue("tcp_port", out var tcpPort) && tcpPort.TryGetInt32(out var tcpParsed) ? tcpParsed : 5000;
+            var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
+            _remote = new IPEndPoint(addresses.FirstOrDefault() ?? IPAddress.Loopback, port);
+            _client = new UdpClient(); SetState(TransportState.Open);
+        }
+        catch { await CloseCoreAsync().ConfigureAwait(false); SetState(TransportState.Faulted); throw; }
+        finally { _gate.Release(); }
+    }
+    public override async Task<ReadOnlyMemory<byte>?> ExchangeAsync(ReadOnlyMemory<byte> request, bool expectResponse, TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var client = _client ?? throw new IOException("UDP 资源尚未打开"); var remote = _remote ?? throw new IOException("UDP 目标地址未配置");
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken); linked.CancelAfter(timeout);
+            await client.SendAsync(request.ToArray(), remote, linked.Token).ConfigureAwait(false); if (!expectResponse) return null;
+            try { var result = await client.ReceiveAsync(linked.Token).ConfigureAwait(false); return result.Buffer; }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { SetState(TransportState.Faulted); throw new TimeoutException("UDP 通信超时"); }
+        }
+        finally { _gate.Release(); }
+    }
+    public override async Task CloseAsync(CancellationToken cancellationToken = default) { await _gate.WaitAsync(cancellationToken).ConfigureAwait(false); try { await CloseCoreAsync().ConfigureAwait(false); } finally { _gate.Release(); } }
+    private Task CloseCoreAsync() { _client?.Dispose(); _client = null; _remote = null; if (State != TransportState.Closed) SetState(TransportState.Closed); return Task.CompletedTask; }
+    public override async ValueTask DisposeAsync() { try { await CloseAsync().ConfigureAwait(false); } finally { _gate.Dispose(); } }
 }
 
 public interface IVisaBackend

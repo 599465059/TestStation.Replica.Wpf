@@ -82,6 +82,13 @@ public partial class SequenceWorkspace : UserControl
         }
     }
 
+    private void VariableEditorExpanded(object sender, RoutedEventArgs args) => ResetVariableEditorHeight(sender);
+    private void VariableEditorCollapsed(object sender, RoutedEventArgs args) => ResetVariableEditorHeight(sender);
+    private static void ResetVariableEditorHeight(object sender)
+    {
+        if (sender is Expander { Parent: Grid grid }) grid.RowDefinitions[3].Height = GridLength.Auto;
+    }
+
     private void VariableGridRightClick(object sender, MouseButtonEventArgs args)
     {
         if (DataContext is not MainViewModel model) return;

@@ -12,7 +12,7 @@ public sealed class PowerSupplyManagementAdapter(IPowerSupplyDeviceService devic
     public IReadOnlyList<ManagedDeviceModel> Models => profiles.Family.Models.Where(m => m.Enabled)
         .Select(m => new ManagedDeviceModel(m.Id, m.Name, (m.Tcp ? new[] { "tcp" } : []).Concat(m.Serial ? ["serial"] : []).ToArray())).ToArray();
     public event EventHandler? Changed { add { devices.Changed += value; devices.StateChanged += value; } remove { devices.Changed -= value; devices.StateChanged -= value; } }
-    public ManagedDeviceState GetState(string id) { var state = devices.ConnectionFor(id); return new(state.Connected, state.Error); }
+    public ManagedDeviceState GetState(string id) { var state = devices.ConnectionFor(id); return new(state.Connected, state.Error, state.Connected ? state.OutputEnabled : null); }
     public DeviceDefinition Add(string name) => devices.AddDevice(name);
     public void Update(string id, string name, string modelId, string resourceId) => devices.UpdateDevice(id, name, modelId, resourceId);
     public void Remove(string id) => devices.RemoveDevice(id);

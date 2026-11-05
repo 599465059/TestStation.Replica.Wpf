@@ -1,6 +1,6 @@
 # Test Station 项目最高规则
 
-本文档仅适用于当前独立的 C# + WPF 工程：`F:\opencode\jmytest\TestStation.Replica.Wpf`。它是该工程 UI、模块和主题实现的最高约束，不是本次对话的全局规则，也不适用于 `F:\opencode\web_py\test`、`F:\opencode\web_py\WpfHilPlatform` 或其他项目。参考工程中的代码只能择优适配，不能覆盖本项目的领域模型、工程文件格式和分层边界。
+本文档仅适用于当前独立的 C# + WPF 工程：`F:\opencode\TestStation.Replica.Wpf`。它是该工程 UI、模块和主题实现的最高约束，不是本次对话的全局规则，也不适用于 `F:\opencode\web_py\test`、`F:\opencode\web_py\WpfHilPlatform` 或其他项目。参考工程中的代码只能择优适配，不能覆盖本项目的领域模型、工程文件格式和分层边界。
 
 ## 1. UI 技术栈
 
@@ -16,7 +16,7 @@
 
 - 页面 (`Views`) 只负责布局、绑定和交互组合，不重复定义通用控件的视觉样式。
 - 当前阶段不自研基础控件库。业务页面的 `UserControl` 负责组合 Industrial.Controls 提供的控件和样式；后续用户提供的自定义库按授权范围接入。
-- 用户提供的 `Industrial.Controls` 通过本工程 `vendor/nuget` 的固定版本包接入，允许使用该库已封装的控件和模板；不得在页面中重写或复制其基础模板。当前锁定最新已发布 `1.0.0`，正式页面与预览使用同一资源入口。`F:\opencode\web_py\UI库\IndustrialKit` 源码只读。
+- 用户提供的 `Industrial.Controls` 通过本工程 `vendor/nuget` 的固定版本包接入，允许使用该库已封装的控件和模板；不得在页面中重写或复制其基础模板。当前锁定 `1.1.0`，正式页面与预览使用同一资源入口。`F:\opencode\web_py\UI库\IndustrialKit` 源码只读。
 - 控件库版本更新必须发布新的包版本，不能覆盖同版本包。引用、主题适配和控件使用分离；不得引用 Gallery 工程或使 Domain/Application 依赖 UI 库。
 - 通用控件样式统一放在 `Themes/HandyControlStyles.xaml`，库资源由 `Themes/ResourceBootstrap.cs` 按依赖顺序加载并注册原包样式别名，外壳样式放在 `ShellStyles.xaml`，序列行模板放在 `Themes/EditorTemplates/StepListResources.xaml`。页面不复制这些视觉定义。控件不得反向依赖设备驱动、序列执行器或具体页面。
 - 公共按钮、表格、输入框、属性编辑器、工具栏、状态标记和空状态视图只能有一套可复用实现。页面需要通过属性、模板或数据绑定改变内容，而不是复制一份 XAML。
@@ -55,7 +55,7 @@
 
 - 手动测试自由画布的位置和尺寸必须以整数网格保存，移动及缩放强制吸附；辅助网格仅在移动/拉伸手势进行时显示。当前允许组合现有库样式实现一个临时数值业务视图和专用画布编辑层供测试，不另建基础控件模板，不修改 IndustrialKit；正式仪表控件的缺项记录后交由用户完善库。
 
-- 协议功能使用独立 `ProtocolModule` 注册；Domain 放协议/帧/字段/DBC 模型，Application 放编辑和预览规则及接口，Infrastructure 放文件与 DBC 解析实现，App 放各页面和 ViewModel。新增后端代码不得依赖 WPF、控件库、图标或停靠组件。
+- 协议功能恢复接入时必须使用独立模块注册；Domain 放协议/帧/字段/DBC 模型，Application 放编辑和预览规则及接口，Infrastructure 放文件与 DBC 解析实现，App 放各页面和 ViewModel。当前协议实现保留在仓库中，但暂未注册到主启动链。新增后端代码不得依赖 WPF、控件库、图标或停靠组件。
 - 通用通信层必须先于设备协议和驱动：`ITransportSession` 只负责生命周期、状态和资源标识；TCP、串口 RS232/RS422/RS485 与 VISA 实现 `IByteTransportSession`；CAN/CAN FD 实现 `ICanBusSession`。RS232/422/485 是串口线路模式，VISA 是传输后端，Modbus/SCPI/CANopen/J1939 是协议，不能把协议字段混入 `TransportResource`。
 - Application 只能依赖厂商无关传输接口，不得引用 NI-VISA、Keysight、ZLG、Kvaser 或其他硬件 SDK。真实 SDK 必须在 Infrastructure 适配器中注入；缺少运行库时必须返回明确错误，不能退回内存模拟值冒充真实连接。CAN 总线允许共享租约，TCP、串口和 VISA 默认独占。
 - 协议使用 `.tsproto` v1 和原工程目录约定；一个协议文件包含多个帧。帧过滤仅改变显示，不能删除隐藏帧。字段编辑在副本校验通过后提交，字节重叠和越界必须拒绝。

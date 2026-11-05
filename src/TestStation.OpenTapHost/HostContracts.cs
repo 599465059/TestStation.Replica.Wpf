@@ -84,7 +84,10 @@ public sealed class OpenTapRunner : IOpenTapRunner
                 var testPlan = OpenTapPlanBuilder.Build(plan, context, arguments);
                 var listener = new HostResultListener(context);
                 // A null selection executes the whole plan. An empty set selects no steps.
-                var run = await testPlan.ExecuteAsync(new[] { listener }, Array.Empty<ResultParameter>(), null, linked.Token);
+                // Stop is cooperative through HostExecutionContext, not OpenTAP's abort token:
+                // OpenTAP registers that token to TapThread.Abort, after which every child step
+                // throws on entry and the CLEANUP section could never run.
+                var run = await testPlan.ExecuteAsync(new[] { listener }, Array.Empty<ResultParameter>(), null, CancellationToken.None);
                 run.WaitForResults();
             });
         }

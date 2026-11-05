@@ -65,7 +65,7 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
         }
         catch
         {
-            foreach (var id in opened) await CloseCoreAsync(id).ConfigureAwait(false);
+            foreach (var id in opened) await CloseCoreAsync(id, safeOff: true).ConfigureAwait(false);
             IsAutomationActive = false; throw;
         }
         finally { _gate.Release(); }
@@ -83,7 +83,9 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
                 owned = new HashSet<string>(_automationOwned, StringComparer.OrdinalIgnoreCase);
                 _automationOwned.Clear();
             }
-            foreach (var id in owned) await CloseCoreAsync(id).ConfigureAwait(false);
+            // Sessions opened for this run are closed with the output switched off. Failures are shown
+            // as device errors; this runs from the automation lease release and must not throw.
+            foreach (var id in owned) await CloseCoreAsync(id, safeOff: true).ConfigureAwait(false);
             IsAutomationActive = false;
         }
         finally { _gate.Release(); }
@@ -111,6 +113,21 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
     public IReadOnlyList<SequenceChannelDefinition> GetChannels() => !FamilyEnabled ? [] : Devices.Where(d => ModelFor(d.Id).Enabled).SelectMany(d => ChannelsFor(d.Id)
         .Select(c => new SequenceChannelDefinition(c.Id, c.DataType, d.Name + " / " + c.DisplayName, c.CanRead, c.CanWrite))).ToArray();
     public PowerSupplyConnection ConnectionFor(string deviceId) => _states.GetValueOrDefault(deviceId) ?? new();
+    public bool TurnOutputOffBeforeDisconnect { get; set; } = true;
+    private static bool IsOutputChannel(string channelId) => channelId.EndsWith(".Output.Enabled", StringComparison.OrdinalIgnoreCase);
+    private PowerSupplyChannel? OutputChannel(string deviceId)
+    {
+        try { return ChannelsFor(deviceId).FirstOrDefault(c => c.Binding == "output" && c.CanWrite); }
+        catch (Exception error) when (error is InvalidOperationException or ObjectDisposedException) { return null; } // device or model removed
+    }
+    /// <summary>Records the output state from a successful read or write; raises StateChanged only on change.</summary>
+    private void TrackOutput(string deviceId, string channelId, JsonElement value)
+    {
+        if (!IsOutputChannel(channelId) || value.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) return;
+        var enabled = value.GetBoolean();
+        var current = ConnectionFor(deviceId);
+        if (current.Connected && current.OutputEnabled != enabled) SetState(deviceId, current with { OutputEnabled = enabled });
+    }
     private void SetState(string id, PowerSupplyConnection state) { _states[id] = state; StateChanged?.Invoke(this, EventArgs.Empty); }
     private void EnsureManual()
     { ObjectDisposedException.ThrowIf(_disposed, this); if (IsAutomationActive) throw new InvalidOperationException("自动测试期间不能修改设备或家族配置"); }
@@ -198,8 +215,17 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
             await createdSession.ConnectAsync(token).ConfigureAwait(false);
             var identity = await createdSession.QueryAsync("*IDN?", token).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(identity)) throw new InvalidDataException("设备身份响应为空");
+            bool? output = null;
+            var outputChannel = ChannelsFor(device.Id).FirstOrDefault(c => c.Binding == "output" && c.CanRead);
+            if (outputChannel is not null)
+            {
+                using var outputTimeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+                outputTimeout.CancelAfter(Math.Max(outputChannel.TimeoutMs, 1500));
+                var state = await createdSession.ReadAsync(outputChannel.Id, outputTimeout.Token).ConfigureAwait(false);
+                if (state.ValueKind is JsonValueKind.True or JsonValueKind.False) output = state.GetBoolean();
+            }
             _sessions[device.Id] = new(session, lease, JsonSerializer.Serialize(device));
-            SetState(device.Id, new(true, identity));
+            SetState(device.Id, new(true, identity, OutputEnabled: output));
         }
         catch (Exception error)
         {
@@ -209,11 +235,41 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
             throw;
         }
     }
-    private async Task CloseCoreAsync(string id, string error = "")
+    /// <summary>
+    /// Closes one session. With <paramref name="safeOff"/> (and the policy enabled) the output is
+    /// switched off first; a failure is returned so callers can report it, and also shown as the
+    /// device error. I/O-failure paths pass safeOff = false: the link is already broken.
+    /// </summary>
+    private async Task<string?> CloseCoreAsync(string id, string error = "", bool safeOff = false)
     {
+        string? failure = null;
         if (_sessions.TryRemove(id, out var active))
-        { try { await active.Session.DisposeAsync().ConfigureAwait(false); } finally { active.Lease.Dispose(); } }
-        SetState(id, new(Error: error));
+        {
+            try
+            {
+                if (safeOff && TurnOutputOffBeforeDisconnect && error.Length == 0 && OutputChannel(id) is { } output)
+                {
+                    try
+                    {
+                        using var timeout = new CancellationTokenSource(Math.Max(output.TimeoutMs, 1500));
+                        await active.Session.WriteAsync(output.Id, JsonSerializer.SerializeToElement(false), timeout.Token).ConfigureAwait(false);
+                    }
+                    catch (Exception off) when (off is not OutOfMemoryException)
+                    {
+                        failure = $"关闭输出失败：{off.Message}。请到现场确认电源输出状态";
+                    }
+                }
+                await active.Session.DisposeAsync().ConfigureAwait(false);
+            }
+            finally { active.Lease.Dispose(); }
+        }
+        SetState(id, new(Error: failure ?? error));
+        return failure;
+    }
+
+    private static void ThrowIfFailed(IReadOnlyCollection<string> failures)
+    {
+        if (failures.Count > 0) throw new IOException(string.Join("；", failures));
     }
     private static bool SamePhysicalEndpoint(TransportResource left, TransportResource right)
     {
@@ -230,14 +286,36 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
         await _gate.WaitAsync().ConfigureAwait(false);
         try
         {
-            foreach (var id in _sessions.Keys.ToArray()) await CloseCoreAsync(id).ConfigureAwait(false);
+            foreach (var id in _sessions.Keys.ToArray()) await CloseCoreAsync(id, safeOff: true).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
     }
     public async Task DisconnectDeviceAsync(string deviceId, CancellationToken token = default)
-    { await _gate.WaitAsync(token).ConfigureAwait(false); try { EnsureManual(); await CloseCoreAsync(deviceId).ConfigureAwait(false); } finally { _gate.Release(); } }
+    {
+        await _gate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            EnsureManual();
+            var failure = await CloseCoreAsync(deviceId, safeOff: true).ConfigureAwait(false);
+            if (failure is not null) throw new IOException(failure);
+        }
+        finally { _gate.Release(); }
+    }
+    /// <summary>Disconnects every session (project switch, app exit); all are closed even if one fails.</summary>
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
-    { await _gate.WaitAsync(cancellationToken).ConfigureAwait(false); try { EnsureManual(); foreach (var id in _sessions.Keys) await CloseCoreAsync(id).ConfigureAwait(false); } finally { _gate.Release(); } }
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            EnsureManual();
+            var failures = new List<string>();
+            foreach (var id in _sessions.Keys.ToArray())
+                if (await CloseCoreAsync(id, safeOff: true).ConfigureAwait(false) is { } failure)
+                    failures.Add($"{Devices.FirstOrDefault(d => d.Id == id)?.Name ?? id}：{failure}");
+            ThrowIfFailed(failures);
+        }
+        finally { _gate.Release(); }
+    }
     private (string DeviceId, PowerSupplyChannel Channel, IDeviceSession Session) Resolve(string channelId)
     {
         if (!FamilyEnabled) throw new InvalidOperationException("电源家族已禁用");
@@ -257,6 +335,7 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
             try
             {
                 var value = await session.ReadAsync(channelId, timeout.Token).ConfigureAwait(false);
+                TrackOutput(id, channelId, value);
                 ValueChanged?.Invoke(this, new(channelId, value, DateTimeOffset.UtcNow));
                 return value;
             }
@@ -271,7 +350,7 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
         {
             var (id, channel, session) = Resolve(channelId);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken); timeout.CancelAfter(channel.TimeoutMs);
-            try { await session.WriteAsync(channelId, value, timeout.Token).ConfigureAwait(false); ValueChanged?.Invoke(this, new(channelId, value, DateTimeOffset.UtcNow)); }
+            try { await session.WriteAsync(channelId, value, timeout.Token).ConfigureAwait(false); TrackOutput(id, channelId, value); ValueChanged?.Invoke(this, new(channelId, value, DateTimeOffset.UtcNow)); }
             catch (Exception e) when (e is IOException or TimeoutException or OperationCanceledException or InvalidDataException or FormatException) { await CloseCoreAsync(id, e.Message).ConfigureAwait(false); throw; }
         }
         finally { _gate.Release(); }
@@ -343,7 +422,7 @@ public sealed class PowerSupplyDeviceService : IPowerSupplyDeviceService
     public async ValueTask DisposeAsync()
     {
         await _gate.WaitAsync().ConfigureAwait(false);
-        try { if (_disposed) return; _disposed = true; _catalog.Changed -= CatalogChanged; _catalog.Changing -= CatalogChanging; _profiles.Changed -= ProfilesChanged; foreach (var id in _sessions.Keys) await CloseCoreAsync(id).ConfigureAwait(false); }
+        try { if (_disposed) return; _disposed = true; _catalog.Changed -= CatalogChanged; _catalog.Changing -= CatalogChanging; _profiles.Changed -= ProfilesChanged; foreach (var id in _sessions.Keys.ToArray()) await CloseCoreAsync(id, safeOff: true).ConfigureAwait(false); }
         finally { _gate.Release(); }
     }
 }

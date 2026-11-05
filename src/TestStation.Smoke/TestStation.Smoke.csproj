@@ -14,4 +14,15 @@
     <ProjectReference Include="..\TestStation.App\TestStation.App.csproj" />
   </ItemGroup>
 
+  <!-- UI Smoke launches the real Host from its own output directory. -->
+  <Target Name="CopySmokeOpenTapHost" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <_SmokeOpenTapHostFiles Include="$(MSBuildProjectDirectory)\..\TestStation.OpenTapHost\bin\$(Configuration)\net9.0\**\*" />
+    </ItemGroup>
+    <Error Condition="'@(_SmokeOpenTapHostFiles)' == ''" Text="UI Smoke requires the built OpenTAP Host." />
+    <Copy SourceFiles="@(_SmokeOpenTapHostFiles)"
+          DestinationFiles="@(_SmokeOpenTapHostFiles->'$(TargetDir)OpenTapHost\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

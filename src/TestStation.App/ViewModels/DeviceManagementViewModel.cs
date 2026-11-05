@@ -64,9 +64,11 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
     public void OpenProject(string root) => _catalog.OpenProject(root);
     private void Post(Action action) { if (_context is null) action(); else _context.Post(_ => action(), null); }
     private void Changed(object? sender, EventArgs e) => Post(Reload);
-    partial void OnShowResourcesChanged(bool value) => OnPropertyChanged(nameof(ShowDevices));
+    partial void OnShowResourcesChanged(bool value) { OnPropertyChanged(nameof(ShowDevices)); OnPropertyChanged(nameof(HardwareTabIndex)); }
+    /// <summary>In-page tab strip on the hardware configuration page: 0 = communication resources, 1 = device instances.</summary>
+    public int HardwareTabIndex { get => ShowResources ? 0 : 1; set => ShowResources = value != 1; }
     partial void OnIsBusyChanged(bool value) => NotifyState();
-    private void NotifyState() { foreach (var name in new[] { nameof(CanManage), nameof(DiagnosticOpen), nameof(DiagnosticCan), nameof(DiagnosticByte), nameof(CanDiagnostic), nameof(DiagnosticState) }) OnPropertyChanged(name); }
+    private void NotifyState() { foreach (var name in new[] { nameof(CanManage), nameof(DiagnosticOpen), nameof(CanToggleDiagnostic), nameof(DiagnosticCan), nameof(DiagnosticByte), nameof(CanDiagnostic), nameof(DiagnosticState) }) OnPropertyChanged(name); }
     private void Reload()
     {
         var resourceId = SelectedResource?.Definition.Id; var deviceId = SelectedDevice?.Definition.Id;
@@ -74,7 +76,7 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
         foreach (var resource in _catalog.Catalog.Transports)
         {
             var s = TransportSettingsAccessor.Read(resource);
-            var summary = resource.Type switch { "tcp" => $"{s.Host}:{s.TcpPort}", "serial" => $"{s.Port} · {s.SerialMode} · {s.BaudRate}", "can" => $"{s.CanBackendId} · {s.CanChannel} · {s.CanBitrate}", "visa" => s.VisaResource ?? "", _ => resource.Type };
+            var summary = resource.Type switch { "tcp" => $"{s.Host}:{s.TcpPort}", "udp" => $"{s.Host}:{s.TcpPort}", "serial" => $"{s.Port} · {s.SerialMode} · {s.BaudRate}", "can" => $"{s.CanBackendId} · {s.CanChannel} · {s.CanBitrate}", "visa" => s.VisaResource ?? "", _ => resource.Type };
             var bound = string.Join("、", _catalog.Catalog.Devices.Where(d => d.TransportId == resource.Id).Select(d => d.Name));
             Resources.Add(new(resource, summary, bound, _resources.IsLeased(resource.Id) ? UiText.Get("HwInUse") : UiText.Get("HwIdle")));
         }
@@ -155,6 +157,9 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
     [RelayCommand] private async Task OpenDiagnosticAsync()
     { if (!CanDiagnostic || SelectedResource is null) return; var id = SelectedResource.Definition.Id; await RunAsync(token => _diagnostics.OpenAsync(id, token)); }
     [RelayCommand] private async Task CloseDiagnosticAsync() { Cancel(); await _diagnostics.CloseAsync(); Reload(); }
+    /// <summary>One button: opens diagnostics for the selected resource, or closes the open session.</summary>
+    public bool CanToggleDiagnostic => DiagnosticOpen || CanDiagnostic;
+    [RelayCommand] private Task ToggleDiagnosticAsync() => DiagnosticOpen ? CloseDiagnosticAsync() : OpenDiagnosticAsync();
     [RelayCommand] private void Cancel() => _operation?.Cancel();
     [RelayCommand] private void ClearTraffic() => Traffic.Clear();
     private byte[] Bytes()
@@ -192,5 +197,10 @@ public sealed partial class DeviceManagementViewModel : ObservableObject
     public async Task LeaveAsync() { Cancel(); await _diagnostics.CloseAsync(); NotifyState(); }
 }
 
-public sealed record ResourceManagementRow(TransportResource Definition, string Summary, string BoundDevices, string Occupancy);
+public sealed record ResourceManagementRow(TransportResource Definition, string Summary, string BoundDevices, string Occupancy)
+{
+    /// <summary>Display name of the stored transport type id.</summary>
+    public string TypeText => TestStation.Application.Resources.TransportSettingsAccessor.NormalizeType(Definition.Type) switch
+    { "tcp" => "TCP", "udp" => "UDP", "serial" => UiText.Get("HwTypeSerial"), "can" => "CAN", "visa" => "VISA", var other => other.ToUpperInvariant() };
+}
 public sealed record DeviceManagementRow(DeviceDefinition Definition, string Family, string Model, string Resource, string State, string Error, string Occupancy);

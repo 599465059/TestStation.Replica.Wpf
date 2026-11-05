@@ -15,19 +15,23 @@
     <Button Content="{x:Static text:UiText.PluginDisable}" Command="{Binding DisablePluginCommand}"/>
    </StackPanel>
   </StackPanel>
-  <DataGrid Grid.Row="1" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" AutoGenerateColumns="False"
+  <DataGrid Grid.Row="1" ItemsSource="{Binding Plugins}" SelectedItem="{Binding SelectedPlugin}" AutoGenerateColumns="False" Style="{StaticResource AppDataGridStyle}"
+   HeadersVisibility="Column" RowHeaderWidth="0" ColumnHeaderHeight="32" RowHeight="30" ScrollViewer.HorizontalScrollBarVisibility="Auto"
    CanUserAddRows="False" IsReadOnly="True" CanUserResizeColumns="True" SelectionMode="Single" SelectionUnit="FullRow">
    <DataGrid.Columns>
     <DataGridTextColumn Header="{x:Static text:UiText.Name}" Binding="{Binding Name}" Width="2*" MinWidth="200"/>
     <DataGridTextColumn Header="{x:Static text:UiText.PluginId}" Binding="{Binding Id}" Width="2*" MinWidth="220"/>
-    <DataGridTextColumn Header="{x:Static text:UiText.PluginVersion}" Binding="{Binding Version}" Width="100"/>
-    <DataGridTemplateColumn Header="{x:Static text:UiText.Status}" Width="110">
+    <DataGridTextColumn Header="{x:Static text:UiText.PluginVersion}" Binding="{Binding Version}" Width="100" MinWidth="90"/>
+    <DataGridTemplateColumn Header="{x:Static text:UiText.Status}" Width="110" MinWidth="100">
      <DataGridTemplateColumn.CellTemplate><DataTemplate>
       <TextBlock Text="{Binding State}" Foreground="{Binding StateBrush, Converter={StaticResource StateBrush}}" VerticalAlignment="Center" Margin="6,0"/>
      </DataTemplate></DataGridTemplateColumn.CellTemplate>
     </DataGridTemplateColumn>
    </DataGrid.Columns>
   </DataGrid>
+  <TextBlock Grid.Row="1" Text="{x:Static text:UiText.PluginNone}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False">
+   <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Plugins.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+  </TextBlock>
   <TextBlock Grid.Row="2" Text="{Binding Status}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" Margin="0,12,0,0"/>
  </Grid>
 </UserControl>

@@ -31,7 +31,7 @@ dotnet run --no-build --project src/TestStation.Smoke/TestStation.Smoke.csproj -
 # 单独复验文档操作与运行中关闭：
 dotnet run --no-build --project src/TestStation.Smoke/TestStation.Smoke.csproj -- --ui-documents
 # 验证正式 Prism 可执行文件和实际注册的弹窗服务：
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\jmytest\TestStation.Replica.Wpf\artifacts\demo-project" -VerifyUnsavedProtection
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\TestStation.Replica.Wpf\artifacts\demo-project" -VerifyUnsavedProtection
 ```
 
 业务回归包含嵌套/跨组撤销重做、保存基线、失败事务回滚、重做失效、复制 ID 与引用隔离、管理、三种未保存决策、无效输入、保存失败恢复、损坏工程读取、运行/暂停/CLEANUP 锁定、即时停止和报告保存。
@@ -41,3 +41,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Ve
 ## 当前边界
 
 历史只在本次运行的内存中保留，不写入 .tsseq；没有新增崩溃自动恢复。已经确认的序列文件删除不能撤销，提示明确说明。模拟值应用后直接保存到原模拟文件，未提交表单在离开工程时处理；它不属于序列撤销历史。无硬件通信扩展。
+
+## 停止与清理（2026-11-01）
+
+OpenTAP 执行器：点“停止”后，当前序列的主体在下一个检查点结束，然后执行 CLEANUP 段。清理段不受停止影响（等待步骤照常等待，设备读写不随停止取消），某一步失败不跳过后续清理步骤。主程序等待执行器结束的时间在设置页“执行器 → 停止等待时间”中设置（默认 15 秒），超时后强制结束执行器进程。电源设备在会话关闭前还会单独发送关闭输出命令（设置页“安全”）。实现说明见 docs/UI_LAYOUT_PLAN.md 第 10 节。

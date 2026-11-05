@@ -22,6 +22,9 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
     private readonly SynchronizationContext? _context = SynchronizationContext.Current;
     private readonly List<IDisposable> _subscriptions = [];
     private readonly System.Windows.Threading.DispatcherTimer _freshness = new() { Interval = TimeSpan.FromMilliseconds(500) };
+    private readonly string? _pinnedDeviceId;
+    public bool IsFamilyPanel => _pinnedDeviceId is null;
+    public bool CanSelectInstance => _pinnedDeviceId is null && CanManage;
     private bool _visible;
     private bool _refreshing;
     private DeviceDefinition[] _deviceItems = [];
@@ -50,8 +53,9 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _autoRefresh = true;
     partial void OnAutoRefreshChanged(bool value) => UpdatePolling();
     public HiokiPowerAnalyzerViewModel(IChannelRuntimeCoordinator runtime, IHiokiPowerAnalyzerDeviceService devices,
-        IResourceManager resources, ISequenceDialogService dialogs, IResourceEditorService? resourceEditor = null)
+        IResourceManager resources, ISequenceDialogService dialogs, IResourceEditorService? resourceEditor = null, string? pinnedDeviceId = null)
     {
+        _pinnedDeviceId = pinnedDeviceId;
         _runtime = runtime; _devices = devices; _resources = resources; _dialogs = dialogs; _resourceEditor = resourceEditor;
         _devices.Changed += DevicesChanged; _devices.StateChanged += StateChanged; _devices.ValueChanged += ValueChanged;
         _runtime.AvailabilityChanged += RuntimeChanged;
@@ -67,9 +71,9 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
 
     private void Reload()
     {
-        var selectedId = SelectedDevice?.Id; _refreshing = true;
+        var selectedId = _pinnedDeviceId ?? SelectedDevice?.Id; _refreshing = true;
         _deviceItems = _devices.Devices.ToArray(); _resourceItems = _devices.Resources.ToArray();
-        SelectedDevice = Devices.FirstOrDefault(d => d.Id == selectedId) ?? Devices.FirstOrDefault();
+        SelectedDevice = Devices.FirstOrDefault(d => d.Id == selectedId) ?? (_pinnedDeviceId is null ? Devices.FirstOrDefault() : null);
         _refreshing = false; OnPropertyChanged(nameof(Devices)); OnPropertyChanged(nameof(Resources)); LoadSelection();
     }
 
@@ -82,7 +86,7 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
         _refreshing = false; OnPropertyChanged(nameof(ResourceSummary)); OnPropertyChanged(nameof(HasFields)); NotifyState(); UpdatePolling();
     }
 
-    private void NotifyState() { foreach (var name in new[] { nameof(IsConnected), nameof(IsAutomationActive), nameof(CanManage), nameof(CanConfigure), nameof(CanOperate), nameof(CanConnect), nameof(CanDisconnect), nameof(ConnectionLabel), nameof(Identity) }) OnPropertyChanged(name); }
+    private void NotifyState() { foreach (var name in new[] { nameof(IsConnected), nameof(IsAutomationActive), nameof(CanManage), nameof(CanSelectInstance), nameof(CanConfigure), nameof(CanOperate), nameof(CanConnect), nameof(CanDisconnect), nameof(ConnectionLabel), nameof(Identity) }) OnPropertyChanged(name); }
     public void StartPolling() { _visible = true; _freshness.Start(); UpdatePolling(); }
     public void StopPolling() { _visible = false; _freshness.Stop(); StopSubscriptions(); }
     private void StopSubscriptions() { foreach (var subscription in _subscriptions) subscription.Dispose(); _subscriptions.Clear(); }
@@ -94,11 +98,11 @@ public partial class HiokiPowerAnalyzerViewModel : ObservableObject, IDisposable
     private async Task RunAsync(Func<Task> action) { IsBusy = true; try { await action(); } catch (Exception error) { Status = error.Message; } finally { IsBusy = false; NotifyState(); } }
 
     [RelayCommand] private async Task AddDeviceAsync()
-    { if (!CanManage) return; var name = await _dialogs.RequestNameAsync("新增功率分析仪", "新 PW6001"); if (string.IsNullOrWhiteSpace(name)) return; await RunAsync(() => { var created = _devices.AddDevice(name); Reload(); SelectedDevice = Devices.FirstOrDefault(d => d.Id == created.Id); return Task.CompletedTask; }); }
+    { if (!CanSelectInstance) return; var name = await _dialogs.RequestNameAsync("新增功率分析仪", "新 PW6001"); if (string.IsNullOrWhiteSpace(name)) return; await RunAsync(() => { var created = _devices.AddDevice(name); Reload(); SelectedDevice = Devices.FirstOrDefault(d => d.Id == created.Id); return Task.CompletedTask; }); }
     [RelayCommand] private async Task RenameDeviceAsync()
     { if (!CanConfigure || SelectedDevice is null) return; var name = await _dialogs.RequestNameAsync("重命名功率分析仪", SelectedDevice.Name); if (string.IsNullOrWhiteSpace(name)) return; await RunAsync(() => { _devices.UpdateDevice(SelectedDevice.Id, name, "PW6001", SelectedDevice.TransportId); return Task.CompletedTask; }); }
     [RelayCommand] private async Task RemoveDeviceAsync()
-    { if (!CanConfigure || SelectedDevice is null) return; if (!await _dialogs.ConfirmDeleteItemAsync("设备实例", SelectedDevice.Name)) return; await RunAsync(() => { _devices.RemoveDevice(SelectedDevice.Id); Reload(); return Task.CompletedTask; }); }
+    { if (!CanSelectInstance || !CanConfigure || SelectedDevice is null) return; if (!await _dialogs.ConfirmDeleteItemAsync("设备实例", SelectedDevice.Name)) return; await RunAsync(() => { _devices.RemoveDevice(SelectedDevice.Id); Reload(); return Task.CompletedTask; }); }
     [RelayCommand] private async Task SaveBindingAsync()
     { if (!CanConfigure || SelectedDevice is null) return; await RunAsync(() => { _devices.UpdateDevice(SelectedDevice.Id, SelectedDevice.Name, "PW6001", SelectedResource?.Id ?? ""); Status = SelectedResource is null ? "已保存，尚未绑定资源" : "设备绑定已保存"; return Task.CompletedTask; }); }
     [RelayCommand] private async Task ConnectAsync()

@@ -1,6 +1,6 @@
 # .NET 10 升级与验证记录
 
-日期：2026-10-05。范围：`F:\opencode\jmytest\TestStation.Replica.Wpf`。
+日期：2026-10-05。范围：`F:\opencode\TestStation.Replica.Wpf`。
 
 ## 目标框架与 SDK
 
@@ -32,7 +32,7 @@ dotnet restore TestStation.slnx
 dotnet build TestStation.slnx --no-restore
 dotnet run --no-build --project src/TestStation.Smoke/TestStation.Smoke.csproj
 dotnet run --no-build --project src/TestStation.Smoke/TestStation.Smoke.csproj -- --ui
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\jmytest\TestStation.Replica.Wpf\artifacts\demo-project"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\TestStation.Replica.Wpf\artifacts\demo-project"
 ```
 
 | 检查 | 结果 |

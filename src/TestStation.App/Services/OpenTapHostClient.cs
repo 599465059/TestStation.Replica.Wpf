@@ -32,7 +32,11 @@ public sealed record OpenTapHostRun(SequenceRunResult Result, IReadOnlyList<Open
 public sealed class OpenTapHostClient : ISequenceExecutionHost
 {
     private readonly IChannelRuntimeCoordinator? _channelRuntime;
-    public OpenTapHostClient(IChannelRuntimeCoordinator? channelRuntime = null) => _channelRuntime = channelRuntime;
+    private readonly TestStation.Application.IStationSettings? _settings;
+    public OpenTapHostClient(IChannelRuntimeCoordinator? channelRuntime = null, TestStation.Application.IStationSettings? settings = null)
+    { _channelRuntime = channelRuntime; _settings = settings; }
+    /// <summary>Stop waits this long for the Host to finish (CLEANUP runs after Stop) before killing it.</summary>
+    private TimeSpan StopWait => TimeSpan.FromSeconds(_settings?.Current.StopWaitSeconds ?? 15);
     private Session? _session;
     public event Action<OpenTapHostEvent>? EventReceived;
 
@@ -153,7 +157,7 @@ public sealed class OpenTapHostClient : ISequenceExecutionHost
         var session = _session;
         if (session is null) return;
         session.StopRequested = true;
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var timeout = new CancellationTokenSource(StopWait);
         try
         {
             try { await session.SendAsync(new { command = ExecutionProtocol.Stop }, timeout.Token).ConfigureAwait(false); }

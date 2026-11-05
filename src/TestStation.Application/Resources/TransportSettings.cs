@@ -41,7 +41,7 @@ public static class TransportSettingsAccessor
         var settings = Read(resource);
         if (string.IsNullOrWhiteSpace(resource.Id) || string.IsNullOrWhiteSpace(resource.Name)) throw new InvalidDataException("资源标识和名称不能为空");
         var type = NormalizeType(resource.Type);
-        if (type == "tcp")
+        if (type is "tcp" or "udp")
         {
             if (string.IsNullOrWhiteSpace(settings.Host) || settings.TcpPort is not (>= 1 and <= 65535)) throw new InvalidDataException("TCP 地址或端口无效");
         }
@@ -76,6 +76,7 @@ public static class TransportSettingsAccessor
     {
         "serial" => [("mode", "串口模式"), ("port", "串口"), ("baud_rate", "波特率"), ("data_bits", "数据位"), ("parity", "校验位"), ("stop_bits", "停止位"), ("flow_control", "流控"), ("half_duplex", "半双工"), ("direction_delay_ms", "方向切换延时(ms)"), ("timeout_ms", "超时(ms)"), ("max_response_bytes", "最大响应字节数"), ("terminator", "终止符")],
         "tcp" => [("host", "主机地址"), ("tcp_port", "端口"), ("connect_timeout_ms", "连接超时(ms)"), ("timeout_ms", "读写超时(ms)"), ("max_response_bytes", "最大响应字节数"), ("terminator", "终止符")],
+        "udp" => [("host", "主机地址"), ("tcp_port", "UDP 端口"), ("connect_timeout_ms", "超时(ms)"), ("timeout_ms", "读写超时(ms)"), ("max_response_bytes", "最大响应字节数")],
         "visa" => [("visa_resource", "VISA 资源名"), ("backend_id", "VISA 后端"), ("timeout_ms", "超时(ms)"), ("max_response_bytes", "最大响应字节数"), ("terminator", "终止符")],
         "can" => [("can_backend_id", "CAN 后端"), ("channel", "CAN 通道"), ("bitrate", "仲裁波特率"), ("data_bitrate", "数据波特率"), ("fd_enabled", "CAN FD"), ("listen_only", "只听模式")],
         "modbus_tcp" => [("host", "主机地址"), ("tcp_port", "端口"), ("connect_timeout_ms", "连接超时(ms)"), ("timeout_ms", "读写超时(ms)"), ("max_response_bytes", "最大响应字节数"), ("unit_id", "站号")],
@@ -179,6 +180,7 @@ public static class TransportSettingsAccessor
     {
         "serial" or "modbus_rtu" => new Dictionary<string, string> { ["mode"] = "串口模式", ["port"] = "串口名称", ["baud_rate"] = "波特率", ["data_bits"] = "数据位", ["parity"] = "校验位", ["stop_bits"] = "停止位", ["flow_control"] = "流控", ["half_duplex"] = "半双工", ["direction_delay_ms"] = "方向切换延时", ["timeout_ms"] = "超时", ["max_response_bytes"] = "最大响应字节数", ["terminator"] = "终止符", ["unit_id"] = "站号" },
         "tcp" or "modbus_tcp" => new Dictionary<string, string> { ["host"] = "主机地址", ["tcp_port"] = "端口", ["connect_timeout_ms"] = "连接超时", ["timeout_ms"] = "读写超时", ["max_response_bytes"] = "最大响应字节数", ["terminator"] = "终止符", ["unit_id"] = "站号" },
+        "udp" => new Dictionary<string, string> { ["host"] = "主机地址", ["tcp_port"] = "UDP 端口", ["timeout_ms"] = "读写超时", ["max_response_bytes"] = "最大响应字节数" },
         "visa" => new Dictionary<string, string> { ["visa_resource"] = "VISA 资源名", ["backend_id"] = "VISA 后端", ["timeout_ms"] = "超时", ["max_response_bytes"] = "最大响应字节数", ["terminator"] = "终止符" },
         "can" => new Dictionary<string, string> { ["can_backend_id"] = "CAN 后端", ["channel"] = "CAN 通道", ["bitrate"] = "仲裁波特率", ["data_bitrate"] = "数据波特率", ["fd_enabled"] = "CAN FD", ["listen_only"] = "只听模式" },
         _ => new Dictionary<string, string>()

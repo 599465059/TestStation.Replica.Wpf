@@ -27,12 +27,13 @@ public partial class SequenceRow : ObservableObject
         "comment" or "log" or "statement" => "utility",
         _ => "action"
     };
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(StatusText), nameof(StatusColor))] private string _status = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(StatusText), nameof(StatusKind))] private string _status = "";
     /// <summary>Only executable step rows have a runtime status. Group, branch, footer and end rows are layout rows.</summary>
     public bool IsExecutableStep => RowType == "step" && Step is not null;
     public bool HasJudgment => Step?.Kind == "assert" || Step?.Kind == "read_value" && HasReadComparison(Step);
     public string StatusText => IsExecutableStep ? UiDisplay.StepState(Status, HasJudgment) : "";
-    public string StatusColor => IsExecutableStep ? UiDisplay.StepStateColor(Status, HasJudgment) : "Transparent";
+    /// <summary>success / error / running / idle; colored by theme brushes in StepListResources.</summary>
+    public string StatusKind => IsExecutableStep ? UiDisplay.StepStateKind(Status) : "idle";
     [ObservableProperty] private bool _isCurrent;
     [ObservableProperty] private bool _canEdit = true;
     public Func<SequenceStep, bool, bool>? ChangeEnabled { get; set; }

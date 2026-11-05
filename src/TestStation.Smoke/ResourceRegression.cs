@@ -16,7 +16,14 @@ internal static class ResourceRegression
         var workspace = ProjectWorkspace.Create(root, "resources");
         var catalog = new ResourceCatalog
         {
-            Transports = [new TransportResource { Id = "psu-serial", Name = "电源串口", Type = "serial", Settings = new() { ["port"] = JsonDocument.Parse("\"COM3\"").RootElement, ["baud_rate"] = JsonDocument.Parse("9600").RootElement } }],
+            Transports = [new TransportResource { Id = "psu-serial", Name = "电源串口", Type = "serial", Settings = new()
+            {
+                ["port"] = JsonDocument.Parse("\"COM3\"").RootElement,
+                ["baud_rate"] = JsonDocument.Parse("9600").RootElement,
+                ["data_bits"] = JsonDocument.Parse("8").RootElement,
+                ["parity"] = JsonDocument.Parse("\"None\"").RootElement,
+                ["stop_bits"] = JsonDocument.Parse("\"1\"").RootElement
+            } }],
             Devices = [new DeviceDefinition
             {
                 Id = "dc-supply", Name = "直流电源", DriverId = "vendor.psu", TransportId = "psu-serial", ProtocolId = "scpi",

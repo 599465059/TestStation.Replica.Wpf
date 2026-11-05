@@ -26,15 +26,16 @@ public sealed class DeviceFamilyModule : IModule
 public sealed class HiokiPowerAnalyzerPanelProvider(
     IHiokiPowerAnalyzerDeviceService devices,
     IResourceManager resources,
-    ISequenceDialogService dialogs) : IManualPluginViewProvider
+    ISequenceDialogService dialogs) : IManualPluginViewProvider, INavigationIconSource
 {
     public string Id => HiokiPowerAnalyzerCatalog.FamilyId;
     public string Name => "HIOKI PW6001 功率分析仪";
     public string Version => "1.0";
+    public string NavigationIcon => "SineWave";
 
     public FrameworkElement CreateView(ManualPluginViewContext context)
     {
-        var model = new HiokiPowerAnalyzerViewModel(context.Runtime, devices, resources, dialogs, context.ResourceEditor);
+        var model = new HiokiPowerAnalyzerViewModel(context.Runtime, devices, resources, dialogs, context.ResourceEditor, context.DeviceId);
         return new HiokiPowerAnalyzerView(model);
     }
 }

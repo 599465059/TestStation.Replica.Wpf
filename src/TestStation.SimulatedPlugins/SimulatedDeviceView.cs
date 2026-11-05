@@ -124,18 +124,20 @@ internal abstract class SimulatedDeviceView : Border, IDisposable
         SetStatus(Runtime.IsAutomationActive ? "自动测试中，手动操作已暂停。" : "", Runtime.IsAutomationActive);
     });
 
-    protected TextBlock Label(string text) => new()
+    protected TextBlock Label(string text)
     {
-        Text = text, Margin = new Thickness(0, 0, 0, 6), FontWeight = FontWeights.SemiBold,
-        Foreground = FindBrush("MutedBrush")
-    };
+        var label = new TextBlock { Text = text, Margin = new Thickness(0, 0, 0, 6), FontWeight = FontWeights.SemiBold };
+        // Resource reference, not a looked-up brush, so the label follows theme switches.
+        label.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush");
+        return label;
+    }
 
     protected TextBox NumberBox(string value)
     {
         var box = new TextBox { Text = value, MinWidth = 110, MinHeight = 28, Padding = new Thickness(7, 3, 7, 3) };
-        box.SetResourceReference(Control.BackgroundProperty, "WindowBrush");
+        box.SetResourceReference(Control.BackgroundProperty, "InputBackgroundBrush");
         box.SetResourceReference(Control.ForegroundProperty, "TextBrush");
-        box.SetResourceReference(Control.BorderBrushProperty, "BorderBrush");
+        box.SetResourceReference(Control.BorderBrushProperty, "InputBorderBrush");
         return box;
     }
 
@@ -156,7 +158,9 @@ internal abstract class SimulatedDeviceView : Border, IDisposable
     protected TextBlock Value(string initial = "—")
     {
         var block = new TextBlock { Text = initial, FontSize = 18, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 2, 0, 2), HorizontalAlignment = HorizontalAlignment.Right };
-        block.SetResourceReference(TextBlock.ForegroundProperty, "AccentBrush");
+        // Measured values are data, not actions: text colour, monospaced digits. Accent is reserved for interaction.
+        block.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+        block.SetResourceReference(TextBlock.FontFamilyProperty, "ReadoutFontFamily");
         return block;
     }
 

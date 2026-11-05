@@ -6,6 +6,12 @@ using TestStation.App.Services;
 using TestStation.Smoke;
 using TestStation.Domain;
 
+if (args.Contains("--ui-layout"))
+{
+    try { WorkspaceLayoutRegression.Run(); }
+    catch (Exception error) { Console.Error.WriteLine(error); Environment.ExitCode = 1; }
+    return;
+}
 if (args.Contains("--canvas-model"))
 {
     ManualCanvasRegression.VerifyModel();
@@ -32,9 +38,9 @@ if (args.Contains("--ui-canvas"))
     catch (Exception error) { Console.Error.WriteLine(error); Environment.ExitCode = 1; }
     return;
 }
-if (args.Contains("--ui") || args.Contains("--ui-documents"))
+if (args.Contains("--ui") || args.Contains("--ui-documents") || args.Contains("--ui-preview"))
 {
-    try { UiRegression.Run(args.Contains("--ui-documents")); }
+    try { UiRegression.Run(args.Contains("--ui-documents"), args.Contains("--ui-preview")); }
     catch (Exception error) { Console.Error.WriteLine(error); Environment.ExitCode = 1; }
     return;
 }
@@ -93,28 +99,34 @@ if (!SequenceEditor.Move(editable, loop.Id, new SequenceInsertTarget("Main", con
     condition.Children.Count != 0 || condition.ElseChildren[0] != loop || condition.ElseChildren[1] != alternative)
     throw new Exception("Moving a nested FOR into ELSE failed.");
 workspace.SaveSequence(editable);
-var edited = ProjectWorkspace.Open(workspace.Root).LoadSequences().Single(item => item.Id == editable.Id);
+var sequenceRepository = new SequenceWorkspaceRepository(workspace);
+var sequenceProjects = sequenceRepository.Load();
+sequenceRepository.Save(sequenceProjects);
+var edited = sequenceRepository.Load().SelectMany(project => project.Sequences).Single(item => item.Id == editable.Id);
 if (edited.Steps.Single().ElseChildren[0].Children.Single().Kind != "read_value")
     throw new Exception("Edited branches did not survive persistence.");
 
 var viewModel = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs());
 viewModel.OpenProject(workspace.Root);
-viewModel.SelectSequence(viewModel.Sequences.Single(item => item.Id == editable.Id));
+await viewModel.SelectSequenceAsync(viewModel.Sequences.Single(item => item.Id == editable.Id));
 var readRow = viewModel.Rows.Single(row => row.Step?.Id == read.Id);
 viewModel.SelectedRow = readRow;
-if (viewModel.StepFields.Select(field => field.Key).SequenceEqual(["channel_id", "timeout_ms"]) is false)
-    throw new Exception("Read step did not expose its specific fields.");
-viewModel.StepFields.Single(field => field.Key == "channel_id").Value = "Power.Voltage";
-viewModel.StepFields.Single(field => field.Key == "timeout_ms").Value = "-1";
+viewModel.AddSignalRows(["Sim.Voltage"]);
+if (!viewModel.IsSignalTableStep || viewModel.SignalValueRows.Count != 1 ||
+    viewModel.SignalValueRows[0].Target != "Sim.Voltage" || viewModel.SignalValueRows[0].DataType.Length == 0)
+    throw new Exception($"Read step did not expose its channel table: selected={viewModel.SelectedRow?.Step?.Id}/{viewModel.SelectedRow?.Step?.Kind}, signal={viewModel.IsSignalTableStep}, rows={viewModel.SignalValueRows.Count}, target={viewModel.SignalValueRows.FirstOrDefault()?.Target}");
+viewModel.SignalValueRows[0].Target = "Sim.Voltage";
+viewModel.StepTimeoutMs = "-1";
 viewModel.ApplyStepCommand.Execute(null);
 if (!viewModel.Status.Contains("不小于 0") || readRow.Step!.Params.ContainsKey("timeout_ms"))
     throw new Exception("Invalid timeout changed the step.");
-viewModel.StepFields.Single(field => field.Key == "timeout_ms").Value = "250";
+viewModel.StepTimeoutMs = "250";
 viewModel.ApplyStepCommand.Execute(null);
 viewModel.SaveSequenceCommand.Execute(null);
-var savedRead = ProjectWorkspace.Open(workspace.Root).LoadSequences().Single(item => item.Id == editable.Id)
+var savedRead = sequenceRepository.Load().SelectMany(project => project.Sequences).Single(item => item.Id == editable.Id)
     .Steps.Single().ElseChildren[0].Children.Single();
-if (savedRead.Params["channel_id"].GetString() != "Power.Voltage" || savedRead.Params["timeout_ms"].GetInt32() != 250)
+var savedSignals = SequenceSignalOperation.Read(savedRead.Params["signals"]).Single();
+if (savedSignals.ChannelId != "Sim.Voltage" || savedRead.TimeoutMs != 250)
     throw new Exception("Step fields did not persist with their correct types.");
 
 viewModel.NewVariableCommand.Execute(null);
@@ -124,7 +136,7 @@ viewModel.VariableScope = "local";
 viewModel.VariableDefault = "12.5";
 viewModel.ApplyVariableCommand.Execute(null);
 viewModel.SaveSequenceCommand.Execute(null);
-var savedVariable = ProjectWorkspace.Open(workspace.Root).LoadSequences().Single(item => item.Id == editable.Id).Variables.Single();
+var savedVariable = sequenceRepository.Load().SelectMany(project => project.Sequences).Single(item => item.Id == editable.Id).Variables.Single();
 if (savedVariable.Name != "limit" || savedVariable.Default?.GetDouble() != 12.5)
     throw new Exception("Variable declaration did not persist.");
 
@@ -260,14 +272,20 @@ if (callRun.Status != "completed" || callRun.Steps.Count(step => step.SequenceId
     throw new Exception("Called sequence did not execute its Cleanup section.");
 
 workspace.SaveSequence(runnable);
+var runProjects = sequenceRepository.Load();
+var runProject = runProjects.Single();
+foreach (var item in runProject.Sequences) item.Role = "sub";
+runnable.Role = "main";
+runProject.Sequences.Add(runnable);
+sequenceRepository.Save(runProjects);
 var runViewModel = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs());
 runViewModel.OpenProject(workspace.Root);
-runViewModel.SelectSequence(runViewModel.Sequences.Single(item => item.Id == runnable.Id));
+await runViewModel.SelectSequenceAsync(runViewModel.Sequences.Single(item => item.Id == runnable.Id));
 await runViewModel.RunSequenceCommand.ExecuteAsync(null);
-if (runViewModel.ExecutionState != "PASSED" || !runViewModel.ExecutionSummary.Contains("completed") ||
-    runViewModel.RunLogs.All(entry => !entry.Message.Contains("序列结束")) ||
+if (runViewModel.ExecutionState != "PASSED" ||
+    runViewModel.RunLogs.All(entry => !entry.Message.Contains("已编译序列")) ||
     new RunResultRepository(workspace.Root).LoadAll().Count != 2)
-    throw new Exception("ViewModel run command did not update logs and save a report.");
+    throw new Exception($"ViewModel run command did not update logs and save a report: state={runViewModel.ExecutionState}, summary={runViewModel.ExecutionSummary}, logs={string.Join("|", runViewModel.RunLogs.Select(log => log.Message))}, reports={new RunResultRepository(workspace.Root).LoadAll().Count}, selected={runViewModel.SelectedSequence?.Id}");
 
 var pauseSequence = new SequenceDefinition
 {

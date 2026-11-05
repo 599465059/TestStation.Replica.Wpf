@@ -69,6 +69,9 @@ public sealed class ResourceCatalogEditingService(IResourceCatalogService catalo
             case "tcp":
                 TransportSettingsAccessor.Write(item, new(Host: "127.0.0.1", TcpPort: 5025, ConnectTimeoutMs: 1500));
                 break;
+            case "udp":
+                TransportSettingsAccessor.Write(item, new(Host: "127.0.0.1", TcpPort: 5000, ConnectTimeoutMs: 1500));
+                break;
             case "can":
                 TransportSettingsAccessor.Write(item, new(CanChannel: "CAN0", CanBitrate: 500000, CanDataBitrate: 2000000));
                 break;
@@ -201,7 +204,7 @@ public sealed class ResourceCatalogService(IResourceCatalogRepository repository
 
 public static class ResourceCatalogValidator
 {
-    private static readonly HashSet<string> TransportTypes = new(["serial", "tcp", "visa", "can", "modbus_tcp", "modbus_rtu", "custom"], StringComparer.OrdinalIgnoreCase);
+    private static readonly HashSet<string> TransportTypes = new(["serial", "tcp", "udp", "visa", "can", "modbus_tcp", "modbus_rtu", "custom"], StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> PollingModes = ["manual", "periodic", "event"];
     private static readonly HashSet<string> MappingProtocols = ["scpi", "dbc", "modbus", "custom"];
     private static readonly HashSet<string> ByteOrders = ["little_endian", "big_endian"];

@@ -454,8 +454,9 @@
 
   <!-- AnchorablePaneTitleStyle -->
   <Style x:Key="AnchorablePaneTitleStyle" TargetType="{x:Type avalonDockControls:AnchorablePaneTitle}">
-    <Setter Property="Background" Value="{DynamicResource ContentBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <!-- Title band uses the raised surface; the accent bar marks only the active pane. -->
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBrush}"/>
     <Setter Property="BorderThickness" Value="3,0,0,0"/>
     <Setter Property="Padding" Value="8,2"/>
     <Setter Property="Template">
@@ -523,6 +524,11 @@
         </ControlTemplate>
       </Setter.Value>
     </Setter>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding Model.IsActive, RelativeSource={RelativeSource Self}}" Value="True">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+      </DataTrigger>
+    </Style.Triggers>
   </Style>
 
   <Style TargetType="{x:Type avalonDockControls:AnchorablePaneTitle}" BasedOn="{StaticResource AnchorablePaneTitleStyle}"/>

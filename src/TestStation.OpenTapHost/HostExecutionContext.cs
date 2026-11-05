@@ -69,6 +69,8 @@ public sealed class HostExecutionContext
     internal string RunId { get; set; } = "";
     internal bool WasStopped => _cancellation.IsCancellationRequested;
     internal bool ShouldStopBody => _stopRequested && _cleanupDepth == 0;
+    /// <summary>True while a CLEANUP section runs. Stop no longer interrupts it.</summary>
+    internal bool InCleanup => _cleanupDepth > 0;
 
     internal void InitializeShared(IReadOnlyList<JsonElement> globalDefinitions, IReadOnlyList<JsonElement> stationDefinitions,
         IReadOnlyDictionary<string, JsonElement> globalValues, IReadOnlyDictionary<string, JsonElement> stationValues)
@@ -192,6 +194,25 @@ public sealed class HostExecutionContext
 
     internal void CheckCancellation()
     {
+        if (InCleanup)
+        {
+            // CLEANUP brings hardware to a safe state, so Stop must not cut it short.
+            // Pause is still honoured unless Stop has already been requested.
+            if (!_cancellation.IsCancellationRequested)
+            {
+                try
+                {
+                    _control.Checkpoint(_cancellation, paused => Publish(new HostEvent
+                    {
+                        Type = paused ? "run_paused" : "run_resumed", RunId = RunId,
+                        Status = paused ? "paused" : "running", Message = paused ? "序列已暂停" : "序列继续执行"
+                    }));
+                }
+                catch (OperationCanceledException) when (_cancellation.IsCancellationRequested) { }
+            }
+            if (_deadlines.Any(deadline => _control.ExecutionTime >= deadline)) throw new TimeoutException("步骤执行超时");
+            return;
+        }
         _cancellation.ThrowIfCancellationRequested();
         _control.Checkpoint(_cancellation, paused => Publish(new HostEvent
         {
@@ -234,7 +255,7 @@ public sealed class HostExecutionContext
             CheckCancellation();
             var remaining = (int)Math.Ceiling((until - _control.ExecutionTime).TotalMilliseconds);
             if (remaining <= 0) return;
-            Task.Delay(Math.Min(remaining, 25), _cancellation).GetAwaiter().GetResult();
+            Task.Delay(Math.Min(remaining, 25), InCleanup ? CancellationToken.None : _cancellation).GetAwaiter().GetResult();
         }
     }
 

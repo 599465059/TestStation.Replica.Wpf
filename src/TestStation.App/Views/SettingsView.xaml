@@ -1,0 +1,185 @@
+<UserControl x:Class="TestStation.App.Views.SettingsView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:text="clr-namespace:TestStation.App.Localization"
+ xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+ Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}" AutomationProperties.AutomationId="SettingsView">
+ <UserControl.Resources>
+  <Style x:Key="SettingsCard" TargetType="Border">
+   <Setter Property="Background" Value="{DynamicResource CardBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+   <Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="8"/><Setter Property="Margin" Value="0,0,0,18"/>
+  </Style>
+  <!-- One setting: name and one-line description on the left, the control on the right. -->
+  <Style x:Key="SettingRow" TargetType="Border">
+   <Setter Property="BorderBrush" Value="{DynamicResource GridLineBrush}"/><Setter Property="BorderThickness" Value="0,0,0,1"/><Setter Property="Padding" Value="16,12"/>
+  </Style>
+  <Style x:Key="GroupTitle" TargetType="TextBlock"><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,8"/></Style>
+  <Style x:Key="RowHint" TargetType="TextBlock"><Setter Property="FontSize" Value="12"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="Margin" Value="0,2,0,0"/></Style>
+  <!-- A section is visible when it is selected in the inner navigation. -->
+  <Style x:Key="Section" TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Setter Property="MaxWidth" Value="780"/><Setter Property="HorizontalAlignment" Value="Left"/></Style>
+  <Style x:Key="ThemeChoice" TargetType="Button" BasedOn="{StaticResource AppButtonStyle}">
+   <Setter Property="Width" Value="120"/><Setter Property="Padding" Value="8"/><Setter Property="Margin" Value="0,0,10,0"/><Setter Property="BorderThickness" Value="2"/>
+   <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+  </Style>
+ </UserControl.Resources>
+ <Grid Margin="20,16,20,16">
+  <Grid.ColumnDefinitions><ColumnDefinition Width="210" MinWidth="180"/><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+  <!-- Inner navigation -->
+  <DockPanel>
+   <TextBlock DockPanel.Dock="Top" Text="{x:Static text:UiText.Settings}" FontSize="18" FontWeight="SemiBold" Margin="4,0,0,12"/>
+   <ListBox ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}" BorderThickness="0" Background="Transparent"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.AutomationId="SettingsSections">
+    <ListBox.ItemTemplate>
+     <DataTemplate>
+      <StackPanel Orientation="Horizontal" Height="30">
+       <md:PackIcon Kind="{Binding Icon}" Width="16" Height="16" Margin="4,0,10,0" VerticalAlignment="Center"/>
+       <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+      </StackPanel>
+     </DataTemplate>
+    </ListBox.ItemTemplate>
+   </ListBox>
+  </DockPanel>
+
+  <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+   <Grid>
+    <!-- 外观 -->
+    <StackPanel>
+     <StackPanel.Style><Style TargetType="StackPanel" BasedOn="{StaticResource Section}"><Style.Triggers><DataTrigger Binding="{Binding SelectedSection.Id}" Value="look"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+     <TextBlock Text="{x:Static text:UiText.SettingsLook}" FontSize="16" FontWeight="SemiBold"/>
+     <TextBlock Style="{StaticResource RowHint}" Margin="0,4,0,16"><Run Text="{x:Static text:UiText.SettingsScopeLocal}"/><Run Text="{Binding SettingsFile, Mode=OneWay}"/></TextBlock>
+     <TextBlock Text="{x:Static text:UiText.SettingsThemeGroup}" Style="{StaticResource GroupTitle}"/>
+     <Border Style="{StaticResource SettingsCard}">
+      <StackPanel>
+       <Border Style="{StaticResource SettingRow}">
+        <DockPanel>
+         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button Command="{Binding UseDarkCommand}" AutomationProperties.AutomationId="SettingsDark">
+           <Button.Style><Style TargetType="Button" BasedOn="{StaticResource ThemeChoice}"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Style.Triggers><DataTrigger Binding="{Binding IsDark}" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></DataTrigger></Style.Triggers></Style></Button.Style>
+           <StackPanel Orientation="Horizontal"><md:PackIcon Kind="WeatherNight" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock Text="{x:Static text:UiText.SettingsDark}" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+          </Button>
+          <Button Command="{Binding UseLightCommand}" AutomationProperties.AutomationId="SettingsLight">
+           <Button.Style><Style TargetType="Button" BasedOn="{StaticResource ThemeChoice}"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Style.Triggers><DataTrigger Binding="{Binding IsDark}" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/></DataTrigger></Style.Triggers></Style></Button.Style>
+           <StackPanel Orientation="Horizontal"><md:PackIcon Kind="WhiteBalanceSunny" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/><TextBlock Text="{x:Static text:UiText.SettingsLight}" Foreground="{DynamicResource TextBrush}"/></StackPanel>
+          </Button>
+         </StackPanel>
+         <StackPanel VerticalAlignment="Center"><TextBlock Text="{x:Static text:UiText.SettingsThemeMode}"/><TextBlock Text="{x:Static text:UiText.SettingsThemeModeHint}" Style="{StaticResource RowHint}"/></StackPanel>
+        </DockPanel>
+       </Border>
+       <Border Style="{StaticResource SettingRow}" BorderThickness="0">
+        <DockPanel>
+         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Tag="Blue" Background="{DynamicResource BlueSwatchBrush}" ToolTip="{x:Static text:UiText.AccentBlue}" Command="{Binding UseAccentCommand}" CommandParameter="Blue">
+           <Button.Style><Style TargetType="Button" BasedOn="{StaticResource AccentSwatchButton}"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Accent}" Value="Blue"><Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/><Setter Property="BorderThickness" Value="2"/></DataTrigger></Style.Triggers></Style></Button.Style>
+          </Button>
+          <Button Tag="Purple" Background="{DynamicResource PurpleSwatchBrush}" ToolTip="{x:Static text:UiText.AccentPurple}" Command="{Binding UseAccentCommand}" CommandParameter="Purple">
+           <Button.Style><Style TargetType="Button" BasedOn="{StaticResource AccentSwatchButton}"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Accent}" Value="Purple"><Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/><Setter Property="BorderThickness" Value="2"/></DataTrigger></Style.Triggers></Style></Button.Style>
+          </Button>
+          <Button Tag="Teal" Background="{DynamicResource TealSwatchBrush}" ToolTip="{x:Static text:UiText.AccentTeal}" Command="{Binding UseAccentCommand}" CommandParameter="Teal">
+           <Button.Style><Style TargetType="Button" BasedOn="{StaticResource AccentSwatchButton}"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Accent}" Value="Teal"><Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/><Setter Property="BorderThickness" Value="2"/></DataTrigger></Style.Triggers></Style></Button.Style>
+          </Button>
+          <Button Tag="Orange" Background="{DynamicResource OrangeSwatchBrush}" ToolTip="{x:Static text:UiText.SettingsAccentOrange}" Command="{Binding UseAccentCommand}" CommandParameter="Orange">
+           <Button.Style><Style TargetType="Button" BasedOn="{StaticResource AccentSwatchButton}"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Accent}" Value="Orange"><Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/><Setter Property="BorderThickness" Value="2"/></DataTrigger></Style.Triggers></Style></Button.Style>
+          </Button>
+         </StackPanel>
+         <StackPanel VerticalAlignment="Center"><TextBlock Text="{x:Static text:UiText.SettingsAccent}"/><TextBlock Text="{x:Static text:UiText.SettingsAccentHint}" Style="{StaticResource RowHint}"/></StackPanel>
+        </DockPanel>
+       </Border>
+      </StackPanel>
+     </Border>
+     <TextBlock Text="{x:Static text:UiText.SettingsLayoutGroup}" Style="{StaticResource GroupTitle}"/>
+     <Border Style="{StaticResource SettingsCard}">
+      <Border Style="{StaticResource SettingRow}" BorderThickness="0">
+       <DockPanel>
+        <ComboBox DockPanel.Dock="Right" Width="140" VerticalAlignment="Center" ItemsSource="{Binding NavigationChoices}" SelectedIndex="{Binding NavigationIndex}"/>
+        <StackPanel VerticalAlignment="Center"><TextBlock Text="{x:Static text:UiText.SettingsNavStartup}"/><TextBlock Text="{x:Static text:UiText.SettingsNavStartupHint}" Style="{StaticResource RowHint}"/></StackPanel>
+       </DockPanel>
+      </Border>
+     </Border>
+    </StackPanel>
+    <!-- 安全 -->
+    <StackPanel>
+     <StackPanel.Style><Style TargetType="StackPanel" BasedOn="{StaticResource Section}"><Style.Triggers><DataTrigger Binding="{Binding SelectedSection.Id}" Value="safety"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+     <TextBlock Text="{x:Static text:UiText.SettingsSafety}" FontSize="16" FontWeight="SemiBold"/>
+     <TextBlock Style="{StaticResource RowHint}" Margin="0,4,0,16"><Run Text="{x:Static text:UiText.SettingsScopeLocal}"/><Run Text="{Binding SettingsFile, Mode=OneWay}"/></TextBlock>
+     <TextBlock Text="{x:Static text:UiText.SettingsOutputGroup}" Style="{StaticResource GroupTitle}"/>
+     <Border Style="{StaticResource SettingsCard}">
+      <StackPanel>
+       <Border Style="{StaticResource SettingRow}">
+        <DockPanel>
+         <CheckBox DockPanel.Dock="Right" IsChecked="{Binding TurnOutputOff}" VerticalAlignment="Center" AutomationProperties.AutomationId="SettingsTurnOutputOff"/>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{x:Static text:UiText.SettingsTurnOutputOff}"/><TextBlock Text="{x:Static text:UiText.SettingsTurnOutputOffHint}" Style="{StaticResource RowHint}"/></StackPanel>
+        </DockPanel>
+       </Border>
+       <Border Style="{StaticResource SettingRow}" BorderThickness="0">
+        <DockPanel>
+         <Border DockPanel.Dock="Right" CornerRadius="11" Padding="10,2" Background="{DynamicResource SubtleBrush}" VerticalAlignment="Center">
+          <TextBlock Text="{x:Static text:UiText.SettingsAlwaysOn}" FontSize="12" Foreground="{DynamicResource SuccessBrush}"/>
+         </Border>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{x:Static text:UiText.SettingsRunLock}"/><TextBlock Text="{x:Static text:UiText.SettingsRunLockHint}" Style="{StaticResource RowHint}"/></StackPanel>
+        </DockPanel>
+       </Border>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+
+    <!-- 执行器 -->
+    <StackPanel>
+     <StackPanel.Style><Style TargetType="StackPanel" BasedOn="{StaticResource Section}"><Style.Triggers><DataTrigger Binding="{Binding SelectedSection.Id}" Value="exec"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+     <TextBlock Text="{x:Static text:UiText.SettingsExecutor}" FontSize="16" FontWeight="SemiBold"/>
+     <TextBlock Style="{StaticResource RowHint}" Margin="0,4,0,16"><Run Text="{x:Static text:UiText.SettingsScopeLocal}"/><Run Text="{Binding SettingsFile, Mode=OneWay}"/></TextBlock>
+     <TextBlock Text="OpenTAP" Style="{StaticResource GroupTitle}"/>
+     <Border Style="{StaticResource SettingsCard}">
+      <StackPanel>
+       <Border Style="{StaticResource SettingRow}">
+        <StackPanel><TextBlock Text="{x:Static text:UiText.SettingsExecutorLocation}"/><TextBlock Text="{Binding ExecutorOverride}" Style="{StaticResource RowHint}"/></StackPanel>
+       </Border>
+       <Border Style="{StaticResource SettingRow}" BorderThickness="0">
+        <DockPanel>
+         <ComboBox DockPanel.Dock="Right" Width="120" VerticalAlignment="Center" ItemsSource="{Binding StopWaitChoices}" SelectedItem="{Binding StopWait}" DisplayMemberPath="Text"/>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{x:Static text:UiText.SettingsStopWait}"/><TextBlock Text="{x:Static text:UiText.SettingsStopWaitHint}" Style="{StaticResource RowHint}"/></StackPanel>
+        </DockPanel>
+       </Border>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+
+    <!-- 日志与诊断 -->
+    <StackPanel>
+     <StackPanel.Style><Style TargetType="StackPanel" BasedOn="{StaticResource Section}"><Style.Triggers><DataTrigger Binding="{Binding SelectedSection.Id}" Value="log"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+     <TextBlock Text="{x:Static text:UiText.SettingsLogs}" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+     <Border Style="{StaticResource SettingsCard}">
+      <StackPanel>
+       <Border Style="{StaticResource SettingRow}">
+        <DockPanel>
+         <Button DockPanel.Dock="Right" Content="{x:Static text:UiText.SettingsOpen}" Command="{Binding OpenLogDirectoryCommand}" VerticalAlignment="Center"/>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{x:Static text:UiText.SettingsLogDirectory}"/><TextBlock Text="{Binding LogDirectory}" Style="{StaticResource RowHint}" FontFamily="{DynamicResource ReadoutFontFamily}"/></StackPanel>
+        </DockPanel>
+       </Border>
+       <Border Style="{StaticResource SettingRow}" BorderThickness="0">
+        <DockPanel>
+         <Button DockPanel.Dock="Right" Content="{x:Static text:UiText.SettingsOpen}" Command="{Binding OpenControlPreviewCommand}" VerticalAlignment="Center" AutomationProperties.AutomationId="SettingsOpenControlPreview"/>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{x:Static text:UiText.SettingsControlPreview}"/><TextBlock Text="{x:Static text:UiText.SettingsControlPreviewHint}" Style="{StaticResource RowHint}"/></StackPanel>
+        </DockPanel>
+       </Border>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+
+    <!-- 关于 -->
+    <StackPanel>
+     <StackPanel.Style><Style TargetType="StackPanel" BasedOn="{StaticResource Section}"><Style.Triggers><DataTrigger Binding="{Binding SelectedSection.Id}" Value="about"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+     <TextBlock Text="{x:Static text:UiText.SettingsAbout}" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+     <Border Style="{StaticResource SettingsCard}">
+      <StackPanel>
+       <Border Style="{StaticResource SettingRow}"><StackPanel><TextBlock Text="{x:Static text:UiText.ProductName}" FontWeight="SemiBold"/><TextBlock Text="{Binding VersionText}" Style="{StaticResource RowHint}"/></StackPanel></Border>
+       <Border Style="{StaticResource SettingRow}"><StackPanel><TextBlock Text="{x:Static text:UiText.SettingsLibraries}"/><TextBlock Text="OpenTAP 9.35.0，Industrial.Controls 1.1.0，Dirkster.AvalonDock 4.72.0，MaterialDesignThemes 5.3.2，HandyControl 3.5.1" Style="{StaticResource RowHint}"/></StackPanel></Border>
+       <Border Style="{StaticResource SettingRow}" BorderThickness="0"><StackPanel><TextBlock Text="{x:Static text:UiText.SettingsFile}"/><TextBlock Text="{Binding SettingsFile}" Style="{StaticResource RowHint}" FontFamily="{DynamicResource ReadoutFontFamily}"/></StackPanel></Border>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+
+    <TextBlock Text="{Binding SavedText}" Foreground="{DynamicResource MutedBrush}" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+   </Grid>
+  </ScrollViewer>
+ </Grid>
+</UserControl>

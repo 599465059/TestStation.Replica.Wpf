@@ -33,14 +33,15 @@ public sealed class DeviceFamilyModule : IModule
 }
 
 public sealed class PowerSupplyPanelProvider(IPowerSupplyDeviceService devices, IItechPowerSupplyProfileStore profiles,
-    IResourceManager resources, ISequenceDialogService sequenceDialogs) : IManualPluginViewProvider
+    IResourceManager resources, ISequenceDialogService sequenceDialogs) : IManualPluginViewProvider, INavigationIconSource
 {
     public string Id => "itech.power-supply";
     public string Name => "艾德克斯直流电源";
     public string Version => "2.0";
+    public string NavigationIcon => "CurrentDc";
     public FrameworkElement CreateView(ManualPluginViewContext context)
     {
-        var operation = new ItechPowerSupplyViewModel(context.Runtime, devices, profiles, resources, sequenceDialogs, context.ResourceEditor);
+        var operation = new ItechPowerSupplyViewModel(context.Runtime, devices, profiles, resources, sequenceDialogs, context.ResourceEditor, context.DeviceId);
         var view = new ItechPowerSupplyView(operation);
         if (context.WorkspaceId != "device-testing") return view;
         var admin = new ItechPowerSupplyAdminViewModel(profiles, devices, context.Runtime, sequenceDialogs);

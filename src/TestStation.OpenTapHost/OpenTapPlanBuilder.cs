@@ -69,11 +69,14 @@ public abstract class HostCompositeStep : TestStep
         BreakConditionProperty.SetBreakCondition(this, (BreakCondition)0);
     }
 
-    protected void RunSteps(IEnumerable<OpenTapBridgeStep> steps)
+    /// <param name="continueAfterFailure">CLEANUP: a failed step must not skip the remaining
+    /// cleanup steps (for example "turn output off" after a failed reading).</param>
+    protected void RunSteps(IEnumerable<OpenTapBridgeStep> steps, bool continueAfterFailure = false)
     {
         foreach (var step in steps)
         {
             Context.CheckCancellation();
+            if (continueAfterFailure && Context.Frame.Flow is HostFlow.Stop or HostFlow.Cleanup) Context.Frame.Flow = HostFlow.None;
             if (Context.Frame.Flow != HostFlow.None || Context.ShouldStopBody) break;
             if (!step.Enabled) { step.PublishSkipped("步骤已禁用"); continue; }
             // Run each selected child through OpenTAP, and wait before inspecting the Host directive.
@@ -111,7 +114,8 @@ public sealed class OpenTapSequenceStep : HostCompositeStep
             Context.Frame.Flow = HostFlow.None;
             using var deadlines = Context.SuspendDeadlines();
             using var cleanup = Context.EnterCleanup();
-            RunSteps(Sections["Cleanup"]);
+            RunSteps(Sections["Cleanup"], continueAfterFailure: true);
+            if (Context.Frame.Flow is HostFlow.Stop or HostFlow.Cleanup) Context.Frame.Flow = HostFlow.None;
         }
         UpgradeVerdict(Verdict.Pass);
     }
@@ -179,7 +183,7 @@ public sealed partial class OpenTapBridgeStep : HostCompositeStep
         catch (Exception error) { HandleFailure(error.Message, Verdict.Error); }
         finally
         {
-            if (bodyStarted && !Context.WasStopped)
+            if (bodyStarted && (!Context.WasStopped || Context.InCleanup))
             {
                 try { ExecuteExpressions(_step.AfterExpression); }
                 catch (OperationCanceledException) when (Context.WasStopped) { throw; }

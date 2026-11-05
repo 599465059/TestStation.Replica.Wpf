@@ -15,6 +15,8 @@ internal static class NavigationSmokeHelper
     {
         var navigation = (NavigationView)window.FindName("NavigationItems")
             ?? throw new InvalidOperationException("NavigationView was not found.");
+        if (!HasPage(window, page))
+            throw new InvalidOperationException($"Navigation item '{page}' is not registered in the current shell.");
         var button = FindButtons(navigation).FirstOrDefault(candidate => Matches(candidate, page));
         if (button is null)
         {
@@ -32,6 +34,17 @@ internal static class NavigationSmokeHelper
             throw new InvalidOperationException($"Navigation item '{page}' is not invokable.");
         invoker.Invoke();
     }
+
+    public static bool HasPage(MainWindow window, string page)
+    {
+        var navigation = (NavigationView)window.FindName("NavigationItems")
+            ?? throw new InvalidOperationException("NavigationView was not found.");
+        return Contains(navigation.Items.Concat(navigation.FooterItems), page);
+    }
+
+    private static bool Contains(IEnumerable<NavigationItem> items, string page) => items.Any(item =>
+        (item.Children.Count == 0 && string.Equals(item.Tag?.ToString(), page, StringComparison.Ordinal))
+        || Contains(item.Children, page));
 
     private static bool Matches(Button button, string page)
     {

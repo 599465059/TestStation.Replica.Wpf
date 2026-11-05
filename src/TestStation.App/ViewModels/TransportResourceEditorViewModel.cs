@@ -36,7 +36,7 @@ public sealed partial class TransportResourceEditorViewModel : ObservableObject
         TransportResource? existing, IReadOnlyList<string>? allowedTypes)
     {
         _configuration = configuration; _discovery = discovery;
-        Types = existing is null ? allowedTypes ?? ["tcp", "serial", "can", "visa"] : [TransportSettingsAccessor.NormalizeType(existing.Type)];
+        Types = existing is null ? allowedTypes ?? ["tcp", "udp", "serial", "can", "visa"] : [TransportSettingsAccessor.NormalizeType(existing.Type)];
         _draft = existing is null ? configuration.CreateDraft(Types[0]) : Clone(existing);
         _loading = true; Name = _draft.Name; Enabled = _draft.Enabled; Type = Types[0]; _loading = false; LoadFields();
     }

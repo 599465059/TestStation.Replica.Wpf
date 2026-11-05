@@ -5,6 +5,7 @@ using TestStation.Application;
 using TestStation.SimulatedPlugins;
 using TestStation.Application.Devices.ItechPowerSupply;
 using TestStation.Application.Devices.HiokiPowerAnalyzer;
+using TestStation.Application.Devices;
 
 namespace TestStation.App.Services;
 
@@ -18,11 +19,12 @@ public sealed class SimulatedPluginChannelProvider : ISequenceChannelProvider, I
     private readonly IItechPowerSupplyProfileStore _profiles;
     private readonly IPowerSupplyDeviceService? _devices;
     private readonly IHiokiPowerAnalyzerDeviceService? _hioki;
+    private readonly IInstrumentDeviceService? _reference;
     public SimulatedPluginChannelProvider(IManualPluginViewRegistry? registry = null, IDeviceModelCatalog? models = null)
     { _registry = registry; _models = models ?? new SimulatedDeviceModelCatalog(); _profiles = new ItechPowerSupplyProfileStore(); }
-    public SimulatedPluginChannelProvider(IManualPluginViewRegistry? registry, IDeviceModelCatalog? models, IItechPowerSupplyProfileStore profiles, IPowerSupplyDeviceService? devices = null, IHiokiPowerAnalyzerDeviceService? hioki = null)
+    public SimulatedPluginChannelProvider(IManualPluginViewRegistry? registry, IDeviceModelCatalog? models, IItechPowerSupplyProfileStore profiles, IPowerSupplyDeviceService? devices = null, IHiokiPowerAnalyzerDeviceService? hioki = null, IInstrumentDeviceService? reference = null)
     {
-        _devices = devices; _hioki = hioki; _registry = registry; _models = models ?? new SimulatedDeviceModelCatalog(); _profiles = profiles;
+        _devices = devices; _hioki = hioki; _reference = reference; _registry = registry; _models = models ?? new SimulatedDeviceModelCatalog(); _profiles = profiles;
         if (_devices is not null && _registry is not null)
         {
             _devices.FamilyEnabled = _registry.IsEnabled(ItechId);
@@ -30,16 +32,16 @@ public sealed class SimulatedPluginChannelProvider : ISequenceChannelProvider, I
         }
     }
     private IEnumerable<ISimulatedDevicePlugin> EnabledPlugins => _plugins.Where(p => _registry is null || _registry.IsEnabled(p.Id));
-    public IReadOnlyList<SequenceChannelDefinition> InstalledChannels => _plugins.Where(p => p.Id != "simulated.itech.power-supply").SelectMany(p => p.GetChannels()).Concat(_devices?.GetChannels() ?? []).Concat(_hioki?.GetChannels() ?? []).ToArray();
+    public IReadOnlyList<SequenceChannelDefinition> InstalledChannels => _plugins.Where(p => p.Id != "simulated.itech.power-supply").SelectMany(p => p.GetChannels()).Concat(_devices?.GetChannels() ?? []).Concat(_hioki?.GetChannels() ?? []).Concat(_reference?.GetChannels() ?? []).ToArray();
     public event EventHandler? Changed
     {
-        add { if (_registry is not null) _registry.Changed += value; _models.Changed += value; _profiles.Changed += value; if (_devices is not null) _devices.Changed += value; if (_hioki is not null) _hioki.Changed += value; }
-        remove { if (_registry is not null) _registry.Changed -= value; _models.Changed -= value; _profiles.Changed -= value; if (_devices is not null) _devices.Changed -= value; if (_hioki is not null) _hioki.Changed -= value; }
+        add { if (_registry is not null) _registry.Changed += value; _models.Changed += value; _profiles.Changed += value; if (_devices is not null) _devices.Changed += value; if (_hioki is not null) _hioki.Changed += value; if (_reference is not null) _reference.Changed += value; }
+        remove { if (_registry is not null) _registry.Changed -= value; _models.Changed -= value; _profiles.Changed -= value; if (_devices is not null) _devices.Changed -= value; if (_hioki is not null) _hioki.Changed -= value; if (_reference is not null) _reference.Changed -= value; }
     }
 
     public IReadOnlyList<SequenceChannelDefinition> GetChannels() => EnabledPlugins.SelectMany(plugin =>
         plugin.GetChannels().Where(c => _models.GetSelected(plugin.Id).Supports(c.Id)))
-        .Concat(_devices?.GetChannels() ?? []).Concat(_hioki?.GetChannels() ?? []).ToArray();
+        .Concat(_devices?.GetChannels() ?? []).Concat(_hioki?.GetChannels() ?? []).Concat(_reference?.GetChannels() ?? []).ToArray();
 
     public IReadOnlyDictionary<string, JsonElement> GetDefaultValues() =>
         EnabledPlugins.SelectMany(plugin => plugin.DefaultValues.Where(p => _models.GetSelected(plugin.Id).Supports(p.Key)))

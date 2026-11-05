@@ -10,6 +10,7 @@ using TestStation.Infrastructure.Transports;
 using TestStation.Infrastructure.Transports.Can.Pcan;
 using TestStation.Application.Devices;
 using TestStation.App.Services;
+using TestStation.Infrastructure.Devices.Reference;
 
 namespace TestStation.App.Modules;
 
@@ -25,8 +26,13 @@ public sealed class ResourceModule : IModule
         registry.RegisterSingleton<ITransportDiscoveryService>(provider => new TransportDiscoveryService([provider.Resolve<PcanVendorAdapter>()]));
         registry.RegisterSingleton<ITransportDiagnosticService, TransportDiagnosticService>();
         registry.RegisterSingleton<IResourceEditorService, ResourceEditorService>();
-        registry.RegisterSingleton<IDeviceManagementService>(provider => new DeviceManagementService([
-            provider.Resolve<PowerSupplyManagementAdapter>(), provider.Resolve<HiokiManagementAdapter>()]));
+        registry.RegisterSingleton<ReferenceScpiDeviceService>();
+        registry.RegisterSingleton<ReferenceProtocolDeviceService>();
+        registry.RegisterSingleton<CompositeInstrumentDeviceService>();
+        registry.RegisterSingleton<TestStation.Application.Devices.IInstrumentDeviceService>(provider => provider.Resolve<CompositeInstrumentDeviceService>());
+        registry.RegisterSingleton<IDeviceManagementService>(provider => new DeviceManagementService(
+            new IManagedDeviceFamily[] { provider.Resolve<PowerSupplyManagementAdapter>(), provider.Resolve<HiokiManagementAdapter>() }
+                .Concat(provider.Resolve<CompositeInstrumentDeviceService>().Families).ToArray()));
         registry.RegisterSingleton<DeviceNavigationService>();
         registry.RegisterSingleton<DeviceManagementViewModel>();
         registry.RegisterSingleton<DeviceManagementView>();

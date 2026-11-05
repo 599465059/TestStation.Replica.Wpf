@@ -27,6 +27,17 @@ public interface IByteTransportSession : ITransportSession
 {
     Task<ReadOnlyMemory<byte>?> ExchangeAsync(ReadOnlyMemory<byte> request, bool expectResponse,
         TimeSpan timeout, CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one protocol-framed response without relying on packet timing.</summary>
+    Task<ReadOnlyMemory<byte>> ExchangeFramedAsync(ReadOnlyMemory<byte> request, ByteResponseFraming framing,
+        TimeSpan timeout, CancellationToken cancellationToken = default) =>
+        Task.FromException<ReadOnlyMemory<byte>>(new NotSupportedException("该传输后端尚未实现按帧接收"));
+}
+
+/// <summary>The protocol supplies the header size and total frame length; transports remain protocol independent.</summary>
+public sealed record ByteResponseFraming(int HeaderLength, Func<ReadOnlyMemory<byte>, int> GetFrameLength)
+{
+    public static ByteResponseFraming Fixed(int length) => new(length, _ => length);
 }
 
 public sealed record CanFrame(

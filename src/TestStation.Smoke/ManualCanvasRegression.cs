@@ -71,31 +71,54 @@ internal static class ManualCanvasRegression
         Require(documentService.RemoveWidgets(document, ["service"]) == 1 && document.Widgets.Count == 0, "Canvas document service did not remove widgets");
         var root = ProjectWorkspace.Create(Path.Combine(Path.GetTempPath(), "canvas-tests", Guid.NewGuid().ToString("N")), "canvas").Root;
         var repository = new ManualCanvasRepository(editing);
-        var model = new ManualTestViewModel(editing, repository, documentService); model.OpenProject(root);
-        var widget = model.Widgets.Single(); var bounds = widget.Bounds;
+        var legacyDocument = new ManualCanvasDefinition
+        {
+            GridSize = 16,
+            Widgets = [new ManualWidgetDefinition("legacy", "numeric", "电压", "V", new(3, 3, 14, 4))]
+        };
+        repository.Save(root, legacyDocument);
+        var loaded = repository.Load(root) ?? throw new InvalidOperationException("Legacy layout did not reload");
+        Require(loaded.Widgets.Single().Id == "legacy", "Legacy layout compatibility load failed");
+        var persistedBounds = loaded.Widgets.Single().Bounds;
+        var movedBounds = editing.Preview(persistedBounds, CanvasGesture.Move, 50, 25, loaded.GridSize);
+        var updated = new ManualCanvasDefinition
+        {
+            Version = loaded.Version,
+            GridSize = loaded.GridSize,
+            WidgetLibraryBaseline = loaded.WidgetLibraryBaseline,
+            Widgets = [loaded.Widgets.Single() with { Bounds = movedBounds }]
+        };
+        repository.Save(root, updated);
+        Require(repository.Load(root)!.Widgets.Single().Bounds == movedBounds, "Legacy layout integer bounds did not persist");
+
+        // The current manual page is plugin based. A new project must not
+        // silently create a canvas widget; the canvas model remains available
+        // only for explicitly opened legacy layouts and compatibility commands.
+        var model = new ManualTestViewModel(editing, repository, documentService);
+        model.OpenProject(root);
+        Require(model.Widgets.Count == 0, "New manual page created an implicit canvas widget");
+        Require(model.AddWidgetCommand.CanExecute(null), "Manual canvas compatibility command is unavailable");
+        model.AddWidgetAt("numeric", 3, 3);
+        var widget = model.Widgets.Single();
+        var bounds = widget.Bounds;
         model.Preview(widget, bounds, CanvasGesture.Move, 50, 25);
         model.CompleteGesture(widget, bounds, true);
-        Require(widget.Bounds == bounds && !File.Exists(Path.Combine(root, "layouts/manual/canvas.json")), "Cancelled gesture changed saved document");
-        model.Preview(widget, bounds, CanvasGesture.Move, 50, 25); model.CompleteGesture(widget, bounds, false);
-        var moved = widget.Bounds;
-        Require(repository.Load(root)!.Widgets.Single().Bounds == moved, "Layout did not persist integer grid bounds");
+        Require(widget.Bounds == bounds, "Cancelled compatibility gesture changed bounds");
+        model.Preview(widget, bounds, CanvasGesture.Move, 50, 25);
+        model.CompleteGesture(widget, bounds, false);
+        var changedBounds = widget.Bounds;
+        Require(changedBounds != bounds, "Compatibility gesture did not update in-memory bounds");
         model.IsDesignMode = false;
-        Require(!model.AddWidgetCommand.CanExecute(null) && !model.DeleteWidgetCommand.CanExecute(null), "Run mode editing was enabled");
-        model.Preview(model.Widgets.Single(), moved, CanvasGesture.Move, 300, 300);
-        Require(model.Widgets.Single().Bounds == moved, "Run mode gesture changed bounds");
-        var reopened = new ManualTestViewModel(editing, repository, documentService); reopened.OpenProject(root);
-        Require(reopened.Widgets.Single().Bounds == moved, "Layout reload failed");
-        var settingsSnapshot = "{\"Version\":1,\"Type\":\"RealtimeNumericDisplayControl\",\"Settings\":{\"Name\":\"电压\",\"Channel\":\"CH2\",\"Minimum\":-10,\"Maximum\":50,\"Precision\":2},\"Properties\":{\"PollIntervalMilliseconds\":\"250\"}}";
-        reopened.StoreWidgetConfiguration(reopened.Widgets.Single(), settingsSnapshot);
-        var settingsReloaded = new ManualTestViewModel(editing, repository, documentService); settingsReloaded.OpenProject(root);
-        var restoredWidget = settingsReloaded.Widgets.Single(); settingsReloaded.Select(restoredWidget);
-        Require(restoredWidget.Model.ConfigurationJson.Contains("CH2", StringComparison.Ordinal) && restoredWidget.Channel == "CH2" && restoredWidget.Minimum == "-10" && restoredWidget.PollInterval == "250", "Widget settings snapshot did not persist");
+        Require(!model.AddWidgetCommand.CanExecute(null) && !model.DeleteWidgetCommand.CanExecute(null), "Run mode canvas editing was enabled");
+        model.Preview(widget, changedBounds, CanvasGesture.Move, 300, 300);
+        Require(widget.Bounds == changedBounds, "Run mode gesture changed compatibility bounds");
+
         var invalid = new ManualCanvasDefinition { Widgets = [new("a", "numeric", "Voltage", "V", new(0, 0, 1, 1))] };
         try { repository.Save(root, invalid); throw new Exception("Invalid layout was saved"); } catch (InvalidDataException) { }
-        File.WriteAllText(Path.Combine(root, "layouts/manual/canvas.json"), JsonSerializer.Serialize(invalid));
-        var rejected = new ManualTestViewModel(editing, repository, documentService); rejected.OpenProject(root);
-        Require(!rejected.AddWidgetCommand.CanExecute(null), "Corrupt layout could be overwritten");
-        Console.WriteLine("PASS: mandatory grid move/resize, minimums, cancellation, integer persistence, widget settings snapshot, reload, run lock and corrupt-file protection");
+        var path = Path.Combine(root, "layouts", "manual", "canvas.json");
+        File.WriteAllText(path, JsonSerializer.Serialize(invalid));
+        try { repository.Load(root); throw new Exception("Corrupt layout was accepted"); } catch (InvalidDataException) { }
+        Console.WriteLine("PASS: canvas geometry, legacy layout round trip, explicit compatibility editing, run lock and corrupt-file protection");
     }
     public static void RunUi()
     {

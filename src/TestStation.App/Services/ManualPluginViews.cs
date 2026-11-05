@@ -6,7 +6,7 @@ using TestStation.Application;
 namespace TestStation.App.Services;
 
 /// <summary>Context supplied when a plugin view is created inside one manual-test subpage.</summary>
-public sealed record ManualPluginViewContext(string WorkspaceId, string WorkspaceName, IChannelRuntimeCoordinator Runtime, IResourceEditorService? ResourceEditor = null);
+public sealed record ManualPluginViewContext(string WorkspaceId, string WorkspaceName, IChannelRuntimeCoordinator Runtime, IResourceEditorService? ResourceEditor = null, string? DeviceId = null);
 
 public interface IDevicePanelSelection
 {
@@ -22,6 +22,15 @@ public interface IManualPluginViewProvider
     FrameworkElement CreateView(ManualPluginViewContext context);
 }
 
+/// <summary>
+/// Optional: a device family provider can name its MaterialDesign <c>PackIconKind</c>
+/// for the side navigation. Providers without it fall back to a generic device icon.
+/// </summary>
+public interface INavigationIconSource
+{
+    string NavigationIcon { get; }
+}
+
 public interface IManualPluginViewRegistry
 {
     IReadOnlyList<IManualPluginViewProvider> Providers { get; }
@@ -31,6 +40,7 @@ public interface IManualPluginViewRegistry
     bool Unregister(string id);
     bool IsEnabled(string id);
     void SetEnabled(string id, bool enabled);
+    Task SetEnabledAsync(string id, bool enabled) { SetEnabled(id, enabled); return Task.CompletedTask; }
 }
 
 /// <summary>
@@ -44,6 +54,9 @@ public sealed class ManualPluginViewRegistry : IManualPluginViewRegistry
     private readonly HashSet<string> _disabled;
     private readonly string? _settingsPath;
     public Func<bool>? IsBusy { get; set; }
+    public Func<string, bool, Task>? BeforeEnabledChangedAsync { get; set; }
+    public Func<Func<Task>, Task>? ExecuteChangeAsync { get; set; }
+    private readonly SemaphoreSlim _changeGate = new(1, 1);
     public ManualPluginViewRegistry(string? settingsPath = null)
     {
         _settingsPath = settingsPath;
@@ -88,7 +101,45 @@ public sealed class ManualPluginViewRegistry : IManualPluginViewRegistry
         lock (_sync) return _providers.ContainsKey(id) && !_disabled.Contains(id);
     }
 
-    public void SetEnabled(string id, bool enabled)
+    public void SetEnabled(string id, bool enabled) => SetEnabledAsync(id, enabled).GetAwaiter().GetResult();
+
+    public async Task SetEnabledAsync(string id, bool enabled)
+    {
+        await _changeGate.WaitAsync();
+        try
+        {
+            if (ExecuteChangeAsync is not null) await ExecuteChangeAsync(() => ApplyEnabledAsync(id, enabled));
+            else await ApplyEnabledAsync(id, enabled);
+        }
+        finally { _changeGate.Release(); }
+    }
+
+    private async Task ApplyEnabledAsync(string id, bool enabled)
+    {
+        bool previous;
+        lock (_sync)
+        {
+            if (!_providers.ContainsKey(id) || enabled == !_disabled.Contains(id)) return;
+            previous = !_disabled.Contains(id);
+        }
+        if (IsBusy?.Invoke() == true) throw new InvalidOperationException("自动测试运行期间不能变更设备状态");
+        if (BeforeEnabledChangedAsync is not null) await BeforeEnabledChangedAsync(id, enabled);
+        try
+        {
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher is not null && !dispatcher.CheckAccess())
+                await dispatcher.InvokeAsync(() => SetEnabledCore(id, enabled));
+            else SetEnabledCore(id, enabled);
+        }
+        catch (Exception error)
+        {
+            try { if (BeforeEnabledChangedAsync is not null) await BeforeEnabledChangedAsync(id, previous); }
+            catch (Exception cleanup) { error.Data["FamilyStateRollback"] = cleanup.ToString(); }
+            throw;
+        }
+    }
+
+    private void SetEnabledCore(string id, bool enabled)
     {
         if (IsBusy?.Invoke() == true) throw new InvalidOperationException("自动测试运行期间不能变更设备状态");
         lock (_sync)

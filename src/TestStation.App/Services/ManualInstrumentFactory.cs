@@ -29,7 +29,7 @@ public sealed class ManualInstrumentFactory(ManualWidgetConfigurationAdapter con
         control.DeleteRequested += (_, _) => deleteRequested();
         ConfigureMoveTargets(control, widget);
         control.ConfigurationChanged += (_, _) => ConfigureMoveTargets(control, widget);
-        // Industrial.Controls 1.0.0 keeps the shared numeric name/value row at
+        // Industrial.Controls 1.1.0 keeps the shared numeric name/value row at
         // a compact fixed height. The canvas can resize the host vertically,
         // so clear that local height in the application adapter and let the
         // row stretch with its host. This keeps the library package untouched.

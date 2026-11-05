@@ -1,6 +1,6 @@
 # Python 协议管理功能复刻对照
 
-只读参考：TestStationDemo/station。协议管理原有四个导航子节点现已进入当前 C# 主窗口，不使用 Python 子进程，也不修改原工程。
+只读参考：TestStationDemo/station。协议管理的四个页面和服务实现已经迁移到当前 C# 分层代码，但当前主启动链暂不注册协议模块，不会在主窗口导航显示；恢复接入时不使用 Python 子进程，也不修改原工程。
 
 | 来源 | 功能 | C# 对应 | 状态 |
 |---|---|---|---|
@@ -11,7 +11,7 @@
 | protocol_canvas.py | 帧属性、字段属性、示例常量组帧、HEX 按字段解析 | ProtocolFrameForm / ProtocolFieldForm / IProtocolPreviewService | 已复刻，属性溢出滚动 |
 | application/dbc_service.py / infrastructure/dbc.py | DBC 导入去重、文件管理、整数信号编解码 | Infrastructure.Protocols.DbcService / Domain.Protocols.DbcSignal | 已复刻；同内容去重，同名不同内容编号，Intel/Motorola、符号、比例偏移 |
 | dbc_page.py / viewmodels/dbc_viewmodel.py | 按发送 ECU / 接收 ECU / 未分类消息浏览，表格联动 | DbcBrowserView / DbcBrowserViewModel | 已复刻，13 个可调整列，比例和偏移分开；支持按 CAN ID、消息、信号和 ECU 筛选 |
-| gallery.py | 协议库、自定义协议、DBC、协议测试子节点 | ProtocolModule / ProtocolPages / 主窗口 ProtocolHost | 已接通 |
+| gallery.py | 协议库、自定义协议、DBC、协议测试子节点 | ProtocolModule / ProtocolPages / 主窗口 ProtocolHost | 实现保留，当前暂不注册 |
 | ProtocolTestPage（原占位） | 离线协议测试入口 | ProtocolTestView / ProtocolTestViewModel | 按确认范围接通现有示例组帧/字段解析，并接通 DBC 离线编解码 |
 
 ## 原工程未完成或本次未扩展的内容

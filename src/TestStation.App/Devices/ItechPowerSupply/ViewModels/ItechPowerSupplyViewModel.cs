@@ -23,6 +23,9 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     private readonly SynchronizationContext? _context = SynchronizationContext.Current;
     private readonly List<IDisposable> _subscriptions = [];
     private readonly System.Windows.Threading.DispatcherTimer _freshness = new() { Interval = TimeSpan.FromMilliseconds(500) };
+    private readonly string? _pinnedDeviceId;
+    public bool IsFamilyPanel => _pinnedDeviceId is null;
+    public bool CanSelectInstance => _pinnedDeviceId is null && CanManage;
     private bool _visible;
     private bool _refreshing;
     private DeviceDefinition[] _deviceItems = [];
@@ -70,8 +73,9 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _autoRefresh = true;
     partial void OnAutoRefreshChanged(bool value) => UpdatePolling();
     public ItechPowerSupplyViewModel(IChannelRuntimeCoordinator runtime, IPowerSupplyDeviceService devices,
-        IItechPowerSupplyProfileStore profiles, IResourceManager resources, ISequenceDialogService dialogs, IResourceEditorService? resourceEditor = null)
+        IItechPowerSupplyProfileStore profiles, IResourceManager resources, ISequenceDialogService dialogs, IResourceEditorService? resourceEditor = null, string? pinnedDeviceId = null)
     {
+        _pinnedDeviceId = pinnedDeviceId;
         _runtime = runtime; _devices = devices; _profiles = profiles; _resources = resources; _dialogs = dialogs; _resourceEditor = resourceEditor;
         _devices.Changed += DevicesChanged; _devices.StateChanged += DevicesStateChanged;
         _devices.Traffic += TrafficReceived; _devices.ValueChanged += DeviceValueChanged; _runtime.AvailabilityChanged += AvailabilityChanged;
@@ -96,11 +100,11 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     { if (traffic.DeviceId != SelectedDevice?.Id) return; Traffic.Add($"{traffic.Time.ToLocalTime():HH:mm:ss.fff} {traffic.Direction}  {traffic.Text}"); while (Traffic.Count > 120) Traffic.RemoveAt(0); });
     private void Reload()
     {
-        var id = SelectedDevice?.Id; _refreshing = true;
+        var id = _pinnedDeviceId ?? SelectedDevice?.Id; _refreshing = true;
         _deviceItems = _devices.Devices.ToArray();
         _modelItems = _profiles.Family.Models.Where(m => m.Enabled).ToArray();
         _resourceItems = _devices.Resources.ToArray();
-        SelectedDevice = Devices.FirstOrDefault(d => d.Id == id) ?? Devices.FirstOrDefault();
+        SelectedDevice = Devices.FirstOrDefault(d => d.Id == id) ?? (_pinnedDeviceId is null ? Devices.FirstOrDefault() : null);
         _refreshing = false; OnPropertyChanged(nameof(Devices)); LoadSelection();
     }
     partial void OnSelectedDeviceChanged(DeviceDefinition? value) { if (!_refreshing) LoadSelection(); }
@@ -120,7 +124,7 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     partial void OnSelectedResourceChanged(TransportResource? value) => OnPropertyChanged(nameof(ResourceSummary));
     partial void OnIsBusyChanged(bool value) => NotifyState();
     private void NotifyState()
-    { foreach (var name in new[] { nameof(IsConnected), nameof(IsAutomationActive), nameof(CanConfigure), nameof(CanOperate), nameof(CanConnect), nameof(CanDisconnect), nameof(CanManage), nameof(ConnectionLabel), nameof(Identity) }) OnPropertyChanged(name); }
+    { foreach (var name in new[] { nameof(IsConnected), nameof(IsAutomationActive), nameof(CanConfigure), nameof(CanOperate), nameof(CanConnect), nameof(CanDisconnect), nameof(CanManage), nameof(CanSelectInstance), nameof(ConnectionLabel), nameof(Identity) }) OnPropertyChanged(name); }
     public void StartPolling() { _visible = true; _freshness.Start(); UpdatePolling(); }
     public void StopPolling() { _visible = false; _freshness.Stop(); StopSubscriptions(); }
     private void StopSubscriptions() { foreach (var subscription in _subscriptions) subscription.Dispose(); _subscriptions.Clear(); }
@@ -147,7 +151,7 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     { if (!CanDisconnect || SelectedDevice is null) return; await RunAsync(() => _runtime.ExecuteManualAsync(async () => { await _devices.DisconnectDeviceAsync(SelectedDevice.Id); Status = "已断开"; })); }
     [RelayCommand] private async Task AddDeviceAsync()
     {
-        if (!CanManage) return;
+        if (!CanSelectInstance) return;
         var name = await _dialogs.RequestNameAsync("新增电源实例", "新电源"); if (string.IsNullOrWhiteSpace(name)) return;
         await RunAsync(() => { var created = _devices.AddDevice(name); Reload(); SelectedDevice = Devices.First(d => d.Id == created.Id); return Task.CompletedTask; });
     }
@@ -159,7 +163,7 @@ public partial class ItechPowerSupplyViewModel : ObservableObject, IDisposable
     }
     [RelayCommand] private async Task RemoveDeviceAsync()
     {
-        if (!CanConfigure || SelectedDevice is null) return;
+        if (!CanSelectInstance || !CanConfigure || SelectedDevice is null) return;
         if (!await _dialogs.ConfirmDeleteItemAsync("设备实例（已有序列引用将失效）", SelectedDevice.Name)) return;
         await RunAsync(() => { _devices.RemoveDevice(SelectedDevice.Id); return Task.CompletedTask; });
     }

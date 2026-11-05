@@ -27,9 +27,10 @@ internal static class DocumentUiRegression
         workspace.SaveSequence(new() { Id = "a", Name = "A 序列", Steps = [new() { Id = "root", Kind = "comment", Name = "备注" }] });
         workspace.SaveSequence(new() { Id = "b", Name = "B 序列", Steps = [new() { Id = "other", Kind = "comment", Name = "其他步骤" }] });
         var dialogs = new ProtocolDialogService();
-        var model = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: dialogs);
+        var model = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: dialogs,
+            workspaceService: new SmokeAutomaticWorkspaceService());
         model.OpenProject(workspace.Root);
-        var protocols = ProtocolUiRegression.Create(); protocols.Pages.OpenProject(workspace.Root);
+        Require(!model.IsSequenceDirty, "Loading existing station variables incorrectly marks the project as modified.");
         var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
             new ControlPreviewView(new ControlPreviewViewModel(), theme), dialogs, ManualCanvasRegression.CreateView()) { WindowState = WindowState.Maximized };
         var host = (DialogHost)window.FindName("AppDialogHost");
@@ -48,18 +49,20 @@ internal static class DocumentUiRegression
             Require(((DockingManager)view.FindName("DockManager")).Layout.Descendents().OfType<LayoutAnchorable>()
                 .Single(panel => panel.ContentId == "Steps").Title == UiText.SequenceEditor + " *", "Dock title does not show document/dirty status");
             grid.Focus(); NativePointer.Keys(0x11, 0x5A); Pump();
-            Require(a.SetupSteps.Count == 0 && !model.IsSequenceDirty, "Ctrl+Z did not undo the insertion");
+            Require(a.SetupSteps.Count == 0 && !model.IsSequenceDirty,
+                $"Ctrl+Z did not undo the insertion: setup={a.SetupSteps.Count}, dirty={model.IsSequenceDirty}, " +
+                $"undo={model.CanUndoSequence}, redo={model.CanRedoSequence}, active={window.IsActive}, focus={System.Windows.Input.Keyboard.FocusedElement}, status={model.Status}");
             NativePointer.Keys(0x11, 0x59); Pump();
             Require(a.SetupSteps.Count == 1, "Ctrl+Y did not redo insertion");
             NativePointer.Keys(0x11, 0x53); Pump();
-            Require(!model.IsSequenceDirty && workspace.LoadSequences().Single(item => item.Id == "a").SetupSteps.Count == 1, "Ctrl+S did not save");
+            Require(!model.IsSequenceDirty && SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == "a").SetupSteps.Count == 1, "Ctrl+S did not save");
             grid.SelectedItem = model.Rows.Single(row => row.RowType == "step" && row.Step?.Id == a.SetupSteps.Single().Id); Pump();
             var input = Find<TextBox>(view).Single(box => System.Windows.Automation.AutomationProperties.GetAutomationId(box) == "StepName");
             input.Focus(); input.SelectAll(); input.SelectedText = "待提交输入"; Pump();
             NativePointer.Keys(0x11, 0x5A); Pump();
             Require(a.SetupSteps.Count == 1 && !model.CanRedoSequence, "Textbox Ctrl+Z modified document history");
             input.Text = "保存未应用属性"; Pump(); NativePointer.Keys(0x11, 0x53); Pump();
-            Require(workspace.LoadSequences().Single(item => item.Id == "a").SetupSteps.Single().Name == "保存未应用属性", "Ctrl+S ignored property form");
+            Require(SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == "a").SetupSteps.Single().Name == "保存未应用属性", "Ctrl+S ignored property form");
 
             Click((Button)view.FindName("RenameSequenceButton")); Require(host.IsOpen, "Rename did not use library DialogHost");
             Choose("PART_Cancel"); Require(a.Name == "A 序列", "Cancelled rename changed model");
@@ -79,7 +82,36 @@ internal static class DocumentUiRegression
             if (model.SelectedSequence != a) { list.SelectedItem = a; Pump(); }
 
             model.SequenceName = "未保存更名"; list.SelectedItem = b; Pump();
-            Require(host.IsOpen && model.SelectedSequence == a, "Sequence switch did not protect dirty metadata");
+            Require(host.IsOpen && model.SelectedSequence == a && model.SequenceName == "未保存更名" && model.IsSequenceDirty,
+                "Sequence switching did not protect the pending form.");
+            Choose("PART_Cancel");
+            Require(model.SelectedSequence == a && model.SequenceName == "未保存更名" &&
+                SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == "a").Name == "已更名",
+                "Sequence switch Cancel did not retain pending edits.");
+            list.SelectedItem = b; Pump(); Require(host.IsOpen, "Sequence switch Save prompt did not open");
+            Choose("PART_Primary");
+            Require(model.SelectedSequence == b && SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == "a").Name == "未保存更名",
+                "Sequence switch Save did not persist pending metadata.");
+            list.SelectedItem = a; Pump();
+            Require(model.SequenceName == "未保存更名", "Saved sequence did not reload committed metadata.");
+            model.SequenceName = ""; list.SelectedItem = b; Pump();
+            Require(host.IsOpen && model.SelectedSequence == a && model.SequenceName == "",
+                "Invalid sequence form did not block selection.");
+            Choose("PART_Secondary");
+            Require(model.SelectedSequence == b && model.SequenceName == "B 序列",
+                "Discard did not restore the saved sequence before switching.");
+            list.SelectedItem = a; Pump();
+            model.SequenceName = "未保存更名";
+            model.SaveProjectCommand.Execute(null); Pump();
+            Require(!model.IsSequenceDirty && SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == "a").Name == "未保存更名",
+                "Explicit workspace save did not persist retained sequence edits.");
+
+            // Invoke the shared shell entry point to avoid automating the system folder picker.
+            var next = ProjectWorkspace.Create(Path.Combine(Path.GetTempPath(), "test-station-doc-ui", Guid.NewGuid().ToString("N")), "next");
+            model.SequenceDescription = "阻止切换";
+            var method = typeof(MainWindow).GetMethod("OpenProject", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            var open = (Task)method.Invoke(window, [next.Root])!; Pump();
+            Require(host.IsOpen, "Project switch did not protect pending workspace edits.");
             foreach (var mode in new[] { ThemeMode.Light, ThemeMode.Dark })
             {
                 theme.Apply(mode, AccentPalette.Teal); Pump();
@@ -87,21 +119,15 @@ internal static class DocumentUiRegression
                 Require(text?.Foreground == System.Windows.Application.Current.Resources["TextBrush"], "Unsaved prompt did not retain current theme");
                 Require(Find<Button>(host).Single(button => button.Name == "PART_Cancel").IsVisible, "Dialog actions not visible");
             }
-            Choose("PART_Cancel"); Require(model.SelectedSequence == a && model.SequenceName == "未保存更名", "Switch Cancel lost pending form");
-            list.SelectedItem = b; Pump(); Choose("PART_Primary");
-            Require(model.SelectedSequence == b && workspace.LoadSequences().Single(item => item.Id == "a").Name == "未保存更名",
-                $"Switch Save did not persist: selected={model.SelectedSequence?.Id}, form={model.SequenceName}, status={model.Status}, saved={workspace.LoadSequences().Single(item => item.Id == "a").Name}");
-            model.SequenceName = "放弃更名"; list.SelectedItem = a; Pump(); Choose("PART_Secondary");
-            Require(model.SelectedSequence == a && b.Name == "B 序列", "Switch Discard did not restore saved model");
-
-            // Invoke the shared shell entry point to avoid automating the system folder picker.
-            var next = ProjectWorkspace.Create(Path.Combine(Path.GetTempPath(), "test-station-doc-ui", Guid.NewGuid().ToString("N")), "next");
-            model.SequenceDescription = "阻止切换";
-            var method = typeof(MainWindow).GetMethod("OpenProject", BindingFlags.NonPublic | BindingFlags.Instance)!;
-            var open = (Task)method.Invoke(window, [next.Root])!; Pump(); Choose("PART_Cancel"); Wait(open);
-            Require(model.ProjectPath == workspace.Root, "Project switch Cancel changed workspace");
+            Choose("PART_Cancel"); Wait(open);
+            Require(model.ProjectPath == workspace.Root && model.SequenceDescription == "阻止切换", "Project switch Cancel lost pending edits");
             open = (Task)method.Invoke(window, [next.Root])!; Pump(); Choose("PART_Primary"); Wait(open);
-            Require(model.ProjectPath == next.Root && workspace.LoadSequences().Single(item => item.Id == "a").Description == "阻止切换", "Project switch Save lost metadata");
+            Require(model.ProjectPath == next.Root && SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == "a").Description == "阻止切换", "Project switch Save lost metadata");
+            open = (Task)method.Invoke(window, [workspace.Root])!; Wait(open);
+            model.SequenceName = "放弃更名";
+            open = (Task)method.Invoke(window, [next.Root])!; Pump(); Choose("PART_Secondary"); Wait(open);
+            Require(model.ProjectPath == next.Root && SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == "a").Name == "未保存更名",
+                "Project switch Discard wrote pending changes to disk.");
             open = (Task)method.Invoke(window, [workspace.Root])!; Wait(open);
             NavigationSmokeHelper.Invoke(window, "自动测试"); Pump();
             a = model.SelectedSequence!; model.SequenceDescription = "关闭前保存";
@@ -111,8 +137,8 @@ internal static class DocumentUiRegression
             Click((Button)window.FindName("CloseWindowButton"));
             Choose("PART_Primary");
             for (var attempt = 0; attempt < 20 && window.IsVisible; attempt++) Pump();
-            Require(!window.IsVisible && workspace.LoadSequences().Single(item => item.Id == a.Id).Description == "关闭前保存", "Titlebar close Save failed");
-            Console.WriteLine("PASS: actual Ctrl+Z/Y/S, native textbox undo, library rename/delete/unsaved dialogs, project switch, Alt+F4/close cancellation and save");
+            Require(!window.IsVisible && SmokeAutomaticWorkspaceService.LoadSequences(workspace).Single(item => item.Id == a.Id).Description == "关闭前保存", "Titlebar close Save failed");
+            Console.WriteLine("PASS: actual Ctrl+Z/Y/S, native textbox undo, rename/delete, retained sequence edits, invalid-form protection, workspace reload and project/close Save/Discard/Cancel");
         }
         finally
         {
@@ -133,9 +159,9 @@ internal static class DocumentUiRegression
         var workspace = ProjectWorkspace.Create(Path.Combine(Path.GetTempPath(), "test-station-run-close", Guid.NewGuid().ToString("N")), "project");
         workspace.SaveSequence(new() { Id = "run", Name = "关闭保护", Steps = [WaitStep("main", 5000)], CleanupSteps = [WaitStep("cleanup", 800)] });
         var dialogs = new ProtocolDialogService();
-        var model = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: dialogs);
+        var model = new MainViewModel(new AutoTestDisplayService(), new SequenceEditingService(), sequenceDialogs: dialogs,
+            workspaceService: new SmokeAutomaticWorkspaceService());
         model.OpenProject(workspace.Root);
-        var protocols = ProtocolUiRegression.Create(); protocols.Pages.OpenProject(workspace.Root);
         var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
             new ControlPreviewView(new ControlPreviewViewModel(), theme), dialogs, ManualCanvasRegression.CreateView()) { WindowState = WindowState.Maximized };
         var host = (DialogHost)window.FindName("AppDialogHost");
@@ -148,8 +174,11 @@ internal static class DocumentUiRegression
             var view = (SequenceWorkspace)window.FindName("SequenceView");
             Click((Button)view.FindName("RunButton"));
             Require(model.IsExecutionBusy, "Run did not start");
+            for (var attempt = 0; attempt < 120 && model.CurrentExecutionRow is null && model.IsExecutionBusy; attempt++) Pump();
+            Require(model.CurrentExecutionRow is not null, $"OpenTAP did not enter the main step: {model.ExecutionState}; {model.Status}");
             Click((Button)view.FindName("PauseButton"));
-            Require(model.ExecutionState == "PAUSED", "Run did not pause");
+            for (var attempt = 0; attempt < 100 && model.ExecutionState != "PAUSED" && model.IsExecutionBusy; attempt++) Pump();
+            Require(model.ExecutionState == "PAUSED", $"Run did not acknowledge pause: {model.ExecutionState}; {model.Status}");
             Click((Button)window.FindName("CloseWindowButton"));
             Require(host.IsOpen && Find<TextBlock>(host).Any(text => text.Text == UiText.ExecutionInProgress), "Closing paused execution did not request stop");
             Click(Find<Button>(host).Single(button => button.Name == "PART_Cancel"));

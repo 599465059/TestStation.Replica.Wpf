@@ -14,36 +14,36 @@
         </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolVisibility"/>
             <DataTemplate x:Key="SequenceSubprojectTabTemplate">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="▣" Foreground="#60A5FA" Margin="0,0,6,0"/><TextBlock Text="{Binding Name}"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><md:PackIcon Kind="FileDocumentOutline" Width="14" Height="14" Foreground="{DynamicResource MainSequenceBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/><TextBlock Text="{Binding Name}"/></StackPanel>
             </DataTemplate>
             <DataTemplate x:Key="SequenceRoleTemplate">
                 <StackPanel Orientation="Horizontal" Margin="2,4">
-                    <TextBlock x:Name="RoleIcon" Text="↳" Foreground="#34D399" FontSize="16" Margin="0,0,6,0"/>
+                    <md:PackIcon x:Name="RoleIcon" Kind="SubdirectoryArrowRight" Width="16" Height="16" Foreground="{DynamicResource SubSequenceBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="RoleLabel" Text="子序列" Foreground="#34D399" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="RoleLabel" Text="子序列" Foreground="{DynamicResource SubSequenceBrush}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <DataTemplate.Triggers><DataTrigger Binding="{Binding IsMain}" Value="True">
-                    <Setter TargetName="RoleIcon" Property="Text" Value="▶"/><Setter TargetName="RoleIcon" Property="Foreground" Value="#60A5FA"/>
-                    <Setter TargetName="RoleLabel" Property="Text" Value="主序列"/><Setter TargetName="RoleLabel" Property="Foreground" Value="#60A5FA"/>
+                    <Setter TargetName="RoleIcon" Property="Kind" Value="PlayCircleOutline"/><Setter TargetName="RoleIcon" Property="Foreground" Value="{DynamicResource MainSequenceBrush}"/>
+                    <Setter TargetName="RoleLabel" Property="Text" Value="主序列"/><Setter TargetName="RoleLabel" Property="Foreground" Value="{DynamicResource MainSequenceBrush}"/>
                 </DataTrigger></DataTemplate.Triggers>
             </DataTemplate>
             <DataTemplate x:Key="VariableScopeTemplate">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="ScopeIcon" Text="●" Foreground="#60A5FA" Margin="0,0,5,0"/>
-                    <TextBlock x:Name="ScopeLabel" Text="局部" Foreground="#60A5FA"/>
+                    <md:PackIcon x:Name="ScopeIcon" Kind="CircleMedium" Width="14" Height="14" Foreground="{DynamicResource LocalScopeBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="ScopeLabel" Text="局部" Foreground="{DynamicResource LocalScopeBrush}"/>
                 </StackPanel>
                 <DataTemplate.Triggers>
                     <DataTrigger Binding="{Binding Scope}" Value="global">
-                        <Setter TargetName="ScopeIcon" Property="Text" Value="◆"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="#34D399"/>
-                        <Setter TargetName="ScopeLabel" Property="Text" Value="全局"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="#34D399"/>
+                        <Setter TargetName="ScopeIcon" Property="Kind" Value="RhombusMedium"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="{DynamicResource GlobalScopeBrush}"/>
+                        <Setter TargetName="ScopeLabel" Property="Text" Value="全局"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="{DynamicResource GlobalScopeBrush}"/>
                     </DataTrigger>
                     <DataTrigger Binding="{Binding Scope}" Value="station">
-                        <Setter TargetName="ScopeIcon" Property="Text" Value="★"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="#FBBF24"/>
-                        <Setter TargetName="ScopeLabel" Property="Text" Value="站变量"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="#FBBF24"/>
+                        <Setter TargetName="ScopeIcon" Property="Kind" Value="StarCircle"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="{DynamicResource StationScopeBrush}"/>
+                        <Setter TargetName="ScopeLabel" Property="Text" Value="站变量"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="{DynamicResource StationScopeBrush}"/>
                     </DataTrigger>
                     <DataTrigger Binding="{Binding Scope}" Value="parameter">
-                        <Setter TargetName="ScopeIcon" Property="Text" Value="→"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="#C084FC"/>
-                        <Setter TargetName="ScopeLabel" Property="Text" Value="运行参数"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="#C084FC"/>
+                        <Setter TargetName="ScopeIcon" Property="Kind" Value="ArrowRightBold"/><Setter TargetName="ScopeIcon" Property="Foreground" Value="{DynamicResource ParameterScopeBrush}"/>
+                        <Setter TargetName="ScopeLabel" Property="Text" Value="运行参数"/><Setter TargetName="ScopeLabel" Property="Foreground" Value="{DynamicResource ParameterScopeBrush}"/>
                     </DataTrigger>
                 </DataTemplate.Triggers>
             </DataTemplate>
@@ -81,6 +81,22 @@
         </ToolBarTray>
         <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="8,4,8,3">
             <DockPanel LastChildFill="True">
+                <!-- Run strip: only while a run is active. Current step, elapsed time, pass / fail counts. -->
+                <Border DockPanel.Dock="Top" Margin="0,0,0,6" Padding="12,6" CornerRadius="6" Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" AutomationProperties.AutomationId="RunStrip"
+                        Visibility="{Binding ShowRunStrip, Converter={StaticResource BoolVisibility}}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RunElapsed}" FontFamily="{DynamicResource ReadoutFontFamily}" Margin="16,0,0,0"/>
+                            <TextBlock Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" Margin="16,0,0,0"><Run Text="{x:Static text:UiText.Passed}"/><Run Text=" "/><Run Text="{Binding RunPassedCount, Mode=OneWay}"/></TextBlock>
+                            <TextBlock Foreground="{DynamicResource ErrorBrush}" FontWeight="SemiBold" Margin="12,0,0,0"><Run Text="{x:Static text:UiText.Failed}"/><Run Text=" "/><Run Text="{Binding RunFailedCount, Mode=OneWay}"/></TextBlock>
+                        </StackPanel>
+                        <Border CornerRadius="10" Padding="8,1" Background="{DynamicResource AccentSoftBrush}" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <TextBlock Text="{Binding ExecutionState, Converter={StaticResource UiValue}, ConverterParameter=State}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                        </Border>
+                        <TextBlock Text="{Binding RunCurrentStep}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
+                </Border>
                 <WrapPanel DockPanel.Dock="Right">
                     <Button Content="新建标签页" Command="{Binding NewSubprojectCommand}" Margin="4,0"/>
                     <Button Content="重命名" Command="{Binding RenameSubprojectCommand}" Margin="4,0"/>
@@ -103,7 +119,7 @@
                                           Foreground="{DynamicResource TextBrush}" ItemContainerStyle="{StaticResource StepPaletteItemStyle}">
                                     <TreeView.Resources>
                                         <HierarchicalDataTemplate DataType="{x:Type vm:StepPaletteGroup}" ItemsSource="{Binding Items}">
-                                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource MutedBrush}" FontSize="10" FontWeight="SemiBold" Margin="0,7,0,3"/>
+                                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource MutedBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,8,0,3"/>
                                         </HierarchicalDataTemplate>
                                         <DataTemplate DataType="{x:Type vm:StepPaletteItem}">
                                             <StackPanel Orientation="Horizontal" Height="28" VerticalAlignment="Center" ToolTip="{x:Static text:UiText.DragOrDoubleClick}">
@@ -122,7 +138,7 @@
                                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                                           CanUserResizeColumns="True" CanUserReorderColumns="True" IsReadOnly="True"
                                           SelectionMode="Extended" SelectionUnit="FullRow" FrozenColumnCount="2" RowHeight="28" ColumnHeaderHeight="30"
-                                          GridLinesVisibility="All" HeadersVisibility="Column" RowHeaderWidth="0"
+                                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" RowHeaderWidth="0"
                                           Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"
                                           BorderThickness="0" RowStyle="{StaticResource SequenceRowStyle}"
                                           
@@ -143,7 +159,7 @@
                                         <DataGridTextColumn Header="{x:Static text:UiText.SettingsSummary}" Binding="{Binding Settings}" Width="210" MinWidth="120" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
                                         <DataGridTemplateColumn Header="{x:Static text:UiText.Status}" Width="*" MinWidth="100">
                                             <DataGridTemplateColumn.CellTemplate><DataTemplate>
-                                                <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding StatusText}" Style="{StaticResource StepStatusTextStyle}"/>
                                             </DataTemplate></DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
                                     </DataGrid.Columns>
@@ -183,10 +199,10 @@
                                 </Grid>
                             </xcad:LayoutAnchorable>
                             <xcad:LayoutAnchorable Title="{x:Static text:UiText.Variables}" ContentId="Variables" CanClose="False">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource SurfaceBrush}">
-                                    <StackPanel MinWidth="270" Margin="8" IsEnabled="{Binding CanEditSequence}">
-                                        <TextBlock Text="● 局部　◆ 全局（本标签页）　★ 站变量" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,0,0,5"/>
-                                        <DataGrid x:Name="VariableGrid" ItemsSource="{Binding Variables}" SelectedItem="{Binding SelectedVariable, Mode=TwoWay}" Height="160" PreviewMouseRightButtonDown="VariableGridRightClick" ContextMenuOpening="VariableMenuOpening"
+                                <Grid Margin="6" Background="{DynamicResource SurfaceBrush}">
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="80"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5"><md:PackIcon Kind="CircleMedium" Width="12" Height="12" Foreground="{DynamicResource LocalScopeBrush}" Margin="0,0,3,0" VerticalAlignment="Center"/><TextBlock Text="局部" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,0,10,0"/><md:PackIcon Kind="RhombusMedium" Width="12" Height="12" Foreground="{DynamicResource GlobalScopeBrush}" Margin="0,0,3,0" VerticalAlignment="Center"/><TextBlock Text="全局（本标签页）" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,0,10,0"/><md:PackIcon Kind="StarCircle" Width="12" Height="12" Foreground="{DynamicResource StationScopeBrush}" Margin="0,0,3,0" VerticalAlignment="Center"/><TextBlock Text="站变量" Foreground="{DynamicResource MutedBrush}" FontSize="11"/></StackPanel>
+                                        <DataGrid x:Name="VariableGrid" ItemsSource="{Binding Variables}" SelectedItem="{Binding SelectedVariable, Mode=TwoWay}" Grid.Row="1" Style="{StaticResource AppDataGridStyle}" ScrollViewer.HorizontalScrollBarVisibility="Auto" PreviewMouseRightButtonDown="VariableGridRightClick" ContextMenuOpening="VariableMenuOpening"
                                                   AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column"
                                                   CanUserResizeColumns="True" RowHeight="24" ColumnHeaderHeight="26" RowHeaderWidth="0"
                                                   Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}"
@@ -200,28 +216,40 @@
                                                 <MenuItem Header="删除" Tag="SelectedItem" Command="{Binding DeleteVariableCommand}"/>
                                             </ContextMenu></DataGrid.ContextMenu>
                                             <DataGrid.Columns>
-                                                <DataGridTemplateColumn Header="作用域" Width="92" CellTemplate="{StaticResource VariableScopeTemplate}"/>
-                                                <DataGridTextColumn Header="{x:Static text:UiText.Name}" Binding="{Binding Name}" Width="110" MinWidth="110" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
-                                                <DataGridTextColumn Header="{x:Static text:UiText.DefaultValue}" Binding="{Binding Default}" Width="100" MinWidth="100" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
-                                                <DataGridTextColumn Header="{x:Static text:UiText.Type}" Binding="{Binding DataType, Converter={StaticResource UiValue}}" Width="85" MinWidth="85" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+                                                <DataGridTemplateColumn Header="作用域" Width="82" MinWidth="82" CellTemplate="{StaticResource VariableScopeTemplate}"/>
+                                                <DataGridTextColumn Header="{x:Static text:UiText.Name}" Binding="{Binding Name}" Width="*" MinWidth="105" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+                                                <DataGridTextColumn Header="{x:Static text:UiText.DefaultValue}" Binding="{Binding Default}" Width="95" MinWidth="80" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
+                                                <DataGridTextColumn Header="{x:Static text:UiText.Type}" Binding="{Binding DataType, Converter={StaticResource UiValue}}" Width="90" MinWidth="80" ElementStyle="{StaticResource AppDataGridTextStyle}"/>
                                             </DataGrid.Columns>
                                         </DataGrid>
-                                        <TextBlock Text="{x:Static text:UiText.Name}" Margin="0,8,0,3"/><TextBox Text="{Binding VariableName, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBlock Text="{x:Static text:UiText.Type}" Margin="0,6,0,3"/>
-                                        <ComboBox ItemsSource="{Binding VariableTypes}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding VariableType, Mode=TwoWay}" MinHeight="29"/>
-                                        <TextBlock Text="{x:Static text:UiText.Scope}" Margin="0,6,0,3"/>
-                                        <ComboBox ItemsSource="{Binding VariableScopes}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding VariableScope, Mode=TwoWay}" MinHeight="29"/>
-                                        <TextBlock Text="引用：Locals.名称 / Globals.名称 / Station.名称" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/>
-                                        <TextBlock Text="{x:Static text:UiText.DefaultValue}" Margin="0,6,0,3"/><TextBox Text="{Binding VariableDefault, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                            <Button Content="{x:Static text:UiText.New}" Command="{Binding NewVariableCommand}" Margin="0,0,5,0"/>
-                                            <Button Content="重命名" Command="{Binding RenameVariableCommand}" Margin="0,0,5,0"/>
-                                            <Button Content="校验" Command="{Binding ValidateVariableCommand}" Margin="0,0,5,0"/>
-                                            <Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteVariableCommand}" Margin="0,0,5,0"/>
-                                            <Button Content="{x:Static text:UiText.Apply}" Command="{Binding ApplyVariableCommand}"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </ScrollViewer>
+                                    <TextBlock Grid.Row="1" Text="{x:Static text:UiText.VariableEmpty}" Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Variables.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                    </TextBlock>
+                                    <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" Background="{DynamicResource BorderBrush}"/>
+                                    <Expander x:Name="VariableEditor" Grid.Row="3" Header="{x:Static text:UiText.VariableEditor}" IsExpanded="True" Expanded="VariableEditorExpanded" Collapsed="VariableEditorCollapsed" ToolTip="{x:Static text:UiText.VariableReferenceHint}" IsEnabled="{Binding CanEditSequence}">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" MaxHeight="200">
+                                            <Grid MinWidth="280" Margin="0,4,0,0">
+                                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="{x:Static text:UiText.Name}" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                                                <TextBox Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding VariableName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+                                                <TextBlock Grid.Row="1" Text="{x:Static text:UiText.Type}" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                                                <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding VariableTypes}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding VariableType, Mode=TwoWay}" Margin="0,0,8,4"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="2" Text="{x:Static text:UiText.Scope}" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                                                <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding VariableScopes}" ItemTemplate="{StaticResource UiOptionTemplate}" SelectedItem="{Binding VariableScope, Mode=TwoWay}" Margin="0,0,0,4"/>
+                                                <TextBlock Grid.Row="2" Text="{x:Static text:UiText.DefaultValue}" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                                                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding VariableDefault, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+                                                <WrapPanel Grid.Row="3" Grid.ColumnSpan="4">
+                                                    <Button Content="{x:Static text:UiText.New}" Command="{Binding NewVariableCommand}" Style="{StaticResource AppToolBarButtonStyle}"/>
+                                                    <Button Content="{x:Static text:UiText.Rename}" Command="{Binding RenameVariableCommand}" Style="{StaticResource AppToolBarButtonStyle}"/>
+                                                    <Button Content="{x:Static text:UiText.Validate}" Command="{Binding ValidateVariableCommand}" Style="{StaticResource AppToolBarButtonStyle}"/>
+                                                    <Button Content="{x:Static text:UiText.Delete}" Command="{Binding DeleteVariableCommand}" Style="{StaticResource AppToolBarButtonStyle}"/>
+                                                    <Button Content="{x:Static text:UiText.Apply}" Command="{Binding ApplyVariableCommand}" Style="{StaticResource AppToolBarButtonStyle}"/>
+                                                </WrapPanel>
+                                            </Grid>
+                                        </ScrollViewer>
+                                    </Expander>
+                                </Grid>
                             </xcad:LayoutAnchorable>
                             <xcad:LayoutAnchorable Title="{x:Static text:UiText.Simulation}" ContentId="Simulation" CanClose="False">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource SurfaceBrush}">
@@ -274,7 +302,7 @@
                                                         
                                 <Grid Background="{DynamicResource SurfaceBrush}">
                                     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                                    <ScrollViewer x:Name="PropertyScroll" Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <ScrollViewer x:Name="PropertyScroll" Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                                         <TabControl Margin="12" IsEnabled="{Binding CanEditSequence}">
                                             <TabItem Header="通用属性">
                                                 <StackPanel MinWidth="540" Margin="8">
@@ -315,7 +343,7 @@
                                                             <TextBox Text="{Binding StepAfterExpression, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="60" VerticalScrollBarVisibility="Auto" Margin="0,4,0,5"/>
                                                         </StackPanel>
                                                     </Expander>
-                                                    <TextBlock Text="带有判定的步骤显示“通过 / 失败”；普通步骤显示“完成 / 未完成”。" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+                                                    <TextBlock Text="带有判定的步骤显示“通过 / 失败”；普通步骤显示“完成 / 异常”；未运行显示“—”。" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
                                                     <Button Content="校验公式与变量" Command="{Binding ValidateStepExpressionsCommand}" HorizontalAlignment="Left" Margin="0,10,0,0"/>
                                                 </StackPanel>
                                             </TabItem>

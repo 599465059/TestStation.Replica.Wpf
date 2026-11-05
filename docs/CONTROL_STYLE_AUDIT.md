@@ -1,4 +1,4 @@
-> 当前检查记录。正式页面使用 Industrial.Controls 1.0.0；库没有覆盖的类型和回退范围以 CONTROL_LIBRARY_GAPS.md 和 CONTROL_USAGE_INVENTORY.json 为准。
+> 当前检查记录。正式页面使用 Industrial.Controls 1.1.0；库没有覆盖的类型和回退范围以 CONTROL_LIBRARY_GAPS.md 和 CONTROL_USAGE_INVENTORY.json 为准。
 
 # 控件来源与主题检查
 
@@ -6,7 +6,7 @@
 
 ## 当前使用范围
 
-**正式页面已经切换到 Industrial.Controls 1.0.0 的统一资源入口。** 能由发布包提供模板的基础控件直接使用其样式；发布包尚未覆盖的类型保留集中适配的 HandyControl 回退，并在缺项清单中登记。自动测试、工程选择、导航和工具栏不再使用默认 WPF 外观。
+**正式页面已经切换到 Industrial.Controls 1.1.0 的统一资源入口。** 能由发布包提供模板的基础控件直接使用其样式；发布包尚未覆盖的类型保留集中适配的 HandyControl 回退，并在缺项清单中登记。自动测试、工程选择、导航和工具栏不再使用默认 WPF 外观。
 
 | 控件或区域 | 实际来源与入口 |
 |---|---|
@@ -18,7 +18,7 @@
 | 工程和序列工具栏 | KitToolBar；紧凑按钮继承 KitButton；原溢出按钮仅绑定主题画刷，未复制模板 |
 | 提示、折叠区、滚动区域、滚动条 | 提示为库样式；其他按缺项登记保留回退 |
 | 步骤行显示 | 本工程 DataTemplate 组合 MaterialDesign PackIcon 与文本；业务行模板不是基础控件模板 |
-| 控件预览的基础控件、仪表、旋钮、颜色选择等 | Industrial.Controls 1.0.0，样式字典在预览页局部加载 |
+| 控件预览的基础控件、仪表、旋钮、颜色选择等 | Industrial.Controls 1.1.0，样式字典在预览页局部加载 |
 | 停靠面板、浮动窗、标题按钮、分割线 | 保留 AvalonDock 和 `CustomTheme.xaml` 的现有模板；这部分仍有项目停靠模板，属于已确认的保留范围 |
 | 主窗口标题栏与导航布局 | 保留现有 WindowChrome 外壳，按钮使用 Industrial.Controls 样式；页面搜索已移除 |
 | 新建工程名称弹窗 | Industrial.Controls DialogHost/DialogService |

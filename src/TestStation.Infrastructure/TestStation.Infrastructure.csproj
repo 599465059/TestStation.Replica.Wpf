@@ -7,5 +7,6 @@
   <ItemGroup>
     <None Include="Drivers\CAN\**\*" CopyToOutputDirectory="PreserveNewest"
           TargetPath="Drivers\CAN\%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Devices\Reference\Data\reference-scpi-profiles.json" />
   </ItemGroup>
 </Project>

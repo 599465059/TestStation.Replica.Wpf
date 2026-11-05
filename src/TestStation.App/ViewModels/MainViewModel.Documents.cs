@@ -138,19 +138,73 @@ public partial class MainViewModel
         try { SelectedSequence = _sequence; }
         finally { _selectionSync = false; }
     }
-    public Task<bool> SelectSequenceAsync(SequenceDefinition? sequence)
+    public async Task<bool> SelectSequenceAsync(SequenceDefinition? sequence)
     {
-        if (ReferenceEquals(sequence, _sequence)) return Task.FromResult(true);
-        if (sequence is not null && !Sequences.Contains(sequence)) return Task.FromResult(false);
-        if (_documentOperation || IsExecutionBusy) { RevertSequenceSelection(); return Task.FromResult(false); }
+        if (ReferenceEquals(sequence, _sequence)) return true;
+        if (sequence is not null && !Sequences.Contains(sequence)) return false;
+        if (_documentOperation || IsExecutionBusy) { RevertSequenceSelection(); return false; }
         _documentOperation = true; NotifyDocumentState();
         try
         {
-            if (_sequence is not null && !TryCommitPendingSequenceEdits()) return Task.FromResult(false);
-            AttachSequence(sequence); return Task.FromResult(true);
+            if (_sequence is not null && IsSequenceDirty)
+            {
+                var choice = await _sequenceDialogs.AskUnsavedSequenceAsync(_sequence.Name);
+                switch (choice)
+                {
+                    case SequenceUnsavedChoice.Cancel:
+                        // Restore the selected item without touching the editor buffers.
+                        // This is important for an in-progress name, property or variable
+                        // edit: cancelling a tab switch must leave the user's input intact.
+                        RevertSequenceSelection();
+                        return false;
+                    case SequenceUnsavedChoice.Save:
+                        if (!TryCommitPendingSequenceEdits() || !SaveAutomaticWorkspace())
+                        {
+                            RevertSequenceSelection();
+                            return false;
+                        }
+                        break;
+                    case SequenceUnsavedChoice.Discard:
+                        if (!DiscardCurrentSequenceEdits())
+                        {
+                            RevertSequenceSelection();
+                            return false;
+                        }
+                        break;
+                }
+            }
+
+            AttachSequence(sequence);
+            return true;
         }
-        catch (Exception error) { Status = error.Message; return Task.FromResult(false); }
+        catch (Exception error)
+        {
+            Status = error.Message;
+            RevertSequenceSelection();
+            return false;
+        }
         finally { _documentOperation = false; NotifyDocumentState(); }
+    }
+
+    private bool DiscardCurrentSequenceEdits()
+    {
+        if (_sequence is null) return true;
+
+        // A newly created sequence has no saved snapshot. Discarding it means
+        // removing the in-memory document, just like closing an unsaved tab.
+        if (_document?.IsSaved != true)
+        {
+            var discarded = _sequence;
+            _activeSubproject?.Sequences.Remove(discarded);
+            Sequences.Remove(discarded);
+            _documents.Forget(discarded);
+            AttachSequence(null);
+            return true;
+        }
+
+        _document.Discard();
+        RefreshDocumentEditors();
+        return !IsSequenceDirty;
     }
 
     private Task<bool> ResolveUnsavedSequenceAsync() => Task.FromResult(_sequence is null || TryCommitPendingSequenceEdits());

@@ -39,6 +39,17 @@
         <Setter Property="Visibility" Value="Collapsed"/>
         <Style.Triggers><DataTrigger Binding="{Binding RowType}" Value="step"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
     </Style>
+    <!-- Run status colors come from semantic theme brushes; not-run rows stay muted. -->
+    <Style x:Key="StepStatusTextStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding StatusKind}" Value="success"><Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></DataTrigger>
+            <DataTrigger Binding="{Binding StatusKind}" Value="error"><Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></DataTrigger>
+            <DataTrigger Binding="{Binding StatusKind}" Value="running"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></DataTrigger>
+        </Style.Triggers>
+    </Style>
     <DataTemplate x:Key="StepNameTemplate">
         <StackPanel Orientation="Horizontal" Margin="{Binding Depth, Converter={StaticResource IndentToMargin}}" VerticalAlignment="Center">
             <md:PackIcon Kind="{Binding Step.Kind, Converter={StaticResource StepKindToIcon}}" Style="{StaticResource StepIconStyle}"/>

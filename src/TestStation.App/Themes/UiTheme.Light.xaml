@@ -1,17 +1,17 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <SolidColorBrush x:Key="WindowBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="SubtleBrush" Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="WindowBrush" Color="#EEF0F3"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#F7F8FA"/>
+    <SolidColorBrush x:Key="SubtleBrush" Color="#EEF1F5"/>
     <SolidColorBrush x:Key="ContentBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="SecondaryBrush" Color="#F7F7F7"/>
-    <SolidColorBrush x:Key="AccentSoftBrush" Color="#F2F2F2"/>
-    <SolidColorBrush x:Key="SelectedRowBrush" Color="#2563EB"/>
-    <Color x:Key="SelectedRowColor">#2563EB</Color>
-    <Color x:Key="SelectionTextColor">#FFFFFF</Color>
-    <SolidColorBrush x:Key="TextBrush" Color="#171717"/>
-    <SolidColorBrush x:Key="MutedBrush" Color="#666666"/>
-    <SolidColorBrush x:Key="BorderBrush" Color="#D0D0D0"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="#F3F5F8"/>
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#E6EEFD"/>
+    <SolidColorBrush x:Key="SelectedRowBrush" Color="#D6E3FC"/>
+    <Color x:Key="SelectedRowColor">#D6E3FC</Color>
+    <Color x:Key="SelectionTextColor">#1F2937</Color>
+    <SolidColorBrush x:Key="TextBrush" Color="#1F2937"/>
+    <SolidColorBrush x:Key="MutedBrush" Color="#667085"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#D5DAE1"/>
     <SolidColorBrush x:Key="CanvasMajorGridBrush" Color="#AEB8C5"/>
     <SolidColorBrush x:Key="CanvasGridTickBrush" Color="#B8C1CC"/>
     <SolidColorBrush x:Key="AccentBrush" Color="#2563EB"/>
@@ -34,14 +34,34 @@
     <SolidColorBrush x:Key="MutedTextBrush" Color="#667085"/>
     <SolidColorBrush x:Key="DisabledTextBrush" Color="#98A2B3"/>
     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="InputBorderBrush" Color="#C9D1DC"/>
-    <SolidColorBrush x:Key="HoverBrush" Color="#EAEAEA"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#C3CAD4"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#EAEEF3"/>
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#1D4ED8"/>
     <SolidColorBrush x:Key="MenuBackgroundBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="DataGridAltRowBrush" Color="#F7F7F7"/>
+    <SolidColorBrush x:Key="DataGridAltRowBrush" Color="#F9FAFB"/>
+    <!-- Row separators are quieter than panel borders. -->
+    <SolidColorBrush x:Key="GridLineBrush" Color="#E7EAEE"/>
+    <!-- Sequence role and variable scope markers (SequenceWorkspace). -->
+    <SolidColorBrush x:Key="MainSequenceBrush" Color="#2563EB"/>
+    <SolidColorBrush x:Key="SubSequenceBrush" Color="#059669"/>
+    <SolidColorBrush x:Key="LocalScopeBrush" Color="#2563EB"/>
+    <SolidColorBrush x:Key="GlobalScopeBrush" Color="#059669"/>
+    <SolidColorBrush x:Key="StationScopeBrush" Color="#B45309"/>
+    <SolidColorBrush x:Key="ParameterScopeBrush" Color="#7C3AED"/>
+    <!-- Card surface: one step brighter than the window in light mode, raised in dark mode. -->
+    <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF"/>
+    <!-- Energized output (power supply / load output on). The only persistent orange in the shell. -->
+    <SolidColorBrush x:Key="LiveBrush" Color="#B45309"/>
+    <SolidColorBrush x:Key="LiveSurfaceBrush" Color="#FDF1E1"/>
+    <SolidColorBrush x:Key="LiveTextBrush" Color="#8A4300"/>
+    <!-- Device connection dots. -->
+    <SolidColorBrush x:Key="StatusOnlineBrush" Color="#16A34A"/>
+    <SolidColorBrush x:Key="StatusIdleBrush" Color="#98A2B3"/>
+    <SolidColorBrush x:Key="StatusFaultBrush" Color="#DC2626"/>
     <SolidColorBrush x:Key="BlueSwatchBrush" Color="#2563EB"/>
     <SolidColorBrush x:Key="PurpleSwatchBrush" Color="#7C3AED"/>
     <SolidColorBrush x:Key="TealSwatchBrush" Color="#0F766E"/>
+    <SolidColorBrush x:Key="OrangeSwatchBrush" Color="#C2410C"/>
     <!-- Protocol field roles keep their semantic colors in both themes. The
          accent is reserved for selection and focus; it must not flatten the
          field palette into monochrome. -->

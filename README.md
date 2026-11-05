@@ -31,7 +31,7 @@ dotnet build TestStation.slnx --no-restore
 
 从顶部“视图 → 控件预览”进入，不需要先打开工程。工作区左侧“系统设置”下方也有“控件预览”入口。
 
-此页使用固定版本 `Industrial.Controls 1.0.0` 的样式和控件，包含输入、按钮、下拉框、可调列宽表格、树、范围滑块、旋钮、仪表、进度环及颜色选择。使用标题栏太阳按钮和色点比较深浅主题及强调色。样例使用独立 ViewModel，不会修改工程和序列。
+此页使用固定版本 `Industrial.Controls 1.1.0` 的样式和控件，包含输入、按钮、下拉框、可调列宽表格、树、范围滑块、旋钮、仪表、进度环及颜色选择。使用标题栏太阳按钮和色点比较深浅主题及强调色。样例使用独立 ViewModel，不会修改工程和序列。
 
 控件包随工程保存在 `vendor/nuget`，无需引用原始源码目录。正式页面的可迁移控件已使用同一包；未封装控件及主题接口见 docs/CONTROL_LIBRARY_GAPS.md。接入边界、主题适配、升级步骤和验收记录见 [docs/INDUSTRIAL_CONTROLS_INTEGRATION.md](docs/INDUSTRIAL_CONTROLS_INTEGRATION.md)。
 
@@ -86,7 +86,7 @@ UI 验收会打开窗口并实际操作鼠标、键盘，完成后关闭测试�
 实际 Prism 程序启动、导航和最大化验证也可单独运行（默认在完成后关闭窗口，添加 `-KeepOpen` 则保留）：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\jmytest\TestStation.Replica.Wpf\artifacts\demo-project"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Verify-PrismStartup.ps1 -ProjectPath "F:\opencode\TestStation.Replica.Wpf\artifacts\demo-project"
 ```
 
 本项目最高规则见 [PROJECT_RULES.md](PROJECT_RULES.md)，本轮迁移与验收记录见 [docs/AUTO_TEST_INTEGRATION.md](docs/AUTO_TEST_INTEGRATION.md)，来源说明见 [NOTICE.md](NOTICE.md)。
@@ -95,9 +95,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Ve
 
 设备、通信资源、通道映射和轮询策略的当前文件格式见 [docs/RESOURCE_MODEL.md](docs/RESOURCE_MODEL.md)。
 
-## 协议管理
+## 协议管理（暂未启用）
 
-打开工程后使用左侧四个子节点：协议库、自定义协议、DBC 数据库、协议测试。
+协议库、自定义协议、DBC 数据库和协议测试的实现仍保留在仓库中，当前主启动链暂不注册协议页面，因此不会出现在左侧导航。恢复接入时按 `ProtocolModule` 边界重新注册，不改变工程文件格式。以下操作说明适用于恢复模块后。
 
 - 在协议库新建、删除、导入或导出 .tsproto；在自定义协议中编辑名称、ID、版本、通信类型和多个命名帧。
 - 选择协议树根比较全部帧，选择子帧只看一帧；选中空字节后双击字段库添加，也可拖入和拖动已有块。字段不能重叠或越界。
@@ -109,7 +109,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File src/TestStation.Smoke/Ve
 
 协议示例工程：`artifacts/protocol-demo`，含一个双帧协议和 Python 原测试 DBC。使用上方 --open 启动参数打开该目录，或在初始页选择它。
 
-编译完成后也可以双击本工程的 `start-protocol-demo.cmd` 直接打开这个示例工程。
+
 
 序列可靠性功能、边界和测试入口见 [docs/SEQUENCE_DOCUMENTS.md](docs/SEQUENCE_DOCUMENTS.md)。
 

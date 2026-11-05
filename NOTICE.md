@@ -12,11 +12,11 @@
 |---|---|---|
 | Prism.DryIoc | 9.0.537 | 模块及依赖注入 |
 | HandyControl | 3.5.1 | 基础控件样式和窗口组件 |
-| Industrial.Controls | 1.2.0 | 用户提供的工业控件库、主题资源与弹窗样式 |
+| Industrial.Controls | 1.1.0 | 用户提供的工业控件库、主题资源与弹窗样式 |
 | MaterialDesignThemes | 5.3.2 | PackIcon 图标 |
 | Dirkster.AvalonDock | 4.72.0 | 停靠面板 |
 | CommunityToolkit.Mvvm | 8.4.0 | 属性通知及命令 |
 
 第三方组件仍按各自 NuGet 包中的许可使用；本次适配不改变这些许可。
 
-Industrial.Controls 使用用户提供的最新已发布包 `IndustrialKit/dist/packages/Industrial.Controls.1.2.0.nupkg`，原包副本保存于本工程 `vendor/nuget`。来源工程仅只读检查，未修改或复制 Gallery 应用；包内的 README、第三方说明和许可文件随原包保留。
+Industrial.Controls 使用用户提供的最新已发布包 `IndustrialKit/dist/packages/Industrial.Controls.1.1.0.nupkg`，原包副本保存于本工程 `vendor/nuget`。来源工程仅只读检查，未修改或复制 Gallery 应用；包内的 README、第三方说明和许可文件随原包保留。

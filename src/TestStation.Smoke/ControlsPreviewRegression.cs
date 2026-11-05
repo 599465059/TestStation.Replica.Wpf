@@ -26,9 +26,12 @@ internal static class ControlsPreviewRegression
         var document = sequenceModel.SelectedSequence;
         var sequenceCount = sequenceModel.Sequences.Count;
         var dictionaryCount = resources.MergedDictionaries.Count;
-        NavigationSmokeHelper.Invoke(window, "控件预览"); Pump();
+        var dictionarySources = string.Join("; ", resources.MergedDictionaries.Select(dictionary => dictionary.Source?.OriginalString ?? "inline"));
+        VerifyThemeDictionaries(resources, theme);
+        OpenFromSettings(window);
         var host = (ContentControl)window.FindName("ControlPreviewHost");
-        var preview = (ControlPreviewView)host.Content;
+        var preview = host.Content as ControlPreviewView
+            ?? throw new InvalidOperationException("Settings did not open the embedded control preview.");
         var model = (ControlPreviewViewModel)preview.DataContext;
         Require(preview.IsLoaded && preview.IsVisible && Window.GetWindow(preview) == window, "Preview is not embedded in the shell");
         var previewScroll = (ScrollViewer)preview.FindName("PreviewScroll");
@@ -71,6 +74,7 @@ internal static class ControlsPreviewRegression
             foreach (var accent in new[] { AccentPalette.Blue, AccentPalette.Purple, AccentPalette.Teal })
             {
                 theme.Apply(mode, accent); Pump();
+                VerifyThemeDictionaries(resources, theme);
                 Require(ReferenceEquals(pageBrush, resources["PageBrush"]), "Library palette brush identity changed");
                 Require(ColorOf(resources["PageBrush"]) == ColorOf(resources["WindowBrush"]), "Library background changed the application's palette");
                 Require(ColorOf(resources["StrokeBrush"]) == ColorOf(resources["BorderBrush"]), "Library border palette is out of sync");
@@ -100,20 +104,25 @@ internal static class ControlsPreviewRegression
         Invoke(colorButton);
         var picker = FindPopupPicker();
         Require(picker is not null, "Library color picker popup did not open");
+        var hex = Find<TextBox>(picker!).Single(box => box.Width == 190);
+        Require(ColorOf(hex.Background) == ColorOf(resources["InputBackgroundBrush"]) && ColorOf(hex.Foreground) == ColorOf(resources["TextBrush"]),
+            "Open color picker does not use the application's input palette");
         Require(picker!.TrySetHex("#45A1C2"), "Color picker rejected a valid HEX color");
         Pump();
         Require(model.PreviewColor == (Color)ColorConverter.ConvertFromString("#45A1C2"), "Color picker two-way binding failed");
         theme.Apply(AppThemeMode.Dark, AccentPalette.Purple); Pump();
-        var hex = Find<TextBox>(picker).Single(box => box.Width == 190);
-        Require(ColorOf(hex.Background) == ColorOf(resources["SurfaceBrush"]) && ColorOf(hex.Foreground) == ColorOf(resources["TextBrush"]),
-            "Open color picker input retained its previous theme");
+        Require(ColorOf(hex.Background) == ColorOf(resources["InputBackgroundBrush"]) && ColorOf(hex.Foreground) == ColorOf(resources["TextBrush"]),
+            $"Open color picker input retained its previous theme: background={ColorOf(hex.Background)}, expected={ColorOf(resources["InputBackgroundBrush"])}");
         NavigationSmokeHelper.Invoke(window, "自动测试"); Pump();
         Require(!preview.IsLoaded && FindPopupPicker() is null, "Navigating away did not unload the preview and close its popup");
         Require(ReferenceEquals(document, sequenceModel.SelectedSequence) && sequenceModel.Sequences.Count == sequenceCount,
             "Preview navigation changed the sequence document");
         Require(resources.MergedDictionaries.Count == dictionaryCount && ReferenceEquals(shellButtonStyle, resources[typeof(Button)]),
-            "Repeated theme changes injected global library dictionaries");
-        NavigationSmokeHelper.Invoke(window, "控件预览"); Pump();
+            $"Theme/navigation changed global resources: dictionaries={dictionaryCount}->{resources.MergedDictionaries.Count}, " +
+            $"buttonStylePreserved={ReferenceEquals(shellButtonStyle, resources[typeof(Button)])}; " +
+            $"before=[{dictionarySources}]; after=[" +
+            string.Join("; ", resources.MergedDictionaries.Select(dictionary => dictionary.Source?.OriginalString ?? "inline")) + "]");
+        OpenFromSettings(window);
         Require(ReferenceEquals(host.Content, preview) && model.InputValue == 43, "Preview samples were lost on navigation");
         Invoke(Find<Button>(window).Single(button => AutomationProperties.GetAutomationId(button) == "PreviewReset"));
         Require(model.InputValue == 65 && !model.IsLoggingEnabled, "Reset sample command failed");
@@ -124,21 +133,33 @@ internal static class ControlsPreviewRegression
 
     private static void VerifyWithoutProject(ThemeService theme)
     {
-        var model = new MainViewModel(new AutoTestDisplayService(), new TestStation.Application.SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs());
-        var window = new MainWindow(model, theme, new SequenceInteractionService(new SequenceDropTargetService()),
-            new ControlPreviewView(new ControlPreviewViewModel(), theme), new ProtocolDialogService(), ManualCanvasRegression.CreateView());
+        var model = new MainViewModel(new AutoTestDisplayService(), new TestStation.Application.SequenceEditingService(), sequenceDialogs: new TestSequenceDialogs(),
+            workspaceService: new SmokeAutomaticWorkspaceService());
+        var window = ShellSmokeFixture.Create(model, theme);
         try
         {
             window.Show(); Pump();
-            var viewMenu = Find<Menu>(window).Single().Items.OfType<MenuItem>().Single(item => item.Header?.ToString() == "视图");
-            var previewMenu = viewMenu.Items.OfType<MenuItem>().Single(item => AutomationProperties.GetAutomationId(item) == "OpenControlPreview");
-            previewMenu.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); Pump();
+            OpenFromSettings(window);
             Require(!model.IsProjectOpen && ((ContentControl)window.FindName("ControlPreviewHost")).IsVisible,
                 "Preview unexpectedly requires a project");
             NavigationSmokeHelper.Invoke(window, "工程概览"); Pump();
             Require(((FrameworkElement)window.FindName("StartupView")).IsVisible, "Cannot return to the project selection page");
         }
         finally { window.Close(); Pump(); }
+    }
+
+    private static void OpenFromSettings(MainWindow window)
+    {
+        NavigationSmokeHelper.Invoke(window, "settings"); Pump();
+        var settings = ((ContentControl)window.FindName("SettingsHost")).Content as SettingsView
+            ?? throw new InvalidOperationException("Settings page is not registered in the UI fixture.");
+        Require(settings.IsVisible, "Settings navigation did not show the page.");
+        var sections = Find<ListBox>(settings).Single(list => AutomationProperties.GetAutomationId(list) == "SettingsSections");
+        sections.SelectedItem = settings.Model.Sections.Single(section => section.Id == "log"); Pump();
+        var open = Find<Button>(settings).Single(button => AutomationProperties.GetAutomationId(button) == "SettingsOpenControlPreview");
+        Require(open.IsVisible && open.IsEnabled, "Settings control preview action is unavailable.");
+        open.BringIntoView(); Pump();
+        Invoke(open);
     }
 
     private static ColorPicker? FindPopupPicker()
@@ -155,6 +176,17 @@ internal static class ControlsPreviewRegression
     }
 
     private static Color ColorOf(object value) => ((SolidColorBrush)value).Color;
+    private static void VerifyThemeDictionaries(ResourceDictionary resources, ThemeService theme)
+    {
+        var sources = resources.MergedDictionaries.Select(dictionary => dictionary.Source?.OriginalString ?? "").ToArray();
+        var projectThemes = sources.Where(source => source.Contains("UiTheme.", StringComparison.OrdinalIgnoreCase)).ToArray();
+        var skins = sources.Where(source => source.Contains("HandyControl;component/Themes/Skin", StringComparison.OrdinalIgnoreCase)).ToArray();
+        Require(projectThemes.Length == 1 && projectThemes[0].EndsWith($"UiTheme.{theme.CurrentMode}.xaml", StringComparison.OrdinalIgnoreCase),
+            "Initial/repeated theme application lost or duplicated the project theme dictionary.");
+        var expectedSkin = theme.CurrentMode == AppThemeMode.Dark ? "SkinDark.xaml" : "SkinDefault.xaml";
+        Require(skins.Length == 1 && skins[0].EndsWith(expectedSkin, StringComparison.OrdinalIgnoreCase),
+            "Initial/repeated theme application duplicated a skin or retained the previous skin.");
+    }
     private static void Require(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException(message);

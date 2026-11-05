@@ -16,8 +16,13 @@ public sealed class StepKindToIconConverter : IValueConverter
             "assert" => PackIconKind.ClipboardCheckOutline,
             "if" => PackIconKind.SourceBranch,
             "loop" or "for" => PackIconKind.Repeat,
+            "while" => PackIconKind.Autorenew,
+            "break" => PackIconKind.StopCircleOutline,
+            "continue" => PackIconKind.SkipNext,
             "call_sequence" or "sequence_call" => PackIconKind.PlaylistPlay,
             "comment" => PackIconKind.CommentTextOutline,
+            "statement" => PackIconKind.CodeBraces,
+            "log" => PackIconKind.TextBoxOutline,
             _ => PackIconKind.HelpCircleOutline
         };
 

@@ -50,16 +50,16 @@ public partial class PluginManagementViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanEnable))]
-    private void EnablePlugin() => SetEnabled(true);
+    private Task EnablePluginAsync() => SetEnabledAsync(true);
     [RelayCommand(CanExecute = nameof(CanDisable))]
-    private void DisablePlugin() => SetEnabled(false);
+    private Task DisablePluginAsync() => SetEnabledAsync(false);
 
-    private void SetEnabled(bool enabled)
+    private async Task SetEnabledAsync(bool enabled)
     {
         if (_runtime.IsAutomationActive || SelectedPlugin is not { } plugin) return;
         try
         {
-            _registry.SetEnabled(plugin.Id, enabled);
+            await _registry.SetEnabledAsync(plugin.Id, enabled);
             Status = UiText.Format("PluginStateChanged", plugin.Name, UiText.Get(enabled ? "PluginEnabled" : "PluginDisabled"));
         }
         catch (Exception error) { Status = error.Message; }
